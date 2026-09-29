@@ -45,3 +45,37 @@ class EngineTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ExploreTest(unittest.TestCase):
+    def setUp(self):
+        from chineserim.explore import WorldMap, visit
+        self.visit, self.w = visit, WorldMap(GameData())
+        self.d = GameData()
+        self.rs = RealmSystem(self.d, random.Random(2))
+        self.c = Character("t", elements=["金", "木"])
+        self.rs.set_realm(self.c, "mortal")
+        self.c.add("lingshi", 500)
+
+    def test_travel(self):
+        self.assertFalse(self.w.travel(self.c, "tiannan", "tianyuan")[0])   # 靈界鎖
+        ok, days, _ = self.w.travel(self.c, "tiannan", "dajin")
+        self.assertTrue(ok and days > 0)
+        self.c.realm = 2
+        self.assertLess(self.w.travel_days(self.c, "tiannan", "dajin"), days)  # 築基飛行
+
+    def test_visit_types(self):
+        r = random.Random(3)
+        msg, days = self.visit(self.w, self.rs, self.c, "tiannan", "xuese", r)   # 秘境擋凡人
+        self.assertEqual(days, 0)
+        self.c.hp = 1
+        self.visit(self.w, self.rs, self.c, "tiannan", "yuejing", r)             # 城市回血
+        self.assertEqual(self.c.hp, self.c.max_hp)
+        self.visit(self.w, self.rs, self.c, "tiannan", "huangfeng", r)           # 門派聲望
+        self.assertEqual(self.c.sects.get("huangfenggu"), 1)
+        msg, days = self.visit(self.w, self.rs, self.c, "tiannan", "taiyue", r)  # 野外戰鬥
+        self.assertTrue(msg and days == 2)
+
+    def test_layout(self):
+        pts = self.w.location_layout("tiannan")
+        self.assertEqual(len(pts), 18)
