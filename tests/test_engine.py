@@ -266,3 +266,20 @@ class BranchFuzzTest(unittest.TestCase):
             play_through(s, pick=lambda ch: r.choice(ch)["i"])
             self.assertTrue(s.hero.quest["done"], f"seed {seed} 卡在 {s.hero.quest}")
             self.assertLessEqual(s.hero.hp, s.hero.max_hp)
+
+
+class GongfaTest(unittest.TestCase):
+    def test_learn_and_bonus(self):
+        import pathlib, tempfile
+        from chineserim.session import Session
+        from tests.bot import play_through
+        s = Session(pathlib.Path(tempfile.mkdtemp()) / "s.json", seed=4)
+        base_hp = s.hero.max_hp
+        play_through(s, limit=25)                       # 玩到墨大夫傳授長春功之後
+        self.assertIn("changchun_gong", s.hero.gongfa)
+        self.assertGreater(s.combat_bonus()["regen"], 0)
+        play_through(s)
+        for g in ("qingyuan_jianjue", "dayan_jue", "mingqing_lingmu", "fansheng_zhenmo"):
+            self.assertIn(g, s.hero.gongfa)
+        self.assertEqual(s.combat_bonus()["elemDmg"]["木"], 0.3)
+        self.assertGreater(s.hero.max_hp, 1000)           # 化神 1000 × (1+0.1+0.3)

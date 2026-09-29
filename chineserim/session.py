@@ -139,6 +139,17 @@ class Session:
         self._after(q.get("loc") if kind == "visit" else None, arrived if kind == "travel" and ok else None)
         self.save()
 
+    def combat_bonus(self):
+        """已學功法的戰鬥加成總和。"""
+        out = {"regen": 0.0, "maxHp": 0.0, "slashDmg": 0.0, "allDmg": 0.0, "critChance": 0.0, "elemDmg": {}}
+        for gid in self.hero.gongfa:
+            c = self.data.gongfa.get(gid, {}).get("combat", {})
+            for k in ("regen", "maxHp", "slashDmg", "allDmg", "critChance"):
+                out[k] += c.get(k, 0.0)
+            for el, v in c.get("elemDmg", {}).items():
+                out["elemDmg"][el] = out["elemDmg"].get(el, 0.0) + v
+        return out
+
     def snapshot(self):
         h, w = self.hero, self.world
         r = self.rs.realm(h)
@@ -152,7 +163,9 @@ class Session:
             "realms": [x["name"] for x in self.data.realms[:6]],
             "elem": {"adv": ADV_MULT, "dis": DIS_MULT, "parent": PARENT, "pairs": PAIRS},
             "dialogue": dialogue.view(self.data, h),
-            "region": self.region, "region_name": reg["name"], "quest": quests.view(self.data, h), "target": quests.target(self.data, h),
+            "region": self.region, "region_name": reg["name"], "gongfa": [{"id": g, "name": self.data.gongfa[g]["name"]} for g in h.gongfa if g in self.data.gongfa],
+            "combat": self.combat_bonus(),
+            "quest": quests.view(self.data, h), "target": quests.target(self.data, h),
             "world": [{"id": g["id"], "name": g["name"], "x": g["coords"][0], "y": g["coords"][1], "world": g["world_name"],
                        "locked": not w.can_enter(h, g["id"]), "days": w.travel_days(h, self.region, g["id"])}
                       for g in w.regions.values()],

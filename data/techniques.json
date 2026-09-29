@@ -1,35 +1,346 @@
 {
   "$schema": "./schema/techniques.schema.json",
-  "description": "功法（gongfa=被動成長樹/Perk Tree）、法術（spell=Skyrim SPEL）、神通（ability=境界解鎖能力）。skyrim 欄位描述對應原版系統與擴充方式。element 用五行＋變異屬性。任何 mod 可在 Data/SKSE/Plugins/ChineseRim/techniques/*.json 新增條目，遊戲啟動時由 CR_Registry 載入。",
+  "description": "功法（gongfa=被動成長樹/Perk Tree）、法術（spell=Skyrim SPEL）、神通（ability=境界解鎖能力）。skyrim 欄位描述對應原版系統與擴充方式。element 用五行＋變異屬性。任何 mod 可在 Data/SKSE/Plugins/ChineseRim/techniques/*.json 新增條目，遊戲啟動時由 CR_Registry 載入。；gongfa[].combat 為獨立引擎的戰鬥加成（regen 每秒回血比例、maxHp、elemDmg 各屬性法術傷害、slashDmg 劍氣、allDmg 全傷害、critChance 暴擊率）。",
   "gongfa": [
-    { "id": "changchun_gong", "name": "長春功", "source": "七玄門內門（墨大夫傳授）", "element": "木", "grade": "凡俗內功／練氣入門", "minRealm": "mortal", "effect": "極慢速增長真氣（Magicka）、延年益壽；內功基礎。", "skyrim": { "perkTree": "CR_Tree_ChangChun", "perks": ["長春·一層（Magicka 恢復+10%）", "長春·二層（HP 恢復+5%）", "長春·三層（可感知靈氣：解鎖 Detect 靈物）"], "baseSkill": "Restoration" }, "verified": true },
-    { "id": "qingyuan_jianjue", "name": "青元劍訣", "source": "血色禁地遺跡（青元子傳承）", "element": "木", "grade": "天南頂級功法", "minRealm": "qi_refining", "effect": "青元劍氣、青竹蜂雲劍核心心法；結丹後可凝青元劍光；元嬰後與青竹蜂雲劍合一。", "skyrim": { "perkTree": "CR_Tree_QingYuan", "perks": ["劍氣·青芒（Destruction 木刃投射物）", "劍陣·蜂雲（多投射物齊射）", "青元劍罩（護盾 Ward）", "劍光斬（大範圍斬擊）"], "baseSkill": "Destruction+OneHanded" }, "verified": true },
-    { "id": "dayan_jue", "name": "大衍決", "source": "大衍神君", "element": "無（神識）", "grade": "慕蘭頂級神識功法", "minRealm": "foundation", "effect": "神識強度遠超同階；抵禦幻術、催動傀儡、施法無停頓（分神）。", "skyrim": { "perkTree": "CR_Tree_DaYan", "perks": ["神識外放（Detect Life 範圍×3）", "定神（免疫幻術/恐懼）", "分神御器（同時操縱 2 件法寶）", "傀儡操控（Conjuration 傀儡上限+2）"], "baseSkill": "Conjuration+Illusion" }, "verified": true },
-    { "id": "mingqing_lingmu", "name": "明清靈目", "source": "禁地/傳承（待核實出處）", "element": "無", "grade": "眼術秘法", "minRealm": "qi_refining", "effect": "破隱身、透幻術、視破陣法弱點。", "skyrim": { "perkTree": "CR_Tree_MingQing", "perks": ["靈目·初開（看穿隱身 Invisibility）", "靈目·辨陣（顯示陣法節點）", "靈目·真視（弱點暴擊+15%）"], "baseSkill": "Illusion" }, "verified": false },
-    { "id": "yuanci_shenguang", "name": "元磁神光", "source": "元磁神山（靈界）", "element": "土/金", "grade": "靈界神通", "minRealm": "void_refining", "effect": "禁飛、壓制敵人法寶、元磁重力領域。", "skyrim": { "perkTree": "CR_Tree_YuanCi", "perks": ["元磁領域（敵方減速+禁飛）", "元磁鎮壓（法寶失效）"], "baseSkill": "Alteration", "dlc": "ChineseRim_LingJie.esp" }, "verified": true },
-    { "id": "fansheng_zhenmo", "name": "梵聖真魔功", "source": "靈界·妖族/魔功傳承", "element": "無（煉體）", "grade": "靈界頂級煉體功法", "minRealm": "deity_transformation", "effect": "三頭六臂法相，體術與法力雙倍。", "skyrim": { "perkTree": "CR_Tree_FanSheng", "perks": ["法相·三頭六臂（變身形態，類似狼人/吸血鬼領主變身）"], "baseSkill": "TwoHanded+HeavyArmor", "dlc": "ChineseRim_LingJie.esp" }, "verified": true },
-    { "id": "mulan_zhoushu", "name": "慕蘭咒術", "source": "慕蘭法師", "element": "雜", "grade": "異族體系", "minRealm": "qi_refining", "effect": "召喚草原精魂、詛咒、獸化騎兵。", "skyrim": { "perkTree": "CR_Tree_MuLan", "perks": ["精魂召喚", "草原詛咒（減速/流血）"], "baseSkill": "Conjuration", "npcOnly": true }, "verified": true }
+    {
+      "id": "changchun_gong",
+      "name": "長春功",
+      "source": "七玄門內門（墨大夫傳授）",
+      "element": "木",
+      "grade": "凡俗內功／練氣入門",
+      "minRealm": "mortal",
+      "effect": "極慢速增長真氣（Magicka）、延年益壽；內功基礎。",
+      "skyrim": {
+        "perkTree": "CR_Tree_ChangChun",
+        "perks": [
+          "長春·一層（Magicka 恢復+10%）",
+          "長春·二層（HP 恢復+5%）",
+          "長春·三層（可感知靈氣：解鎖 Detect 靈物）"
+        ],
+        "baseSkill": "Restoration"
+      },
+      "verified": true,
+      "combat": {
+        "regen": 0.01,
+        "maxHp": 0.1
+      }
+    },
+    {
+      "id": "qingyuan_jianjue",
+      "name": "青元劍訣",
+      "source": "血色禁地遺跡（青元子傳承）",
+      "element": "木",
+      "grade": "天南頂級功法",
+      "minRealm": "qi_refining",
+      "effect": "青元劍氣、青竹蜂雲劍核心心法；結丹後可凝青元劍光；元嬰後與青竹蜂雲劍合一。",
+      "skyrim": {
+        "perkTree": "CR_Tree_QingYuan",
+        "perks": [
+          "劍氣·青芒（Destruction 木刃投射物）",
+          "劍陣·蜂雲（多投射物齊射）",
+          "青元劍罩（護盾 Ward）",
+          "劍光斬（大範圍斬擊）"
+        ],
+        "baseSkill": "Destruction+OneHanded"
+      },
+      "verified": true,
+      "combat": {
+        "elemDmg": {
+          "木": 0.3
+        },
+        "slashDmg": 0.2
+      }
+    },
+    {
+      "id": "dayan_jue",
+      "name": "大衍決",
+      "source": "大衍神君",
+      "element": "無（神識）",
+      "grade": "慕蘭頂級神識功法",
+      "minRealm": "foundation",
+      "effect": "神識強度遠超同階；抵禦幻術、催動傀儡、施法無停頓（分神）。",
+      "skyrim": {
+        "perkTree": "CR_Tree_DaYan",
+        "perks": [
+          "神識外放（Detect Life 範圍×3）",
+          "定神（免疫幻術/恐懼）",
+          "分神御器（同時操縱 2 件法寶）",
+          "傀儡操控（Conjuration 傀儡上限+2）"
+        ],
+        "baseSkill": "Conjuration+Illusion"
+      },
+      "verified": true,
+      "combat": {
+        "allDmg": 0.15
+      }
+    },
+    {
+      "id": "mingqing_lingmu",
+      "name": "明清靈目",
+      "source": "禁地/傳承（待核實出處）",
+      "element": "無",
+      "grade": "眼術秘法",
+      "minRealm": "qi_refining",
+      "effect": "破隱身、透幻術、視破陣法弱點。",
+      "skyrim": {
+        "perkTree": "CR_Tree_MingQing",
+        "perks": [
+          "靈目·初開（看穿隱身 Invisibility）",
+          "靈目·辨陣（顯示陣法節點）",
+          "靈目·真視（弱點暴擊+15%）"
+        ],
+        "baseSkill": "Illusion"
+      },
+      "verified": false,
+      "combat": {
+        "critChance": 0.12
+      }
+    },
+    {
+      "id": "yuanci_shenguang",
+      "name": "元磁神光",
+      "source": "元磁神山（靈界）",
+      "element": "土/金",
+      "grade": "靈界神通",
+      "minRealm": "void_refining",
+      "effect": "禁飛、壓制敵人法寶、元磁重力領域。",
+      "skyrim": {
+        "perkTree": "CR_Tree_YuanCi",
+        "perks": [
+          "元磁領域（敵方減速+禁飛）",
+          "元磁鎮壓（法寶失效）"
+        ],
+        "baseSkill": "Alteration",
+        "dlc": "ChineseRim_LingJie.esp"
+      },
+      "verified": true
+    },
+    {
+      "id": "fansheng_zhenmo",
+      "name": "梵聖真魔功",
+      "source": "靈界·妖族/魔功傳承",
+      "element": "無（煉體）",
+      "grade": "靈界頂級煉體功法",
+      "minRealm": "deity_transformation",
+      "effect": "三頭六臂法相，體術與法力雙倍。",
+      "skyrim": {
+        "perkTree": "CR_Tree_FanSheng",
+        "perks": [
+          "法相·三頭六臂（變身形態，類似狼人/吸血鬼領主變身）"
+        ],
+        "baseSkill": "TwoHanded+HeavyArmor",
+        "dlc": "ChineseRim_LingJie.esp"
+      },
+      "verified": true,
+      "combat": {
+        "allDmg": 0.5,
+        "maxHp": 0.3
+      }
+    },
+    {
+      "id": "mulan_zhoushu",
+      "name": "慕蘭咒術",
+      "source": "慕蘭法師",
+      "element": "雜",
+      "grade": "異族體系",
+      "minRealm": "qi_refining",
+      "effect": "召喚草原精魂、詛咒、獸化騎兵。",
+      "skyrim": {
+        "perkTree": "CR_Tree_MuLan",
+        "perks": [
+          "精魂召喚",
+          "草原詛咒（減速/流血）"
+        ],
+        "baseSkill": "Conjuration",
+        "npcOnly": true
+      },
+      "verified": true
+    }
   ],
   "spells": [
-    { "id": "huodan", "name": "火彈術", "element": "火", "school": "Destruction", "minRealm": "qi_refining", "tier": 1, "desc": "練氣基礎法術，投射火球。", "skyrimBase": "Firebolt", "verified": true },
-    { "id": "jinren", "name": "金刃術", "element": "金", "school": "Destruction", "minRealm": "qi_refining", "tier": 1, "desc": "凝金氣為刃，破甲。", "skyrimBase": "新投射物：金刃（穿甲 25%）", "verified": true },
-    { "id": "mucizhu", "name": "木刺術／藤蔓縛", "element": "木", "school": "Alteration", "minRealm": "qi_refining", "tier": 1, "desc": "地面生藤纏敵。", "skyrimBase": "Paralyze 短版+DoT", "verified": false },
-    { "id": "shuibo", "name": "水波術／水盾", "element": "水", "school": "Restoration/Alteration", "minRealm": "qi_refining", "tier": 1, "desc": "水盾抵擋火系。", "skyrimBase": "Ward（對火抗性）", "verified": true },
-    { "id": "tuqiang", "name": "土牆術", "element": "土", "school": "Alteration", "minRealm": "qi_refining", "tier": 1, "desc": "升起土牆阻擋。", "skyrimBase": "新：放置臨時 Static 障礙", "verified": true },
-    { "id": "leidun", "name": "雷遁術／五雷咒（雷靈根）", "element": "雷", "school": "Destruction", "minRealm": "foundation", "tier": 2, "desc": "變異雷屬性攻擊。", "skyrimBase": "Chain Lightning", "verified": false },
-    { "id": "yufeng", "name": "御風訣", "element": "風", "school": "Alteration", "minRealm": "qi_refining", "tier": 1, "desc": "加速移動、輕身。", "skyrimBase": "SpeedMult +40% 30s", "verified": true },
-    { "id": "yinshen", "name": "隱身術／遁光隱匿", "element": "無", "school": "Illusion", "minRealm": "qi_refining", "tier": 1, "desc": "隱匿身形。", "skyrimBase": "Invisibility（可被明清靈目破除）", "verified": true },
-    { "id": "yuqi_feixing", "name": "御器飛行", "element": "無", "school": "Alteration", "minRealm": "foundation", "tier": 2, "desc": "築基後踏飛劍/飛舟飛行。", "skyrimBase": "整合飛行框架（見 docs/combat.md 飛行章節）", "verified": true },
-    { "id": "shenshi_saodang", "name": "神識掃蕩", "element": "無（神識）", "school": "Illusion", "minRealm": "foundation", "tier": 2, "desc": "神識探查周遭生靈與寶物。", "skyrimBase": "Detect Life + Detect Dead 合併，範圍隨境界", "verified": true },
-    { "id": "yuanying_chuqiao", "name": "元嬰出竅", "element": "無", "school": "Conjuration", "minRealm": "nascent_soul", "tier": 4, "desc": "元嬰離體作戰，本體無防禦。", "skyrimBase": "Summon 自身分身 + 本體 Paralyze", "verified": true },
-    { "id": "duoshe", "name": "奪舍術", "element": "無", "school": "Illusion", "minRealm": "nascent_soul", "tier": 4, "desc": "元嬰奪取肉身（NPC 用；玩家禁用或高代價）。", "skyrimBase": "劇情專用", "verified": true },
-    { "id": "chuansong", "name": "傳送陣", "element": "無", "school": "Alteration", "minRealm": "foundation", "tier": 2, "desc": "固定陣法間傳送。", "skyrimBase": "傳送門 Activator + 靈石消耗", "verified": true },
-    { "id": "kuilei", "name": "傀儡術", "element": "無", "school": "Conjuration", "minRealm": "foundation", "tier": 2, "desc": "大衍神君傳授，煉製並操縱傀儡（人形/獸形）。", "skyrimBase": "Dwemer Automaton 骨架重製為木/金傀儡", "verified": true }
+    {
+      "id": "huodan",
+      "name": "火彈術",
+      "element": "火",
+      "school": "Destruction",
+      "minRealm": "qi_refining",
+      "tier": 1,
+      "desc": "練氣基礎法術，投射火球。",
+      "skyrimBase": "Firebolt",
+      "verified": true
+    },
+    {
+      "id": "jinren",
+      "name": "金刃術",
+      "element": "金",
+      "school": "Destruction",
+      "minRealm": "qi_refining",
+      "tier": 1,
+      "desc": "凝金氣為刃，破甲。",
+      "skyrimBase": "新投射物：金刃（穿甲 25%）",
+      "verified": true
+    },
+    {
+      "id": "mucizhu",
+      "name": "木刺術／藤蔓縛",
+      "element": "木",
+      "school": "Alteration",
+      "minRealm": "qi_refining",
+      "tier": 1,
+      "desc": "地面生藤纏敵。",
+      "skyrimBase": "Paralyze 短版+DoT",
+      "verified": false
+    },
+    {
+      "id": "shuibo",
+      "name": "水波術／水盾",
+      "element": "水",
+      "school": "Restoration/Alteration",
+      "minRealm": "qi_refining",
+      "tier": 1,
+      "desc": "水盾抵擋火系。",
+      "skyrimBase": "Ward（對火抗性）",
+      "verified": true
+    },
+    {
+      "id": "tuqiang",
+      "name": "土牆術",
+      "element": "土",
+      "school": "Alteration",
+      "minRealm": "qi_refining",
+      "tier": 1,
+      "desc": "升起土牆阻擋。",
+      "skyrimBase": "新：放置臨時 Static 障礙",
+      "verified": true
+    },
+    {
+      "id": "leidun",
+      "name": "雷遁術／五雷咒（雷靈根）",
+      "element": "雷",
+      "school": "Destruction",
+      "minRealm": "foundation",
+      "tier": 2,
+      "desc": "變異雷屬性攻擊。",
+      "skyrimBase": "Chain Lightning",
+      "verified": false
+    },
+    {
+      "id": "yufeng",
+      "name": "御風訣",
+      "element": "風",
+      "school": "Alteration",
+      "minRealm": "qi_refining",
+      "tier": 1,
+      "desc": "加速移動、輕身。",
+      "skyrimBase": "SpeedMult +40% 30s",
+      "verified": true
+    },
+    {
+      "id": "yinshen",
+      "name": "隱身術／遁光隱匿",
+      "element": "無",
+      "school": "Illusion",
+      "minRealm": "qi_refining",
+      "tier": 1,
+      "desc": "隱匿身形。",
+      "skyrimBase": "Invisibility（可被明清靈目破除）",
+      "verified": true
+    },
+    {
+      "id": "yuqi_feixing",
+      "name": "御器飛行",
+      "element": "無",
+      "school": "Alteration",
+      "minRealm": "foundation",
+      "tier": 2,
+      "desc": "築基後踏飛劍/飛舟飛行。",
+      "skyrimBase": "整合飛行框架（見 docs/combat.md 飛行章節）",
+      "verified": true
+    },
+    {
+      "id": "shenshi_saodang",
+      "name": "神識掃蕩",
+      "element": "無（神識）",
+      "school": "Illusion",
+      "minRealm": "foundation",
+      "tier": 2,
+      "desc": "神識探查周遭生靈與寶物。",
+      "skyrimBase": "Detect Life + Detect Dead 合併，範圍隨境界",
+      "verified": true
+    },
+    {
+      "id": "yuanying_chuqiao",
+      "name": "元嬰出竅",
+      "element": "無",
+      "school": "Conjuration",
+      "minRealm": "nascent_soul",
+      "tier": 4,
+      "desc": "元嬰離體作戰，本體無防禦。",
+      "skyrimBase": "Summon 自身分身 + 本體 Paralyze",
+      "verified": true
+    },
+    {
+      "id": "duoshe",
+      "name": "奪舍術",
+      "element": "無",
+      "school": "Illusion",
+      "minRealm": "nascent_soul",
+      "tier": 4,
+      "desc": "元嬰奪取肉身（NPC 用；玩家禁用或高代價）。",
+      "skyrimBase": "劇情專用",
+      "verified": true
+    },
+    {
+      "id": "chuansong",
+      "name": "傳送陣",
+      "element": "無",
+      "school": "Alteration",
+      "minRealm": "foundation",
+      "tier": 2,
+      "desc": "固定陣法間傳送。",
+      "skyrimBase": "傳送門 Activator + 靈石消耗",
+      "verified": true
+    },
+    {
+      "id": "kuilei",
+      "name": "傀儡術",
+      "element": "無",
+      "school": "Conjuration",
+      "minRealm": "foundation",
+      "tier": 2,
+      "desc": "大衍神君傳授，煉製並操縱傀儡（人形/獸形）。",
+      "skyrimBase": "Dwemer Automaton 骨架重製為木/金傀儡",
+      "verified": true
+    }
   ],
   "abilities": [
-    { "id": "shenshi", "name": "神識", "minRealm": "foundation", "desc": "被動：顯示周遭敵人境界；高境界對低境界產生威壓（Fear）。", "skyrim": "Ability + 條件式 Fear 效果" },
-    { "id": "bigu", "name": "辟穀", "minRealm": "foundation", "desc": "不再需要飲食（相容生存模式：關閉飢餓）。", "skyrim": "Survival Mode 飢餓免疫 Keyword" },
-    { "id": "jindan_weiya", "name": "金丹威壓", "minRealm": "core_formation", "desc": "築基以下 NPC 見結丹修士自動臣服/逃離。", "skyrim": "Faction Rank + Calm/Fear 條件" },
-    { "id": "yuanying_zibao", "name": "元嬰自爆（禁術）", "minRealm": "nascent_soul", "desc": "犧牲元嬰造成範圍毀滅，角色死亡。", "skyrim": "劇情/最終手段技能" }
+    {
+      "id": "shenshi",
+      "name": "神識",
+      "minRealm": "foundation",
+      "desc": "被動：顯示周遭敵人境界；高境界對低境界產生威壓（Fear）。",
+      "skyrim": "Ability + 條件式 Fear 效果"
+    },
+    {
+      "id": "bigu",
+      "name": "辟穀",
+      "minRealm": "foundation",
+      "desc": "不再需要飲食（相容生存模式：關閉飢餓）。",
+      "skyrim": "Survival Mode 飢餓免疫 Keyword"
+    },
+    {
+      "id": "jindan_weiya",
+      "name": "金丹威壓",
+      "minRealm": "core_formation",
+      "desc": "築基以下 NPC 見結丹修士自動臣服/逃離。",
+      "skyrim": "Faction Rank + Calm/Fear 條件"
+    },
+    {
+      "id": "yuanying_zibao",
+      "name": "元嬰自爆（禁術）",
+      "minRealm": "nascent_soul",
+      "desc": "犧牲元嬰造成範圍毀滅，角色死亡。",
+      "skyrim": "劇情/最終手段技能"
+    }
   ]
 }

@@ -142,6 +142,10 @@ def main() -> int:
                     errors.append(f"dialogues/{did}/{nid}: next 指向不存在的節點 {x}")
             effs = list(n.get("effects", [])) + [e for c in n.get("choices", []) for e in c.get("effects", [])]
             for e in effs:
+                if "learn" in e and e["learn"] not in {g["id"] for g in load("techniques")["gongfa"]}:
+                    errors.append(f"dialogues/{did}/{nid}: 未知功法 {e['learn']}")
+                if "setRealm" in e and e["setRealm"] not in {r["id"] for r in load("realms")["realms"]}:
+                    errors.append(f"dialogues/{did}/{nid}: 未知境界 {e['setRealm']}")
                 if "rep" in e and e["rep"] not in sect_ids:
                     errors.append(f"dialogues/{did}/{nid}: 未知門派 {e['rep']}")
     dlg = load_merged("dialogues*.json", "dialogues")

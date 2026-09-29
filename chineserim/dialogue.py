@@ -42,6 +42,14 @@ def _apply(ch, effects, data, log, realms=None):
             else:
                 ch.remove(e["item"], min(-n, ch.count(e["item"])))
                 log.append(f"  消耗 {item_name(e['item'])} ×{-n}")
+        elif "learn" in e:
+            if e["learn"] not in ch.gongfa:
+                ch.gongfa.append(e["learn"])
+                log.append(f"  習得功法：{data.gongfa[e['learn']]['name']}")
+                if realms:
+                    hp = ch.hp
+                    realms.apply_stats(ch)          # 重算 maxHp 加成
+                    ch.hp = min(hp, ch.max_hp)
         elif "setRealm" in e and realms:
             realms.set_realm(ch, e["setRealm"])
             ch.level = max(ch.level, realms.realm(ch)["levelRange"][0])

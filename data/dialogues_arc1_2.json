@@ -227,7 +227,12 @@
         },
         "n1": {
           "speaker": "旁白",
-          "text": "青元劍訣——你在心裡默唸這個名字。"
+          "text": "青元劍訣——你在心裡默唸這個名字。",
+          "effects": [
+            {
+              "learn": "qingyuan_jianjue"
+            }
+          ]
         }
       }
     },
@@ -390,6 +395,9 @@
               "effects": [
                 {
                   "level": 1
+                },
+                {
+                  "learn": "dayan_jue"
                 }
               ]
             },
@@ -399,6 +407,9 @@
               "effects": [
                 {
                   "hpFrac": -0.3
+                },
+                {
+                  "learn": "dayan_jue"
                 }
               ]
             }

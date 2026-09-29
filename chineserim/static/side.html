@@ -66,7 +66,7 @@ function ui(){
   const q=S.quest.quests.find(x=>x.state=='active');
   $('quest').innerHTML=q?`<b>▶ ${q.name}</b>`+q.objectives.filter(o=>o.state!='locked').map(o=>`<div>${o.state=='done'?'☑':'☐'} ${o.text}${o.progress&&o.state=='active'?' <small>('+o.progress+')</small>':''}</div>`).join(''):(S.quest.done?'全部任務完成':'');
   $('top').innerHTML=`<b>${S.name}</b><span>${S.realm}·${S.sub}</span><span>Lv ${S.level}/${S.cap}${S.bottleneck?' <b style=color:#e6a>【瓶頸→按突破】</b>':''}</span>
-  <span>HP <span class=bar><i style="width:${100*S.hp/S.max_hp}%;background:#c44"></i></span> ${S.hp}/${S.max_hp}</span><span>靈石 ${S.lingshi}　丹 ${S.pills}　靈液 ${S.lingye}</span><span>第 ${S.day} 日・${S.region_name}</span><span>法術 <b style="color:${ECOL[S.elements[spellIdx%S.elements.length]]}">${S.elements[spellIdx%S.elements.length]}</b></span>`;
+  <span>HP <span class=bar><i style="width:${100*S.hp/S.max_hp}%;background:#c44"></i></span> ${S.hp}/${S.max_hp}</span><span>靈石 ${S.lingshi}　丹 ${S.pills}　靈液 ${S.lingye}</span><span>功法：${S.gongfa.length?S.gongfa.map(x=>x.name).join('、'):'無'}</span><span>第 ${S.day} 日・${S.region_name}</span><span>法術 <b style="color:${ECOL[S.elements[spellIdx%S.elements.length]]}">${S.elements[spellIdx%S.elements.length]}</b></span>`;
   const d=S.dialogue,dl=$('dlg');dl.style.display=d?'block':'none';
   if(d)dl.innerHTML=`<div class=sp>${d.speaker}</div><div class=tx>${d.text}</div>`+(d.cont?`<button onclick="post('choose')">▶ 繼續</button>`:d.choices.map(c=>`<button onclick="post('choose',{i:${c.i}})">${c.text}</button>`).join(''));
   $('logp').innerHTML=S.log.slice(-4).map(x=>'<div>'+x+'</div>').join('')}
@@ -94,19 +94,21 @@ function tp(id){const l=locs.find(x=>x.id===id);$('trv').style.display='none';if
 function openTravel(){const t=$('trv');t.style.display='block';
   t.innerHTML='<b>傳送陣・選擇目的地</b>'+S.world.filter(w=>w.id!=S.region).map(w=>`<button ${w.locked?'disabled':''} onclick="go('${w.id}')">${S.target&&S.target.region===w.id?'★ ':''}${w.name}（${w.days} 日）${w.locked?' 🔒 需化神飛升':''}</button>`).join('')+'<button onclick="$(\'trv\').style.display=\'none\'">取消</button>'}
 async function go(id){$('trv').style.display='none';await post('travel',{to:id})}
-function dmgBase(){return 18*(1+S.realm_index*1.5)}
+function dmgBase(){return 18*(1+S.realm_index*1.5)*(1+S.combat.allDmg)}
+function rollCrit(d){return Math.random()<S.combat.critChance?[d*2,true]:[d,false]}
 function slash(){if(hero.atk>0)return;hero.atk=.35;hero.slash=.18;
   const x0=hero.face>0?hero.x:hero.x-90,x1=x0+90;
-  for(const b of beasts)if(!b.dead&&b.x+b.w/2>x0&&b.x-b.w/2<x1&&Math.abs(b.y-hero.y)<70)hit(b,dmgBase(),'')}
+  for(const b of beasts)if(!b.dead&&b.x+b.w/2>x0&&b.x-b.w/2<x1&&Math.abs(b.y-hero.y)<70)hit(b,dmgBase()*(1+S.combat.slashDmg),'')}
 function spell(){if(hero.spl>0)return;hero.spl=.6;const el=S.elements[spellIdx%S.elements.length];
-  shots.push({x:hero.x+hero.face*30,y:hero.y-40,vx:hero.face*520,el,life:1.4,dmg:dmgBase()*.9})}
-function hit(b,base,el){const m=el?mult(el,b.el):1;const d=base*m;b.hp-=d;b.hit=.15;b.x+=hero.face*10;
-  fx.push({x:b.x,y:b.y-b.h-10,t:.8,txt:Math.round(d)+(m>1?' ↑':m<1?' ↓':''),c:m>1?'#ff8':m<1?'#88f':'#fff'});
+  shots.push({x:hero.x+hero.face*30,y:hero.y-40,vx:hero.face*520,el,life:1.4,dmg:dmgBase()*.9*(1+(S.combat.elemDmg[el]||0))})}
+function hit(b,base,el){const m=el?mult(el,b.el):1;const [d,crit]=rollCrit(base*m);b.hp-=d;b.hit=.15;b.x+=hero.face*10;
+  fx.push({x:b.x,y:b.y-b.h-10,t:.8,txt:Math.round(d)+(crit?'！':'')+(m>1?' ↑':m<1?' ↓':''),c:m>1?'#ff8':m<1?'#88f':'#fff'});
   if(b.hp<=0&&!b.dead){b.dead=1;b.respawn=12;post('kill',{loc:b.zone,deep:b.deep?1:0})}}
 function update(dt){
   if(!S)return;const frozen=busyDlg()||$('trv').style.display=='block';
   toastT-=dt*1000;if(toastT<0)$('toast').textContent='';
   if(frozen)return;
+  if(S.combat.regen)hero.hp=Math.min(hero.maxhp,hero.hp+hero.maxhp*S.combat.regen*dt);
   hero.atk-=dt;hero.spl-=dt;hero.inv-=dt;hero.slash-=dt;
   const mx=(down('d','arrowright')?1:0)-(down('a','arrowleft')?1:0);
   const sp=hero.fly?330:240;hero.vx=mx*sp;if(mx)hero.face=mx;

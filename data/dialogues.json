@@ -2,98 +2,400 @@
   "description": "劇情對話（獨立引擎用，文字為原創改寫）。trigger：{loc,quest,obj}＝在地點 loc、且該任務的第 obj 個目標進行中時造訪觸發；{onQuestDone}＝任務完成後觸發。每段只觸發一次。node.effects / choice.effects 種類：flag、item(+n)、rep(門派+n)、hpFrac(HP 比例增減)、level(+n)。choice.require：{flag}或{item,n}。next 省略＝對話結束。",
   "dialogues": {
     "d_farewell": {
-      "trigger": { "loc": "qingniu", "quest": "CR_MQ00_QingNiu", "obj": 0 },
+      "trigger": {
+        "loc": "qingniu",
+        "quest": "CR_MQ00_QingNiu",
+        "obj": 0
+      },
       "nodes": {
-        "start": { "speaker": "母親", "text": "立兒，山裡的日子苦，別逞強。這幾個銅板和乾糧你帶著。", "choices": [
-          { "text": "收下乾糧，說一定常寫信回來", "effects": [{ "item": "lingshi", "n": 10 }], "next": "end1" },
-          { "text": "只說：我會混出個樣子回來", "effects": [{ "flag": "hanli_resolute" }], "next": "end2" } ] },
-        "end1": { "speaker": "旁白", "text": "你把乾糧塞進包袱，回頭望了一眼低矮的土屋，往鎮外走去。" },
-        "end2": { "speaker": "旁白", "text": "你沒有多說什麼。母親站在門口，直到你的背影消失在田埂盡頭。" }
+        "start": {
+          "speaker": "母親",
+          "text": "立兒，山裡的日子苦，別逞強。這幾個銅板和乾糧你帶著。",
+          "choices": [
+            {
+              "text": "收下乾糧，說一定常寫信回來",
+              "effects": [
+                {
+                  "item": "lingshi",
+                  "n": 10
+                }
+              ],
+              "next": "end1"
+            },
+            {
+              "text": "只說：我會混出個樣子回來",
+              "effects": [
+                {
+                  "flag": "hanli_resolute"
+                }
+              ],
+              "next": "end2"
+            }
+          ]
+        },
+        "end1": {
+          "speaker": "旁白",
+          "text": "你把乾糧塞進包袱，回頭望了一眼低矮的土屋，往鎮外走去。"
+        },
+        "end2": {
+          "speaker": "旁白",
+          "text": "你沒有多說什麼。母親站在門口，直到你的背影消失在田埂盡頭。"
+        }
       }
     },
     "d_sanshu": {
-      "trigger": { "loc": "caixia", "quest": "CR_MQ00_QingNiu", "obj": 1 },
+      "trigger": {
+        "loc": "caixia",
+        "quest": "CR_MQ00_QingNiu",
+        "obj": 1
+      },
       "nodes": {
-        "start": { "speaker": "三叔", "text": "就是這兒了，彩霞山。七玄門一年只收一次人，你別給我丟臉。", "next": "s2" },
-        "s2": { "speaker": "執事", "text": "報上姓名、年紀。先過力氣關，再看根骨與心性。", "choices": [
-          { "text": "如實回答，不多話", "next": "s3a" },
-          { "text": "刻意表現得憨厚老實", "effects": [{ "flag": "played_simple" }], "next": "s3b" } ] },
-        "s3a": { "speaker": "執事", "text": "回答得清楚。留下吧，先入外門。" },
-        "s3b": { "speaker": "執事", "text": "老實人。好，先入外門，看你能撐多久。" }
+        "start": {
+          "speaker": "三叔",
+          "text": "就是這兒了，彩霞山。七玄門一年只收一次人，你別給我丟臉。",
+          "next": "s2"
+        },
+        "s2": {
+          "speaker": "執事",
+          "text": "報上姓名、年紀。先過力氣關，再看根骨與心性。",
+          "choices": [
+            {
+              "text": "如實回答，不多話",
+              "next": "s3a"
+            },
+            {
+              "text": "刻意表現得憨厚老實",
+              "effects": [
+                {
+                  "flag": "played_simple"
+                }
+              ],
+              "next": "s3b"
+            }
+          ]
+        },
+        "s3a": {
+          "speaker": "執事",
+          "text": "回答得清楚。留下吧，先入外門。"
+        },
+        "s3b": {
+          "speaker": "執事",
+          "text": "老實人。好，先入外門，看你能撐多久。"
+        }
       }
     },
     "d_lifeiyu": {
-      "trigger": { "loc": "caixia", "quest": "CR_MQ01_WaiMen", "obj": 0 },
+      "trigger": {
+        "loc": "caixia",
+        "quest": "CR_MQ01_WaiMen",
+        "obj": 0
+      },
       "nodes": {
-        "start": { "speaker": "厲飛雨", "text": "新來的？我叫厲飛雨。教習下手很重，練拳時別硬扛，先學會卸力。", "next": "s2" },
-        "s2": { "speaker": "張鐵", "text": "我……我叫張鐵。（憨笑）一起練吧。", "choices": [
-          { "text": "和他們約好，日後互相照應", "effects": [{ "rep": "qixuanmen", "n": 1 }, { "flag": "friends_lifeiyu" }], "next": "s3" },
-          { "text": "點頭致意，保持距離", "next": "s3" } ] },
-        "s3": { "speaker": "旁白", "text": "外門的日子從天沒亮的拳腳開始。你漸漸摸清了這裡的規矩。" }
+        "start": {
+          "speaker": "厲飛雨",
+          "text": "新來的？我叫厲飛雨。教習下手很重，練拳時別硬扛，先學會卸力。",
+          "next": "s2"
+        },
+        "s2": {
+          "speaker": "張鐵",
+          "text": "我……我叫張鐵。（憨笑）一起練吧。",
+          "choices": [
+            {
+              "text": "和他們約好，日後互相照應",
+              "effects": [
+                {
+                  "rep": "qixuanmen",
+                  "n": 1
+                },
+                {
+                  "flag": "friends_lifeiyu"
+                }
+              ],
+              "next": "s3"
+            },
+            {
+              "text": "點頭致意，保持距離",
+              "next": "s3"
+            }
+          ]
+        },
+        "s3": {
+          "speaker": "旁白",
+          "text": "外門的日子從天沒亮的拳腳開始。你漸漸摸清了這裡的規矩。"
+        }
       }
     },
     "d_mo_herbs": {
-      "trigger": { "loc": "caixia", "quest": "CR_MQ02_MoDaiFu", "obj": 0 },
+      "trigger": {
+        "loc": "caixia",
+        "quest": "CR_MQ02_MoDaiFu",
+        "obj": 0
+      },
       "nodes": {
-        "start": { "speaker": "墨大夫", "text": "你就是新選進神手谷的孩子？我這裡缺個手腳勤快的人。去太岳山脈採幾味藥回來。", "choices": [
-          { "text": "恭敬應下", "effects": [{ "rep": "qixuanmen", "n": 1 }], "next": "s2" },
-          { "text": "問他藥草長什麼模樣、哪裡有毒", "effects": [{ "level": 1 }], "next": "s2b" } ] },
-        "s2": { "speaker": "墨大夫", "text": "好孩子。功法我也會慢慢教你，長春功，養氣最是溫和。" },
-        "s2b": { "speaker": "墨大夫", "text": "（微微一怔）倒是謹慎。記著：顏色鮮豔的，多半碰不得。" }
+        "start": {
+          "speaker": "墨大夫",
+          "text": "你就是新選進神手谷的孩子？我這裡缺個手腳勤快的人。去太岳山脈採幾味藥回來。",
+          "choices": [
+            {
+              "text": "恭敬應下",
+              "effects": [
+                {
+                  "rep": "qixuanmen",
+                  "n": 1
+                },
+                {
+                  "learn": "changchun_gong"
+                }
+              ],
+              "next": "s2"
+            },
+            {
+              "text": "問他藥草長什麼模樣、哪裡有毒",
+              "effects": [
+                {
+                  "level": 1
+                },
+                {
+                  "learn": "changchun_gong"
+                }
+              ],
+              "next": "s2b"
+            }
+          ]
+        },
+        "s2": {
+          "speaker": "墨大夫",
+          "text": "好孩子。功法我也會慢慢教你，長春功，養氣最是溫和。"
+        },
+        "s2b": {
+          "speaker": "墨大夫",
+          "text": "（微微一怔）倒是謹慎。記著：顏色鮮豔的，多半碰不得。"
+        }
       }
     },
     "d_bottle": {
-      "trigger": { "onQuestDone": "CR_MQ02_MoDaiFu" },
+      "trigger": {
+        "onQuestDone": "CR_MQ02_MoDaiFu"
+      },
       "nodes": {
-        "start": { "speaker": "旁白", "text": "月圓之夜，你揣著那只來歷不明的小瓶，發現瓶中悄悄凝出了一滴碧綠的液體。", "next": "s2" },
-        "s2": { "speaker": "旁白", "text": "你把它滴在一株枯弱的藥苗上。第二天清晨，藥苗竟已長得比年份更老的樣子。", "choices": [
-          { "text": "把這個秘密牢牢藏在心裡", "effects": [{ "flag": "bottle_secret" }], "next": "s3" },
-          { "text": "再多試幾次，弄清瓶子的用處", "effects": [{ "item": "lingye", "n": 1 }], "next": "s3" } ] },
-        "s3": { "speaker": "旁白", "text": "從這一夜起，你有了與資質無關的倚仗。" }
+        "start": {
+          "speaker": "旁白",
+          "text": "月圓之夜，你揣著那只來歷不明的小瓶，發現瓶中悄悄凝出了一滴碧綠的液體。",
+          "next": "s2"
+        },
+        "s2": {
+          "speaker": "旁白",
+          "text": "你把它滴在一株枯弱的藥苗上。第二天清晨，藥苗竟已長得比年份更老的樣子。",
+          "choices": [
+            {
+              "text": "把這個秘密牢牢藏在心裡",
+              "effects": [
+                {
+                  "flag": "bottle_secret"
+                }
+              ],
+              "next": "s3"
+            },
+            {
+              "text": "再多試幾次，弄清瓶子的用處",
+              "effects": [
+                {
+                  "item": "lingye",
+                  "n": 1
+                }
+              ],
+              "next": "s3"
+            }
+          ]
+        },
+        "s3": {
+          "speaker": "旁白",
+          "text": "從這一夜起，你有了與資質無關的倚仗。"
+        }
       }
     },
     "d_suspect": {
-      "trigger": { "loc": "caixia", "quest": "CR_MQ03_DuoShe", "obj": 0 },
+      "trigger": {
+        "loc": "caixia",
+        "quest": "CR_MQ03_DuoShe",
+        "obj": 0
+      },
       "nodes": {
-        "start": { "speaker": "旁白", "text": "近來墨大夫的目光越來越奇怪，舉止也像在打量一件合用的器物。你察覺了不對。", "choices": [
-          { "text": "假意順從，暗中布置毒陷", "effects": [{ "flag": "trap_set" }, { "item": "lingshi", "n": 30 }], "next": "trap" },
-          { "text": "當面質問他的用意", "effects": [{ "hpFrac": -0.5 }], "next": "confront" } ] },
-        "trap": { "speaker": "旁白", "text": "你在他慣走的路上設好陷阱，只等他放鬆戒備的那一刻。" },
-        "confront": { "speaker": "墨大夫", "text": "既然看出來了，就別怪我不客氣！（一掌拍來，你被震退數步，咳出血來）", "next": "confront2" },
-        "confront2": { "speaker": "旁白", "text": "你狼狽退走，事後才想到，正面對抗絕無勝算。你咬牙改用毒陷。", "effects": [{ "flag": "trap_set" }] }
+        "start": {
+          "speaker": "旁白",
+          "text": "近來墨大夫的目光越來越奇怪，舉止也像在打量一件合用的器物。你察覺了不對。",
+          "choices": [
+            {
+              "text": "假意順從，暗中布置毒陷",
+              "effects": [
+                {
+                  "flag": "trap_set"
+                },
+                {
+                  "item": "lingshi",
+                  "n": 30
+                }
+              ],
+              "next": "trap"
+            },
+            {
+              "text": "當面質問他的用意",
+              "effects": [
+                {
+                  "hpFrac": -0.5
+                }
+              ],
+              "next": "confront"
+            }
+          ]
+        },
+        "trap": {
+          "speaker": "旁白",
+          "text": "你在他慣走的路上設好陷阱，只等他放鬆戒備的那一刻。"
+        },
+        "confront": {
+          "speaker": "墨大夫",
+          "text": "既然看出來了，就別怪我不客氣！（一掌拍來，你被震退數步，咳出血來）",
+          "next": "confront2"
+        },
+        "confront2": {
+          "speaker": "旁白",
+          "text": "你狼狽退走，事後才想到，正面對抗絕無勝算。你咬牙改用毒陷。",
+          "effects": [
+            {
+              "flag": "trap_set"
+            }
+          ]
+        }
       }
     },
     "d_mo_family": {
-      "trigger": { "loc": "caixia", "quest": "CR_MQ03_DuoShe", "obj": 3 },
+      "trigger": {
+        "loc": "caixia",
+        "quest": "CR_MQ03_DuoShe",
+        "obj": 3
+      },
       "nodes": {
-        "start": { "speaker": "旁白", "text": "墨大夫已死。他留下的家人不知內情，惶惶不安。", "choices": [
-          { "text": "應承照顧，暗中留意", "effects": [{ "rep": "qixuanmen", "n": 1 }, { "item": "lingshi", "n": 50 }], "next": "s2" },
-          { "text": "簡單交代幾句，抽身離開", "next": "s2" } ] },
-        "s2": { "speaker": "旁白", "text": "神手谷的日子到此為止。你明白，自己也該走出七玄門了。" }
+        "start": {
+          "speaker": "旁白",
+          "text": "墨大夫已死。他留下的家人不知內情，惶惶不安。",
+          "choices": [
+            {
+              "text": "應承照顧，暗中留意",
+              "effects": [
+                {
+                  "rep": "qixuanmen",
+                  "n": 1
+                },
+                {
+                  "item": "lingshi",
+                  "n": 50
+                }
+              ],
+              "next": "s2"
+            },
+            {
+              "text": "簡單交代幾句，抽身離開",
+              "next": "s2"
+            }
+          ]
+        },
+        "s2": {
+          "speaker": "旁白",
+          "text": "神手谷的日子到此為止。你明白，自己也該走出七玄門了。"
+        }
       }
     },
     "d_raid": {
-      "trigger": { "loc": "caixia", "quest": "CR_MQ04_YuZiTong", "obj": 0 },
+      "trigger": {
+        "loc": "caixia",
+        "quest": "CR_MQ04_YuZiTong",
+        "obj": 0
+      },
       "nodes": {
-        "start": { "speaker": "厲飛雨", "text": "野狼幫來了，人數不少！守不守得住山門，就看這一夜。", "choices": [
-          { "text": "留下協防", "effects": [{ "rep": "qixuanmen", "n": 1 }], "next": "s2" },
-          { "text": "先去外圍探探對方虛實", "effects": [{ "level": 1 }], "next": "s2" } ] },
-        "s2": { "speaker": "旁白", "text": "山下火把連成一線。此戰過後，七玄門再不是從前的七玄門。" }
+        "start": {
+          "speaker": "厲飛雨",
+          "text": "野狼幫來了，人數不少！守不守得住山門，就看這一夜。",
+          "choices": [
+            {
+              "text": "留下協防",
+              "effects": [
+                {
+                  "rep": "qixuanmen",
+                  "n": 1
+                }
+              ],
+              "next": "s2"
+            },
+            {
+              "text": "先去外圍探探對方虛實",
+              "effects": [
+                {
+                  "level": 1
+                }
+              ],
+              "next": "s2"
+            }
+          ]
+        },
+        "s2": {
+          "speaker": "旁白",
+          "text": "山下火把連成一線。此戰過後，七玄門再不是從前的七玄門。"
+        }
       }
     },
     "d_yuzitong": {
-      "trigger": { "loc": "caixia", "quest": "CR_MQ04_YuZiTong", "obj": 1 },
+      "trigger": {
+        "loc": "caixia",
+        "quest": "CR_MQ04_YuZiTong",
+        "obj": 1
+      },
       "nodes": {
-        "start": { "speaker": "余子童", "text": "小子，交出你身上的東西，我饒你不死。", "choices": [
-          { "text": "拔刀迎戰，絕不讓步", "effects": [{ "level": 2 }], "next": "win" },
-          { "text": "虛應幾句，趁其不備反擊", "effects": [{ "item": "lingshi", "n": 60 }], "next": "win" } ] },
-        "win": { "speaker": "旁白", "text": "一場惡戰後，余子童倒下。你握緊小瓶，心中只剩一個念頭：離開這裡。" }
+        "start": {
+          "speaker": "余子童",
+          "text": "小子，交出你身上的東西，我饒你不死。",
+          "choices": [
+            {
+              "text": "拔刀迎戰，絕不讓步",
+              "effects": [
+                {
+                  "level": 2
+                }
+              ],
+              "next": "win"
+            },
+            {
+              "text": "虛應幾句，趁其不備反擊",
+              "effects": [
+                {
+                  "item": "lingshi",
+                  "n": 60
+                }
+              ],
+              "next": "win"
+            }
+          ]
+        },
+        "win": {
+          "speaker": "旁白",
+          "text": "一場惡戰後，余子童倒下。你握緊小瓶，心中只剩一個念頭：離開這裡。"
+        }
       }
     },
     "d_epilogue": {
-      "trigger": { "onQuestDone": "CR_MQ04_YuZiTong" },
+      "trigger": {
+        "onQuestDone": "CR_MQ04_YuZiTong"
+      },
       "nodes": {
-        "start": { "speaker": "旁白", "text": "越京的城牆映在夕陽裡。第一卷·七玄門到此結束——真正的修仙路，才剛剛開始。", "effects": [{ "flag": "arc0_complete" }] }
+        "start": {
+          "speaker": "旁白",
+          "text": "越京的城牆映在夕陽裡。第一卷·七玄門到此結束——真正的修仙路，才剛剛開始。",
+          "effects": [
+            {
+              "flag": "arc0_complete"
+            }
+          ]
+        }
       }
     }
   }

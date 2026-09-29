@@ -202,6 +202,9 @@
                 },
                 {
                   "level": 2
+                },
+                {
+                  "learn": "mingqing_lingmu"
                 }
               ]
             },
@@ -215,6 +218,9 @@
                 {
                   "item": "lingshi",
                   "n": 200
+                },
+                {
+                  "learn": "mingqing_lingmu"
                 }
               ]
             }
@@ -708,6 +714,9 @@
                 },
                 {
                   "level": 2
+                },
+                {
+                  "learn": "fansheng_zhenmo"
                 }
               ]
             },
@@ -721,6 +730,9 @@
                 {
                   "item": "lingshi",
                   "n": 300
+                },
+                {
+                  "learn": "fansheng_zhenmo"
                 }
               ]
             }
