@@ -1,6 +1,7 @@
 """任務系統：依 data/quests.json 的條件推進 story_arcs.json 的任務，卷與卷之間自動銜接。
 進度存在 Character.quest（隨存檔保存）。visit/kill/arrive 條件從目標啟用時開始累計。"""
 from . import dialogue
+from .character import item_name
 
 COUNTED = ("visit", "kill", "arrive")
 
@@ -62,7 +63,7 @@ def _reward(realms, ch, reward, msgs):
             msgs.append(f"  修為精進：等級 +{n}")
         else:
             ch.add(item, n)
-            msgs.append(f"  獎勵 {item} ×{n}")
+            msgs.append(f"  獎勵 {item_name(item)} ×{n}")
 
 
 def update(data, ch, realms):
@@ -122,3 +123,35 @@ def view(data, ch):
                 objs.append({"text": text, "state": "locked"})
         out["quests"].append({"name": quest["name"], "state": state, "objectives": objs})
     return out
+
+
+def _region_of(data, loc):
+    for w in data.regions:
+        for g in w["regions"]:
+            if any(l["id"] == loc for l in g["locations"]):
+                return g["id"]
+    return None
+
+
+def target(data, ch):
+    """目前目標該去哪裡：{"loc":地點id|None, "region":區域id|None}；沒有明確地點時回傳 None。"""
+    q = ensure(ch, data)
+    if q["done"] and arc_order(data)[-1] == q["arc"]:
+        return None
+    arc = _arc(data, q["arc"])
+    quest = arc["quests"][q["q"]] if q["q"] < len(arc["quests"]) else None
+    rule = _rules(data, q["arc"]).get(quest["id"]) if quest else None
+    if not rule:
+        return None
+    for did, d in data.dialogues.items():        # 尚未播放的簡報優先
+        t = d["trigger"]
+        if not ch.flags.get("seen:" + did) and t.get("quest") == quest["id"] and t.get("obj") == q["o"]:
+            if "arrive" in t:
+                return {"loc": None, "region": t["arrive"]}
+            return {"loc": t["loc"], "region": _region_of(data, t["loc"])}
+    cond = rule["objectives"][q["o"]]
+    if cond["type"] in ("visit", "kill") and cond["loc"] != "total":
+        return {"loc": cond["loc"], "region": _region_of(data, cond["loc"])}
+    if cond["type"] == "arrive":
+        return {"loc": None, "region": cond["loc"]}
+    return None

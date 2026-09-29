@@ -1,6 +1,13 @@
 from dataclasses import dataclass, field
 
 
+ITEM_NAMES = {"lingshi": "靈石", "pill": "突破丹", "lingye": "靈液"}
+
+
+def item_name(i):
+    return ITEM_NAMES.get(i, i)
+
+
 @dataclass
 class Character:
     name: str

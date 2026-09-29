@@ -6,6 +6,9 @@ def _quest_at(ch):
     return q.get("q"), q.get("o"), q.get("done")
 
 
+from .character import item_name
+
+
 def find_trigger(data, ch, loc=None, arrive=None):
     """回傳第一個符合條件且尚未看過的對話 id。"""
     completed = set(ch.quest.get("completed", []))
@@ -35,10 +38,10 @@ def _apply(ch, effects, data, log, realms=None):
             n = e.get("n", 1)
             if n >= 0:
                 ch.add(e["item"], n)
-                log.append(f"  獲得 {e['item']} ×{n}")
+                log.append(f"  獲得 {item_name(e['item'])} ×{n}")
             else:
                 ch.remove(e["item"], min(-n, ch.count(e["item"])))
-                log.append(f"  消耗 {e['item']} ×{-n}")
+                log.append(f"  消耗 {item_name(e['item'])} ×{-n}")
         elif "setRealm" in e and realms:
             realms.set_realm(ch, e["setRealm"])
             ch.level = max(ch.level, realms.realm(ch)["levelRange"][0])

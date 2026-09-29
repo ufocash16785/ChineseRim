@@ -224,3 +224,45 @@ class ArcMigrationTest(unittest.TestCase):
         msgs = quests.update(s.data, s.hero, s.rs)
         self.assertEqual(s.hero.quest["arc"], "arc1_tiannan")
         self.assertTrue(any("第二卷" in m for m in msgs))
+
+
+class FrontendSmokeTest(unittest.TestCase):
+    def test_side_html_js_parses(self):
+        """卷軸頁面內嵌 JS 必須可解析（防止再次出現語法錯誤導致整頁空白）。"""
+        import pathlib, shutil, subprocess, tempfile
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("沒有 node")
+        for name in ("side.html",):
+            html = (pathlib.Path(__file__).parents[1] / "chineserim" / "static" / name).read_text(encoding="utf-8")
+            js = html[html.index("<script>") + 8:html.rindex("</script>")]
+            f = pathlib.Path(tempfile.mkdtemp()) / "x.js"
+            f.write_text(js, encoding="utf-8")
+            r = subprocess.run([node, "--check", str(f)], capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0, r.stderr)
+
+    def test_map_page_js_parses(self):
+        import shutil, subprocess, tempfile, pathlib
+        from chineserim import web
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("沒有 node")
+        js = web.PAGE[web.PAGE.index("<script>") + 8:web.PAGE.rindex("</script>")]
+        f = pathlib.Path(tempfile.mkdtemp()) / "m.js"
+        f.write_text(js, encoding="utf-8")
+        r = subprocess.run([node, "--check", str(f)], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+
+
+class BranchFuzzTest(unittest.TestCase):
+    def test_random_choices_never_soft_lock(self):
+        """不同對話分支選擇（隨機）都必須能打通全部劇情。"""
+        import pathlib, tempfile
+        from chineserim.session import Session
+        from tests.bot import play_through
+        for seed in range(12):
+            r = random.Random(seed)
+            s = Session(pathlib.Path(tempfile.mkdtemp()) / "s.json", seed=seed)
+            play_through(s, pick=lambda ch: r.choice(ch)["i"])
+            self.assertTrue(s.hero.quest["done"], f"seed {seed} 卡在 {s.hero.quest}")
+            self.assertLessEqual(s.hero.hp, s.hero.max_hp)

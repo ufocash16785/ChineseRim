@@ -152,7 +152,7 @@ class Session:
             "realms": [x["name"] for x in self.data.realms[:6]],
             "elem": {"adv": ADV_MULT, "dis": DIS_MULT, "parent": PARENT, "pairs": PAIRS},
             "dialogue": dialogue.view(self.data, h),
-            "region": self.region, "region_name": reg["name"], "quest": quests.view(self.data, h),
+            "region": self.region, "region_name": reg["name"], "quest": quests.view(self.data, h), "target": quests.target(self.data, h),
             "world": [{"id": g["id"], "name": g["name"], "x": g["coords"][0], "y": g["coords"][1], "world": g["world_name"],
                        "locked": not w.can_enter(h, g["id"]), "days": w.travel_days(h, self.region, g["id"])}
                       for g in w.regions.values()],

@@ -14,7 +14,8 @@ def _quest_ids(data, h):
     return arc["quests"][h.quest["q"]]["id"]
 
 
-def play_through(s, limit=3000):
+def play_through(s, limit=3000, pick=None):
+    """pick(choices)->選項 index；預設永遠選第一個。"""
     h, d = s.hero, s.data
     steps = 0
 
@@ -34,7 +35,7 @@ def play_through(s, limit=3000):
         steps += 1
         if h.dialogue:
             v = s.snapshot()["dialogue"]
-            s.act("choose", i=v["choices"][0]["i"] if v["choices"] else "")
+            s.act("choose", i=(pick(v["choices"]) if pick else v["choices"][0]["i"]) if v["choices"] else "")
             continue
         if h.quest["done"]:
             # 最後一卷完成，但還有 onQuestDone 對話未觸發

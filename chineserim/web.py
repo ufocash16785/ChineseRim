@@ -6,11 +6,16 @@ from urllib.parse import parse_qs, urlparse
 
 from .session import Session
 
-session = Session()
-try:
-    session.load()
-except Exception as e:   # 壞檔不擋開局
-    print("讀檔失敗，改開新局：", e)
+session = None      # 由 main() 建立（匯入模組本身不讀存檔）
+
+
+def init(save_path=None):
+    global session
+    session = Session(save_path) if save_path else Session()
+    try:
+        session.load()
+    except Exception as e:   # 壞檔不擋開局
+        print("讀檔失敗，改開新局：", e)
 
 
 PAGE = """<!doctype html><meta charset=utf-8><title>凡人修仙傳</title>
@@ -89,6 +94,7 @@ class H(BaseHTTPRequestHandler):
 
 
 def main():
+    init()
     print("開啟瀏覽器：http://127.0.0.1:8765  （Ctrl+C 結束）")
     HTTPServer(("127.0.0.1", 8765), H).serve_forever()
 

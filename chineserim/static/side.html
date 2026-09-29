@@ -20,7 +20,7 @@ button{padding:6px 12px;font-size:14px}a{color:#9bd}
 <div id=err></div>
 <div id=top></div>
 <div id=stage><canvas id=c width=960 height=540></canvas><div id=toast></div><div id=prompt></div><div id=quest></div>
-<div id=help>A/D 移動　W/空白 跳　J 劍氣　K 法術　Q 換五行　E 互動　F 御器飛行(築基後)</div>
+<div id=help>A/D 移動　W/空白 跳　M 快速移動　J 劍氣　K 法術　Q 換五行　E 互動　F 御器飛行(築基後)</div>
 <div id=dlg></div><div id=trv></div></div>
 <div id=bar2><button onclick="act('break')">突破</button><button onclick="act('refine')">祭煉青竹蜂雲劍</button><button onclick="act('rest')">閉關7日</button>
 <button onclick="if(confirm('重開新局？（覆蓋存檔）'))act('new')">新遊戲</button><a href="/map">舊版地圖頁</a><small>自動存檔</small></div>
@@ -78,6 +78,7 @@ function onPress(k){
   if(k=='j')slash(); else if(k=='k')spell(); else if(k=='q'){spellIdx++;ui()}
   else if(k=='f'){if(S.realm_index>=2){hero.fly=!hero.fly;toast(hero.fly?'御器飛行':'落地')}else toast('築基期後才能御器飛行')}
   else if(k=='e')interact();
+  else if(k=='m')openLocMenu();
   else if((k==' '||k=='w'||k=='arrowup')&&hero.ground&&!hero.fly){hero.vy=-560;hero.ground=false}}
 function interact(){
   if(nearPortal()){openTravel();return}
@@ -85,8 +86,13 @@ function interact(){
   if(l.wild){post('visit',{loc:l.id,nofight:1});return}
   if(l.deep){if(S.realm_index>=l.min_realm)unlocked[l.id]=true;post('visit',{loc:l.id,nofight:1});return}
   post('visit',{loc:l.id})}
+function tgtLoc(){return S&&S.target&&S.target.loc&&S.target.region===S.region?locs.find(l=>l.id===S.target.loc):null}
+function tgtRegionName(){if(!S||!S.target||!S.target.region||S.target.region===S.region)return '';const w=S.world.find(x=>x.id===S.target.region);return w?w.name:''}
+function openLocMenu(){const t=$('trv');t.style.display='block';
+  t.innerHTML='<b>快速移動・本區域地點</b>'+locs.map(l=>`<button onclick="tp('${l.id}')">${S.target&&S.target.loc===l.id?'★ ':''}${l.name.replace(/（.*/,'')}　<small>${l.type}</small></button>`).join('')+'<button onclick="$(\'trv\').style.display=\'none\'">取消</button>'}
+function tp(id){const l=locs.find(x=>x.id===id);$('trv').style.display='none';if(l){hero.x=l.wx-90;hero.y=GY;hero.vy=0;hero.face=1}}
 function openTravel(){const t=$('trv');t.style.display='block';
-  t.innerHTML='<b>傳送陣・選擇目的地</b>'+S.world.filter(w=>w.id!=S.region).map(w=>`<button ${w.locked?'disabled':''} onclick="go('${w.id}')">${w.name}（${w.days} 日）${w.locked?' 🔒 需化神飛升':''}</button>`).join('')+'<button onclick="$(\'trv\').style.display=\'none\'">取消</button>'}
+  t.innerHTML='<b>傳送陣・選擇目的地</b>'+S.world.filter(w=>w.id!=S.region).map(w=>`<button ${w.locked?'disabled':''} onclick="go('${w.id}')">${S.target&&S.target.region===w.id?'★ ':''}${w.name}（${w.days} 日）${w.locked?' 🔒 需化神飛升':''}</button>`).join('')+'<button onclick="$(\'trv\').style.display=\'none\'">取消</button>'}
 async function go(id){$('trv').style.display='none';await post('travel',{to:id})}
 function dmgBase(){return 18*(1+S.realm_index*1.5)}
 function slash(){if(hero.atk>0)return;hero.atk=.35;hero.slash=.18;
@@ -122,7 +128,7 @@ function update(dt){
       if(hero.hp<=0){hero.hp=1;post('die');hero.x=300;hero.y=GY;beasts.forEach(k=>{if(!k.dead)k.hit=0})}}}
   for(const f of fx){f.t-=dt;f.y-=30*dt}fx=fx.filter(f=>f.t>0);
   cam=Math.max(0,Math.min(worldLen-W,hero.x-W/2));
-  const l=nearLoc();$('prompt').textContent=nearPortal()?'E：傳送陣（前往其他區域）':l?(l.wild?`E：探查 ${l.name.replace(/（.*/,'')}`:`E：進入 ${l.name.replace(/（.*/,'')}${l.deep&&S.realm_index<l.min_realm?'（境界不足）':''}`:'';
+  const l=nearLoc();$('prompt').textContent=nearPortal()?'E：傳送陣（前往其他區域）':l?(l.wild?`E：探查 ${l.name.replace(/（.*/,'')}`:`E：進入 ${l.name.replace(/（.*/,'')}${l.deep&&S.realm_index<l.min_realm?'（境界不足）':''}`):'';
 }
 function tree(x,y,s,c){g.fillStyle='#3b2a1a';g.fillRect(x-4*s,y-40*s,8*s,40*s);g.fillStyle=c;g.beginPath();g.arc(x,y-56*s,26*s,0,7);g.fill()}
 function draw(){
@@ -155,8 +161,13 @@ function draw(){
     g.fillStyle='#cfd8e8';g.fillRect(x-11,y-52,22,44);g.fillStyle='#345';g.fillRect(x-11,y-30,22,6);g.fillStyle='#f0d2b0';g.beginPath();g.arc(x,y-62,11,0,7);g.fill();g.fillStyle='#222';g.fillRect(x-11,y-74,22,8);
     g.fillStyle='#222';g.fillRect(x-9,y-8,7,8);g.fillRect(x+2,y-8,7,8)}
   if(hero.slash>0){g.strokeStyle='#bfe8ff';g.lineWidth=6;g.beginPath();g.arc(hero.x+hero.face*30,hero.y-40,56,hero.face>0?-1.1:Math.PI-1.1+.0,hero.face>0?1.1:Math.PI+1.1);g.stroke()}
+  const tl=tgtLoc(),bob=Math.sin(performance.now()/250)*6;
+  if(tl){g.fillStyle='#ffd24a';g.font='bold 26px sans-serif';g.textAlign='center';g.fillText('▼',tl.wx,GY-190+bob);g.font='bold 13px sans-serif';g.fillText('目標',tl.wx,GY-208+bob)}
+  else if(tgtRegionName()){g.fillStyle='#ffd24a';g.font='bold 26px sans-serif';g.textAlign='center';g.fillText('▼',200,GY-100+bob)}
   for(const f of fx){g.fillStyle=f.c;g.font='bold 16px sans-serif';g.textAlign='center';g.fillText(f.txt,f.x,f.y)}
-  g.restore()}
+  g.restore();
+  if(tl){const sx=tl.wx-cam;if(sx<40||sx>W-40){g.fillStyle='#ffd24a';g.font='bold 18px sans-serif';g.textAlign=sx<40?'left':'right';g.fillText((sx<40?'◀ ':'')+'目標 '+Math.round(Math.abs(tl.wx-hero.x)/100)*100+'m'+(sx<40?'':' ▶'),sx<40?8:W-8,GY-120)}}
+  else if(tgtRegionName()){g.fillStyle='#ffd24a';g.font='bold 15px sans-serif';g.textAlign='center';g.fillText('目標在「'+tgtRegionName()+'」：到傳送陣(E)前往',W/2,60)}}
 let last=performance.now();
 function loop(t){const dt=Math.min(.05,(t-last)/1000);last=t;try{update(dt);draw()}catch(e){$('err').style.display='block';$('err').textContent='執行錯誤：'+e.message}requestAnimationFrame(loop)}
 window.__game={hero,get S(){return S},get beasts(){return beasts},get locs(){return locs},post,load};
