@@ -104,10 +104,19 @@ class SaveQuestTest(unittest.TestCase):
 
     def test_quest_flow(self):
         s = self.s
-        s.act("visit", loc="qingniu")
+
+        def go(loc):
+            while s.hero.dialogue:
+                s.act("choose", i=0 if s.snapshot()["dialogue"]["choices"] else "")
+            s.act("visit", loc=loc)
+        go("qingniu")
         self.assertEqual(s.hero.quest["o"], 1)
-        s.act("visit", loc="caixia")            # 門派：+2 等級
-        s.act("visit", loc="caixia")
+        go("caixia")            # 門派：+2 等級
+        go("caixia")
+        go("caixia")
+        while s.hero.dialogue:
+            s.act("choose", i=0 if s.snapshot()["dialogue"]["choices"] else "")
+        s.act("rest")
         self.assertGreaterEqual(s.hero.quest["q"], 1)        # 第一個任務已完成
         self.assertIn("lingshi", s.hero.inventory)
         v = s.snapshot()["quest"]
@@ -121,9 +130,11 @@ class SaveQuestTest(unittest.TestCase):
         s = self.s
         h = s.hero
         for _ in range(400):
-            if h.quest["done"]:
+            if h.quest["done"] and not h.dialogue:
                 break
             for loc in ("qingniu", "caixia", "taiyue", "yuejing"):
+                while h.dialogue:
+                    s.act("choose", i=0 if s.snapshot()["dialogue"]["choices"] else "")
                 s.act("visit", loc=loc)
             if s.rs.at_bottleneck(h):
                 h.add("pill")
@@ -131,5 +142,50 @@ class SaveQuestTest(unittest.TestCase):
             h.hp = h.max_hp
             h.add("lingshi", 10)
             s.day += 30
+            while h.dialogue:
+                s.act("choose", i=0 if s.snapshot()["dialogue"]["choices"] else "")
             s.act("rest")
         self.assertTrue(h.quest["done"])
+        self.assertTrue(h.flags.get("arc0_complete"))
+        seen = [k for k in h.flags if k.startswith("seen:")]
+        self.assertEqual(len(seen), len(s.data.dialogues))   # 每段對話都被觸發
+
+
+class DialogueTest(unittest.TestCase):
+    def setUp(self):
+        import tempfile, pathlib
+        from chineserim.session import Session
+        self.s = Session(pathlib.Path(tempfile.mkdtemp()) / "s.json", seed=1)
+
+    def test_trigger_blocks_and_branches(self):
+        s, h = self.s, self.s.hero
+        s.act("visit", loc="qingniu")
+        self.assertEqual(h.dialogue["id"], "d_farewell")
+        s.act("travel", to="dajin")                        # 對話中其他動作被擋
+        self.assertEqual(s.region, "tiannan")
+        s.act("choose", i=0)                               # 收下乾糧 → end1
+        self.assertIn("lingshi", h.inventory)
+        s.act("choose", i="")                              # 繼續 → 結束
+        self.assertFalse(h.dialogue)
+        s.act("visit", loc="qingniu")                      # 只觸發一次
+        self.assertFalse(h.dialogue)
+
+    def test_dialogue_persists_in_save(self):
+        from chineserim.session import Session
+        s = self.s
+        s.act("visit", loc="qingniu")
+        s2 = Session(s.save_path)
+        s2.load()
+        self.assertEqual(s2.hero.dialogue, s.hero.dialogue)
+        self.assertEqual(s2.snapshot()["dialogue"]["speaker"], "母親")
+
+    def test_trap_choice_sets_flag(self):
+        from chineserim import dialogue
+        s, h = self.s, self.s.hero
+        h.quest = {"arc": "arc0_qixuanmen", "q": 3, "o": 0, "baseline": {}, "done": False}
+        s.act("visit", loc="caixia")
+        self.assertEqual(h.dialogue["id"], "d_suspect")
+        s.act("choose", i=1)                               # 當面質問：受傷，仍會設陷
+        s.act("choose", i="")
+        self.assertTrue(h.flags.get("trap_set"))
+        self.assertLess(h.hp, h.max_hp)

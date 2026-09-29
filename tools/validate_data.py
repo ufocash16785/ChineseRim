@@ -108,6 +108,27 @@ def main() -> int:
             for o in rule["objectives"]:
                 if o["type"] in ("visit", "kill") and o["loc"] != "total" and o["loc"] not in all_locs:
                     errors.append(f"quests/{qid}: 未知地點 {o['loc']}")
+    all_q = {q["id"] for a in arcs["arcs"] for q in a["quests"]}
+    for did, d in load("dialogues")["dialogues"].items():
+        t = d["trigger"]
+        if "quest" in t and t["quest"] not in all_q:
+            errors.append(f"dialogues/{did}: 未知任務 {t['quest']}")
+        if "onQuestDone" in t and t["onQuestDone"] not in all_q:
+            errors.append(f"dialogues/{did}: 未知任務 {t['onQuestDone']}")
+        if "loc" in t and t["loc"] not in all_locs:
+            errors.append(f"dialogues/{did}: 未知地點 {t['loc']}")
+        nodes = d["nodes"]
+        if "start" not in nodes:
+            errors.append(f"dialogues/{did}: 缺 start 節點")
+        for nid, n in nodes.items():
+            nexts = [n.get("next")] + [c.get("next") for c in n.get("choices", [])]
+            for x in nexts:
+                if x and x not in nodes:
+                    errors.append(f"dialogues/{did}/{nid}: next 指向不存在的節點 {x}")
+            effs = list(n.get("effects", [])) + [e for c in n.get("choices", []) for e in c.get("effects", [])]
+            for e in effs:
+                if "rep" in e and e["rep"] not in sect_ids:
+                    errors.append(f"dialogues/{did}/{nid}: 未知門派 {e['rep']}")
     for a in arcs["arcs"]:
         for reg in a["region"].split("/"):
             if reg not in region_ids:

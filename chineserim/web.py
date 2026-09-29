@@ -21,7 +21,9 @@ svg{background:#0c1a22;border:1px solid #444;border-radius:8px;width:100%;aspect
 .lock circle{fill:#333!important}.bar{background:#333;height:10px;border-radius:5px;overflow:hidden;margin:3px 0 8px}.bar i{display:block;height:100%}
 button{margin:3px;padding:7px 12px}#log{background:#0c0f12;padding:8px;min-height:120px;border-radius:6px;font-size:14px}
 .realms span{padding:1px 7px;margin:1px;border:1px solid #555;border-radius:10px;display:inline-block;font-size:13px}.realms .on{background:#b8893a;color:#000}
-h3{margin:8px 0 4px}small{color:#9a9686}
+h3{margin:8px 0 4px}
+#dlg{display:none;position:fixed;left:0;right:0;bottom:0;background:#1d222aee;border-top:2px solid #b8893a;padding:14px 20px;z-index:9}
+#dlg .sp{color:#e6b45a;font-weight:bold;margin-bottom:4px}#dlg .tx{font-size:17px;line-height:1.6;margin-bottom:8px}#dlg button{display:block;margin:4px 0;font-size:15px;text-align:left}small{color:#9a9686}
 </style>
 <h2 style="margin:0 0 8px">凡人修仙傳</h2>
 <div class=wrap>
@@ -30,7 +32,7 @@ h3{margin:8px 0 4px}small{color:#9a9686}
 <div class=col><div id=s></div>
 <button onclick="a('/act?c=break')">突破</button><button onclick="a('/act?c=refine')">祭煉青竹蜂雲劍</button><button onclick="a('/act?c=rest')">閉關 7 日</button>
 <button onclick="if(confirm('確定重開新局？（會覆蓋存檔）'))a('/act?c=new')">新遊戲</button> <small>自動存檔</small>
-<h3 id=qt></h3><div id=qs></div>
+<div id=dlg></div><h3 id=qt></h3><div id=qs></div>
 <h3>紀錄</h3><div id=log></div></div></div>
 <script>
 const COL={"人界":"#4a8","靈界":"#a6d"};
@@ -45,6 +47,8 @@ HP ${d.hp}/${d.max_hp}${bar(d.hp,d.max_hp,'#c44')}
 <p>靈石 ${d.lingshi}　突破丹 ${d.pills}　靈液 ${d.lingye}　法寶 ${JSON.stringify(d.treasures)}<br>門派聲望 ${JSON.stringify(d.sects)}</p>`;
 qt.textContent='任務：'+d.quest.arc+(d.quest.done?'（完成）':'');
 qs.innerHTML=d.quest.quests.filter(q=>q.state!='locked').map(q=>`<div style="margin:4px 0;opacity:${q.state=='done'?.5:1}"><b>${q.state=='done'?'✔ ':'▶ '}${q.name}</b>`+(q.state=='active'?q.objectives.map(o=>`<div style="margin-left:14px;font-size:13px">${o.state=='done'?'☑':'☐'} ${o.text}${o.progress?' <small>('+o.progress+')</small>':''}</div>`).join(''):'')+'</div>').join('');
+dlg.style.display=d.dialogue?'block':'none';
+if(d.dialogue){const g=d.dialogue;dlg.innerHTML=`<div class=sp>${g.speaker}</div><div class=tx>${g.text}</div>`+(g.cont?`<button onclick="a('/choose')">▶ 繼續</button>`:g.choices.map(c=>`<button onclick="a('/choose?i=${c.i}')">${c.text}</button>`).join(''))}
 log.innerHTML=d.log.map(x=>'<div>'+x+'</div>').join('');log.scrollTop=1e6;
 wm.innerHTML=d.world.map(g=>`<g class="node ${g.locked?'lock':''}" onclick="a('/travel?to=${g.id}')"><circle cx=${g.x} cy=${100-g.y} r=${g.id==d.region?4.5:3.2} fill="${COL[g.world]}" stroke="${g.id==d.region?'#fc6':'#000'}" stroke-width=.8></circle>
 <text x=${g.x} y=${100-g.y+7} text-anchor=middle>${g.name}${g.id==d.region?'':' ('+g.days+'日)'}${g.locked?'🔒':''}</text></g>`).join('');

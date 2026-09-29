@@ -1,6 +1,8 @@
 """任務系統：依 data/quests.json 的條件推進 story_arcs.json 的任務。
 進度存在 Character.quest（隨存檔保存）。visit/kill 條件從目標啟用時開始累計。"""
 
+from . import dialogue
+
 ARC = "arc0_qixuanmen"
 
 
@@ -29,6 +31,8 @@ def _met(cond, ch, base):
         return ch.realm >= n
     if t == "item":
         return ch.count(cond["item"]) >= n
+    if t == "flag":
+        return bool(ch.flags.get(cond["flag"]))
     return False
 
 
@@ -37,6 +41,8 @@ def _progress_text(cond, ch, base):
     if t in ("visit", "kill"):
         key = f"{t}:{cond['loc']}"
         return f"{min(n, ch.counters.get(key, 0) - base.get(key, 0))}/{n}"
+    if t == "flag":
+        return "1/1" if ch.flags.get(cond["flag"]) else "0/1"
     cur = {"level": ch.level, "realm": ch.realm}.get(t, ch.count(cond.get("item", "")))
     return f"{min(n, cur)}/{n}"
 
@@ -52,7 +58,7 @@ def update(data, ch):
         if not rule:
             break
         cond = rule["objectives"][q["o"]]
-        if not _met(cond, ch, q["baseline"]):
+        if dialogue.gating(data, ch, quest["id"], q["o"]) or not _met(cond, ch, q["baseline"]):
             break
         msgs.append(f"✔ 目標完成：{quest['objectives'][q['o']]}")
         q["o"] += 1
@@ -62,6 +68,7 @@ def update(data, ch):
             for item, n in rule.get("reward", {}).items():
                 ch.add(item, n)
                 msgs.append(f"  獎勵 {item} ×{n}")
+            q.setdefault("completed", []).append(quest["id"])
             q["q"] += 1
             q["o"] = 0
             if q["q"] >= len(arc["quests"]):
@@ -82,7 +89,7 @@ def view(data, ch):
             if state == "done" or (state == "active" and j < q["o"]):
                 objs.append({"text": text, "state": "done"})
             elif state == "active" and j == q["o"]:
-                objs.append({"text": text, "state": "active", "progress": _progress_text(rule["objectives"][j], ch, q["baseline"]) if rule["objectives"] else ""})
+                objs.append({"text": text, "state": "active", "progress": ("先去見相關人物（地點見劇情）" if dialogue.gating(data, ch, quest["id"], j) else _progress_text(rule["objectives"][j], ch, q["baseline"])) if rule["objectives"] else ""})
             else:
                 objs.append({"text": text, "state": "locked"})
         out["quests"].append({"name": quest["name"], "state": state, "objectives": objs})

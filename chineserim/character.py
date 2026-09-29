@@ -35,3 +35,5 @@ class Character:
         return True
     counters: dict = field(default_factory=dict)    # visit:<loc> / kill:<loc> / kill:total
     quest: dict = field(default_factory=dict)
+    flags: dict = field(default_factory=dict)
+    dialogue: dict = field(default_factory=dict)   # 進行中的對話 {"id","node"}

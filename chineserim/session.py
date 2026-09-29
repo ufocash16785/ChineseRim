@@ -4,7 +4,7 @@ import pathlib
 import random
 from dataclasses import asdict
 
-from . import quests, treasures
+from . import dialogue, quests, treasures
 from .character import Character
 from .data import ROOT, GameData
 from .explore import WorldMap, visit
@@ -71,8 +71,34 @@ class Session:
                 if self.hero.count("lingye") > n:
                     self.log.append(f"第 {d} 日月圓，掌天瓶凝出一滴靈液")
 
+    def _after(self, loc=None):
+        """任務推進與對話觸發。loc 為剛造訪的地點（用於地點型對話）。"""
+        h = self.hero
+        if loc and not h.dialogue:
+            did = dialogue.find_trigger(self.data, h, loc)
+            if did:
+                dialogue.start(self.data, h, did, self.log)
+                # 簡報播完才開始累計；但這次造訪本身算數
+                h.quest["baseline"] = dict(h.counters)
+                k = f"visit:{loc}"
+                h.quest["baseline"][k] = max(0, h.quest["baseline"].get(k, 0) - 1)
+        self.log.extend(quests.update(self.data, h))
+        if not h.dialogue:
+            did = dialogue.find_trigger(self.data, h)
+            if did:
+                dialogue.start(self.data, h, did, self.log)
+
     def act(self, kind, **q):
         h = self.hero
+        if kind == "choose":
+            if h.dialogue:
+                idx = int(q["i"]) if q.get("i") not in (None, "") else None
+                dialogue.choose(self.data, h, idx, self.log)
+                self._after()
+                self.save()
+            return
+        if h.dialogue and kind != "new":
+            return          # 對話進行中，先做完對話
         if kind == "travel":
             ok, days, msg = self.world.travel(h, self.region, q["to"])
             self.log.append(msg + (f"（耗時 {days} 日）" if ok else ""))
@@ -96,7 +122,7 @@ class Session:
             self.new_game()
             self.save()
             return
-        self.log.extend(quests.update(self.data, h))
+        self._after(q.get("loc") if kind == "visit" else None)
         self.save()
 
     def snapshot(self):
@@ -110,6 +136,7 @@ class Session:
             "day": self.day, "treasures": h.treasures, "sects": {self.data.sects[k]["name"]: v for k, v in h.sects.items()},
             "bottleneck": self.rs.at_bottleneck(h), "log": self.log[-14:], "realm_index": h.realm,
             "realms": [x["name"] for x in self.data.realms[:6]],
+            "dialogue": dialogue.view(self.data, h),
             "region": self.region, "region_name": reg["name"], "quest": quests.view(self.data, h),
             "world": [{"id": g["id"], "name": g["name"], "x": g["coords"][0], "y": g["coords"][1], "world": g["world_name"],
                        "locked": not w.can_enter(h, g["id"]), "days": w.travel_days(h, self.region, g["id"])}
