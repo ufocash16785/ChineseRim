@@ -98,3 +98,12 @@ def gating(data, ch, quest_id, obj):
     """該任務目標是否有尚未播放的簡報對話（有的話，目標先不推進，播完才開始累計）。"""
     return any(not ch.flags.get("seen:" + did) and d["trigger"].get("quest") == quest_id and d["trigger"].get("obj") == obj
                for did, d in data.dialogues.items())
+
+
+def gating_hint(data, ch, quest_id, obj):
+    for did, d in data.dialogues.items():
+        t = d["trigger"]
+        if not ch.flags.get("seen:" + did) and t.get("quest") == quest_id and t.get("obj") == obj:
+            names = {l["id"]: l["name"] for w in data.regions for g in w["regions"] for l in g["locations"]}
+            return f"劇情：前往「{names.get(t['loc'], t['loc'])}」"
+    return ""

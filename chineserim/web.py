@@ -16,7 +16,8 @@ PAGE = """<!doctype html><meta charset=utf-8><title>凡人修仙傳</title>
 <style>
 body{font-family:sans-serif;background:#14181d;color:#e6e2d3;margin:0;padding:12px}
 .wrap{display:flex;flex-wrap:wrap;gap:14px}.col{flex:1 1 380px;min-width:300px}
-svg{background:#0c1a22;border:1px solid #444;border-radius:8px;width:100%;aspect-ratio:1}
+svg{background:#0c1a22;border:1px solid #444;border-radius:8px;width:100%;aspect-ratio:1;max-height:46vh}
+#err{background:#7a1f1f;padding:6px 10px;border-radius:6px;display:none;margin-bottom:8px}
 .node{cursor:pointer}.node:hover circle{stroke:#fff}.node text{fill:#e6e2d3;font-size:3.2px;pointer-events:none}
 .lock circle{fill:#333!important}.bar{background:#333;height:10px;border-radius:5px;overflow:hidden;margin:3px 0 8px}.bar i{display:block;height:100%}
 button{margin:3px;padding:7px 12px}#log{background:#0c0f12;padding:8px;min-height:120px;border-radius:6px;font-size:14px}
@@ -25,7 +26,7 @@ h3{margin:8px 0 4px}
 #dlg{display:none;position:fixed;left:0;right:0;bottom:0;background:#1d222aee;border-top:2px solid #b8893a;padding:14px 20px;z-index:9}
 #dlg .sp{color:#e6b45a;font-weight:bold;margin-bottom:4px}#dlg .tx{font-size:17px;line-height:1.6;margin-bottom:8px}#dlg button{display:block;margin:4px 0;font-size:15px;text-align:left}small{color:#9a9686}
 </style>
-<h2 style="margin:0 0 8px">凡人修仙傳</h2>
+<h2 style="margin:0 0 8px">凡人修仙傳 <small>UI v3（地圖＋任務＋對話）</small></h2><div id=err></div>
 <div class=wrap>
 <div class=col><h3>世界地圖 <small>點區域旅行</small></h3><svg id=wm viewBox="0 0 100 100"></svg>
 <h3 id=rt></h3><svg id=rm viewBox="0 0 100 100"></svg></div>
@@ -37,8 +38,9 @@ h3{margin:8px 0 4px}
 <script>
 const COL={"人界":"#4a8","靈界":"#a6d"};
 const TC={"村鎮":"#6c6","城市":"#6c6","都城":"#6c6","府城":"#6c6","坊市":"#6c6","巨城":"#6c6","門派":"#e94","門派/山":"#e94","秘境":"#d4d","聖地":"#d4d"};
+window.onerror=(m)=>{err.style.display='block';err.textContent='頁面錯誤：'+m};
 async function a(u){await fetch(u,{method:'POST'});r()}
-async function r(){const d=await (await fetch('/state')).json();
+async function r(){let d;try{d=await (await fetch('/state')).json();err.style.display='none'}catch(e){err.style.display='block';err.textContent='連不上伺服器：'+e;return}
 const bar=(v,m,c)=>`<div class=bar><i style="width:${Math.min(100,100*v/m)}%;background:${c}"></i></div>`;
 s.innerHTML=`<div class=realms>${d.realms.map((n,i)=>`<span class="${i==d.realm_index?'on':''}">${n}</span>`).join('')}</div>
 <p><b>${d.name}</b> ${d.realm}·${d.sub}　靈根 ${d.elements.join('')}　第 ${d.day} 日　所在：${d.region_name}</p>

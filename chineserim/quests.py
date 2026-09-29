@@ -89,7 +89,7 @@ def view(data, ch):
             if state == "done" or (state == "active" and j < q["o"]):
                 objs.append({"text": text, "state": "done"})
             elif state == "active" and j == q["o"]:
-                objs.append({"text": text, "state": "active", "progress": ("先去見相關人物（地點見劇情）" if dialogue.gating(data, ch, quest["id"], j) else _progress_text(rule["objectives"][j], ch, q["baseline"])) if rule["objectives"] else ""})
+                objs.append({"text": text, "state": "active", "progress": (dialogue.gating_hint(data, ch, quest["id"], j) if dialogue.gating(data, ch, quest["id"], j) else _progress_text(rule["objectives"][j], ch, q["baseline"])) if rule["objectives"] else ""})
             else:
                 objs.append({"text": text, "state": "locked"})
         out["quests"].append({"name": quest["name"], "state": state, "objectives": objs})
