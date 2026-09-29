@@ -59,6 +59,29 @@ def find_location(world, region_id, loc_id):
     raise KeyError(loc_id)
 
 
+def is_wild(loc_type):
+    return loc_type not in SAFE and loc_type not in SECT and loc_type not in DEEP
+
+
+def scale_for(ch, deep=False):
+    return 1 + ch.realm * (1.6 if deep else 1.0)
+
+
+def kill_reward(realms, ch, rng, loc_id, deep=False):
+    """即時戰鬥擊殺一隻妖獸的結算（卷軸前端使用）。回傳訊息列表。"""
+    scale = scale_for(ch, deep)
+    gold = int(rng.uniform(20, 60) * scale * (3 if deep else 1))
+    ch.add("lingshi", gold)
+    for k in (f"kill:{loc_id}", "kill:total"):
+        ch.counters[k] = ch.counters.get(k, 0) + 1
+    realms.gain_level(ch, 8 if deep else 3)
+    msg = [f"擊殺妖獸，獲得靈石 {gold}"]
+    if deep and rng.random() < 0.6:
+        ch.add("lingye")
+        msg.append("秘境深處拾得一滴靈液")
+    return msg
+
+
 def fight(ch, rng, deep=False):
     """自動回合制。回傳 (勝?, 紀錄行, 戰利靈石)。"""
     beast_elem = rng.choice(ELEMENTS)
@@ -86,7 +109,7 @@ def fight(ch, rng, deep=False):
     return False, log, 0
 
 
-def visit(world, realms, ch, region_id, loc_id, rng=None, day=0):
+def visit(world, realms, ch, region_id, loc_id, rng=None, day=0, fight_wild=True):
     """造訪地點，回傳 (訊息列表, 花費天數)。"""
     rng = rng or random.Random()
     loc = find_location(world, region_id, loc_id)
@@ -110,6 +133,8 @@ def visit(world, realms, ch, region_id, loc_id, rng=None, day=0):
             ch.sects[sid] = min(4, ch.sects.get(sid, 0) + 1)
             msg.append(f"與{world.sect_index[sid]['name']}聲望 {ch.sects[sid]}/4")
         return msg, 2
+    if not fight_wild:      # 卷軸前端：野外/秘境由玩家即時戰鬥，這裡只記錄到訪
+        return [f"來到{loc['name']}"], 0
     ok, log, gold = fight(ch, rng, deep=t in DEEP)
     if ok:
         for k in (f"kill:{loc_id}", "kill:total"):

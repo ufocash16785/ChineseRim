@@ -7,7 +7,8 @@ from dataclasses import asdict
 from . import dialogue, quests, treasures
 from .character import Character
 from .data import ROOT, GameData
-from .explore import WorldMap, visit
+from .elements import ADV_MULT, DIS_MULT, PAIRS, PARENT
+from .explore import DEEP, WorldMap, is_wild, kill_reward, visit
 from .realms import RealmSystem
 
 SAVE_VERSION = 1
@@ -99,14 +100,23 @@ class Session:
             return
         if h.dialogue and kind != "new":
             return          # 對話進行中，先做完對話
-        if kind == "travel":
+        if q.get("hp") not in (None, ""):
+            h.hp = max(1.0, min(h.max_hp, float(q["hp"])))    # 卷軸前端即時戰鬥的血量
+        if kind == "kill":
+            self.log.extend(kill_reward(self.rs, h, self.rng, q.get("loc", "total"), q.get("deep") == "1"))
+        elif kind == "die":
+            lost = min(50, h.count("lingshi"))
+            h.remove("lingshi", lost)
+            h.hp = h.max_hp / 2
+            self.log.append(f"你重傷倒下，被人救回，損失靈石 {lost}")
+        elif kind == "travel":
             ok, days, msg = self.world.travel(h, self.region, q["to"])
             self.log.append(msg + (f"（耗時 {days} 日）" if ok else ""))
             if ok:
                 self.region = q["to"]
                 self.advance(days)
         elif kind == "visit":
-            msgs, days = visit(self.world, self.rs, h, self.region, q["loc"], self.rng)
+            msgs, days = visit(self.world, self.rs, h, self.region, q["loc"], self.rng, fight_wild=q.get("nofight") != "1")
             self.log.extend(msgs)
             self.advance(days)
         elif kind == "break":
@@ -136,11 +146,12 @@ class Session:
             "day": self.day, "treasures": h.treasures, "sects": {self.data.sects[k]["name"]: v for k, v in h.sects.items()},
             "bottleneck": self.rs.at_bottleneck(h), "log": self.log[-14:], "realm_index": h.realm,
             "realms": [x["name"] for x in self.data.realms[:6]],
+            "elem": {"adv": ADV_MULT, "dis": DIS_MULT, "parent": PARENT, "pairs": PAIRS},
             "dialogue": dialogue.view(self.data, h),
             "region": self.region, "region_name": reg["name"], "quest": quests.view(self.data, h),
             "world": [{"id": g["id"], "name": g["name"], "x": g["coords"][0], "y": g["coords"][1], "world": g["world_name"],
                        "locked": not w.can_enter(h, g["id"]), "days": w.travel_days(h, self.region, g["id"])}
                       for g in w.regions.values()],
-            "locations": [{"id": l["id"], "name": l["name"], "type": l["type"], "note": l.get("note", ""), "x": x, "y": y}
+            "locations": [{"id": l["id"], "name": l["name"], "type": l["type"], "wild": is_wild(l["type"]), "deep": l["type"] in DEEP, "note": l.get("note", ""), "x": x, "y": y}
                           for l, x, y in w.location_layout(self.region)],
         }

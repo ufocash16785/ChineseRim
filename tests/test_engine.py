@@ -189,3 +189,39 @@ class DialogueTest(unittest.TestCase):
         s.act("choose", i="")
         self.assertTrue(h.flags.get("trap_set"))
         self.assertLess(h.hp, h.max_hp)
+
+
+class SideScrollBackendTest(unittest.TestCase):
+    def setUp(self):
+        import tempfile, pathlib
+        from chineserim.session import Session
+        self.s = Session(pathlib.Path(tempfile.mkdtemp()) / "s.json", seed=1)
+
+    def test_kill_counts_and_rewards(self):
+        s, h = self.s, self.s.hero
+        n = h.count("lingshi")
+        s.act("kill", loc="taiyue", deep="0", hp="80")
+        self.assertGreater(h.count("lingshi"), n)
+        self.assertEqual(h.counters["kill:taiyue"], 1)
+        self.assertEqual(h.counters["kill:total"], 1)
+        self.assertEqual(h.hp, 80)            # 前端血量被同步
+
+    def test_die_penalty(self):
+        s, h = self.s, self.s.hero
+        n = h.count("lingshi")
+        s.act("die", hp="1")
+        self.assertEqual(h.count("lingshi"), n - 50)
+        self.assertEqual(h.hp, h.max_hp / 2)
+
+    def test_snapshot_has_scroller_fields(self):
+        d = self.s.snapshot()
+        self.assertIn("pairs", d["elem"])
+        self.assertTrue(any(l["wild"] for l in d["locations"]))
+        self.assertTrue(any(l["deep"] for l in d["locations"]))
+
+    def test_nofight_visit_only_counts(self):
+        s, h = self.s, self.s.hero
+        h.realm = 2
+        s.act("visit", loc="xuese", nofight="1")
+        self.assertEqual(h.counters["visit:xuese"], 1)
+        self.assertEqual(h.count("lingshi"), 500)   # 沒有自動戰鬥結算

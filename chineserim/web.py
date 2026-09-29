@@ -1,5 +1,6 @@
 """瀏覽器介面（世界地圖探索）：python -m chineserim.web  → http://127.0.0.1:8765"""
 import json
+import pathlib
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
 
@@ -72,8 +73,10 @@ class H(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/state":
             self._send(json.dumps(session.snapshot(), ensure_ascii=False), "application/json")
-        else:
+        elif self.path.startswith("/map"):
             self._send(PAGE, "text/html")
+        else:
+            self._send((pathlib.Path(__file__).parent / "static" / "side.html").read_text(encoding="utf-8"), "text/html")
 
     def do_POST(self):
         u = urlparse(self.path)
