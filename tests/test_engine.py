@@ -127,28 +127,15 @@ class SaveQuestTest(unittest.TestCase):
         self.assertEqual(s2.hero.quest, s.hero.quest)
 
     def test_full_arc_reachable(self):
+        """機器人從第一卷玩到靈界 DLC：驗證所有任務鏈與對話都走得通、沒有卡死。"""
+        from tests.bot import play_through
         s = self.s
-        h = s.hero
-        for _ in range(400):
-            if h.quest["done"] and not h.dialogue:
-                break
-            for loc in ("qingniu", "caixia", "taiyue", "yuejing"):
-                while h.dialogue:
-                    s.act("choose", i=0 if s.snapshot()["dialogue"]["choices"] else "")
-                s.act("visit", loc=loc)
-            if s.rs.at_bottleneck(h):
-                h.add("pill")
-                s.act("break")
-            h.hp = h.max_hp
-            h.add("lingshi", 10)
-            s.day += 30
-            while h.dialogue:
-                s.act("choose", i=0 if s.snapshot()["dialogue"]["choices"] else "")
-            s.act("rest")
-        self.assertTrue(h.quest["done"])
-        self.assertTrue(h.flags.get("arc0_complete"))
-        seen = [k for k in h.flags if k.startswith("seen:")]
-        self.assertEqual(len(seen), len(s.data.dialogues))   # 每段對話都被觸發
+        steps = play_through(s)
+        self.assertTrue(s.hero.quest["done"], f"卡在 {s.hero.quest}（{steps} 步）")
+        self.assertEqual(s.hero.quest["arc"], "arc6_lingjie")
+        self.assertTrue(s.hero.flags.get("arc0_complete"))
+        seen = {k[5:] for k in s.hero.flags if k.startswith("seen:")}
+        self.assertEqual(set(s.data.dialogues) - seen, set(), "有對話沒被觸發")
 
 
 class DialogueTest(unittest.TestCase):
@@ -225,3 +212,15 @@ class SideScrollBackendTest(unittest.TestCase):
         s.act("visit", loc="xuese", nofight="1")
         self.assertEqual(h.counters["visit:xuese"], 1)
         self.assertEqual(h.count("lingshi"), 500)   # 沒有自動戰鬥結算
+
+
+class ArcMigrationTest(unittest.TestCase):
+    def test_old_save_with_finished_arc0_advances(self):
+        import tempfile, pathlib
+        from chineserim import quests
+        from chineserim.session import Session
+        s = Session(pathlib.Path(tempfile.mkdtemp()) / "s.json", seed=1)
+        s.hero.quest = {"arc": "arc0_qixuanmen", "q": 5, "o": 0, "baseline": {}, "done": True}   # 舊格式：無 completed
+        msgs = quests.update(s.data, s.hero, s.rs)
+        self.assertEqual(s.hero.quest["arc"], "arc1_tiannan")
+        self.assertTrue(any("第二卷" in m for m in msgs))

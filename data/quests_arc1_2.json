@@ -1,0 +1,200 @@
+{
+  "description": "第二、三卷任務規則。",
+  "arcs": {
+    "arc1_tiannan": {
+      "CR_MQ10_RuMen": {
+        "objectives": [
+          {
+            "type": "visit",
+            "loc": "tiannan_fangshi"
+          },
+          {
+            "type": "visit",
+            "loc": "huangfeng"
+          },
+          {
+            "type": "level",
+            "n": 10
+          }
+        ],
+        "reward": {
+          "lingshi": 100,
+          "level": 2
+        }
+      },
+      "CR_MQ11_XueSe": {
+        "objectives": [
+          {
+            "type": "visit",
+            "loc": "xuese"
+          },
+          {
+            "type": "visit",
+            "loc": "yanyue"
+          },
+          {
+            "type": "kill",
+            "loc": "xuese",
+            "n": 2
+          },
+          {
+            "type": "flag",
+            "flag": "zhuji_material"
+          }
+        ],
+        "reward": {
+          "pill": 2,
+          "lingshi": 150,
+          "level": 3
+        }
+      },
+      "CR_MQ12_ZhuJi": {
+        "objectives": [
+          {
+            "type": "flag",
+            "flag": "zhuji_pill_made"
+          },
+          {
+            "type": "realm",
+            "n": 2
+          }
+        ],
+        "reward": {
+          "lingshi": 200,
+          "pill": 1
+        }
+      },
+      "CR_MQ13_ZhengMo": {
+        "objectives": [
+          {
+            "type": "kill",
+            "loc": "yuanwu",
+            "n": 3
+          },
+          {
+            "type": "visit",
+            "loc": "jihe"
+          },
+          {
+            "type": "visit",
+            "loc": "yanyue"
+          },
+          {
+            "type": "visit",
+            "loc": "jixi"
+          }
+        ],
+        "reward": {
+          "pill": 2,
+          "lingshi": 300,
+          "level": 3
+        }
+      }
+    },
+    "arc2_mulan": {
+      "CR_MQ20_LianQi": {
+        "objectives": [
+          {
+            "type": "kill",
+            "loc": "taiyue",
+            "n": 3
+          },
+          {
+            "type": "treasure",
+            "id": "qingzhu_fengyunjian",
+            "n": 1
+          }
+        ],
+        "reward": {
+          "lingshi": 200,
+          "pill": 1,
+          "level": 2
+        }
+      },
+      "CR_MQ21_ShiJinChong": {
+        "objectives": [
+          {
+            "type": "visit",
+            "loc": "lingshou"
+          },
+          {
+            "type": "flag",
+            "flag": "insect_nest"
+          }
+        ],
+        "reward": {
+          "pill": 2,
+          "lingye": 1,
+          "lingshi": 150
+        }
+      },
+      "CR_MQ22_JieDan": {
+        "objectives": [
+          {
+            "type": "item",
+            "item": "pill",
+            "n": 1
+          },
+          {
+            "type": "flag",
+            "flag": "seclusion_site"
+          },
+          {
+            "type": "realm",
+            "n": 3
+          }
+        ],
+        "reward": {
+          "lingshi": 400,
+          "pill": 1,
+          "level": 2
+        }
+      },
+      "CR_MQ23_MuLan": {
+        "objectives": [
+          {
+            "type": "visit",
+            "loc": "jiazhou"
+          },
+          {
+            "type": "kill",
+            "loc": "grass_sea",
+            "n": 3
+          },
+          {
+            "type": "visit",
+            "loc": "mulan_camp"
+          },
+          {
+            "type": "kill",
+            "loc": "mulan_camp",
+            "n": 4
+          }
+        ],
+        "reward": {
+          "lingshi": 500,
+          "pill": 1,
+          "level": 3
+        }
+      },
+      "CR_MQ24_QuHun": {
+        "objectives": [
+          {
+            "type": "visit",
+            "loc": "tianlan"
+          },
+          {
+            "type": "kill",
+            "loc": "grass_sea",
+            "n": 3
+          }
+        ],
+        "reward": {
+          "lingshi": 600,
+          "pill": 2,
+          "level": 4
+        }
+      }
+    }
+  }
+}

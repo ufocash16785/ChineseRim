@@ -1,0 +1,859 @@
+{
+  "description": "第四至六卷與 DLC 劇情對話。",
+  "dialogues": {
+    "d3_sea": {
+      "trigger": {
+        "loc": "wubian",
+        "quest": "CR_MQ30_DuHai",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "船夫",
+          "text": "過了無邊海才是亂星海。海上有妖獸，還有海盜，你可得自己多小心。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "旁白",
+          "text": "海浪翻卷，一頭巨大的海獸從水中躍起。"
+        }
+      }
+    },
+    "d3_arrive": {
+      "trigger": {
+        "arrive": "luanxinghai",
+        "quest": "CR_MQ30_DuHai",
+        "obj": 1
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "靠岸時，外星海的島嶼群如星子般散落。這裡不比天南，資源被大宗門壟斷，散修朝不保夕。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "旁白",
+          "text": "你收斂氣息，決定先打聽情報。"
+        }
+      }
+    },
+    "d3_city": {
+      "trigger": {
+        "loc": "tianxing_cheng",
+        "quest": "CR_MQ31_TianXingCheng",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "天星城是亂星海最大的城市，星宮與逆星盟的勢力在這裡交錯。街上處處是修士，也處處是眼線。"
+        }
+      }
+    },
+    "d3_faction": {
+      "trigger": {
+        "loc": "tianxing_cheng",
+        "quest": "CR_MQ31_TianXingCheng",
+        "obj": 1
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "星宮與逆星盟都遞來了橄欖枝。你知道，站隊將影響此後的聲望與門路。",
+          "choices": [
+            {
+              "text": "加入星宮：聲望穩重，庇護可靠",
+              "next": "xg",
+              "effects": [
+                {
+                  "flag": "faction_chosen"
+                },
+                {
+                  "flag": "faction_xinggong"
+                },
+                {
+                  "rep": "xinggong",
+                  "n": 2
+                }
+              ]
+            },
+            {
+              "text": "加入逆星盟：手段狠辣，機會更多",
+              "next": "nx",
+              "effects": [
+                {
+                  "flag": "faction_chosen"
+                },
+                {
+                  "flag": "faction_nixing"
+                },
+                {
+                  "rep": "nixingmeng",
+                  "n": 2
+                },
+                {
+                  "item": "lingshi",
+                  "n": 200
+                }
+              ]
+            },
+            {
+              "text": "兩不相幫，做個外星海散修",
+              "next": "free",
+              "effects": [
+                {
+                  "flag": "faction_chosen"
+                },
+                {
+                  "rep": "waixinghai_sanxiu",
+                  "n": 2
+                }
+              ]
+            }
+          ]
+        },
+        "xg": {
+          "speaker": "旁白",
+          "text": "你在星宮名冊上簽下化名。"
+        },
+        "nx": {
+          "speaker": "旁白",
+          "text": "逆星盟的人笑了：『識時務者。』並塞給你一袋靈石。"
+        },
+        "free": {
+          "speaker": "旁白",
+          "text": "誰也不靠，你的路只能靠自己。"
+        }
+      }
+    },
+    "d3_xutian_open": {
+      "trigger": {
+        "loc": "xutian",
+        "quest": "CR_MQ32_XuTian",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "虛天殿每三百年開啟一次，各大勢力早已雲集。殿門緩緩開啟，靈光沖天。"
+        }
+      }
+    },
+    "d3_lingyuling": {
+      "trigger": {
+        "loc": "xutian",
+        "quest": "CR_MQ32_XuTian",
+        "obj": 1
+      },
+      "nodes": {
+        "start": {
+          "speaker": "凌玉靈",
+          "text": "（少女模樣，眼神卻老成）殿中兇險，單槍匹馬的都活不久。要不要合作？",
+          "choices": [
+            {
+              "text": "合作，共進退",
+              "next": "ally",
+              "effects": [
+                {
+                  "rep": "xinggong",
+                  "n": 1
+                },
+                {
+                  "level": 1
+                }
+              ]
+            },
+            {
+              "text": "互不信任，各自為戰",
+              "next": "solo"
+            }
+          ]
+        },
+        "ally": {
+          "speaker": "凌玉靈",
+          "text": "那就說定了。"
+        },
+        "solo": {
+          "speaker": "凌玉靈",
+          "text": "（聳肩）也好，各憑本事。"
+        }
+      }
+    },
+    "d3_ding": {
+      "trigger": {
+        "loc": "xutian",
+        "quest": "CR_MQ32_XuTian",
+        "obj": 2
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "殿心的虛天鼎近在眼前，各方人馬同時出手。",
+          "choices": [
+            {
+              "text": "搶先出手奪鼎",
+              "next": "grab",
+              "effects": [
+                {
+                  "flag": "xutian_ding"
+                },
+                {
+                  "hpFrac": -0.3
+                },
+                {
+                  "level": 2
+                }
+              ]
+            },
+            {
+              "text": "坐山觀虎鬥，撿漏",
+              "next": "wait",
+              "effects": [
+                {
+                  "flag": "xutian_ding"
+                },
+                {
+                  "item": "lingshi",
+                  "n": 200
+                }
+              ]
+            }
+          ]
+        },
+        "grab": {
+          "speaker": "旁白",
+          "text": "你冒險搶鼎，雖受了傷，卻拿到了最有利的位置。"
+        },
+        "wait": {
+          "speaker": "旁白",
+          "text": "趁對方兩敗俱傷，你悄悄拿到了不少殿中遺落之物。"
+        }
+      }
+    },
+    "d3_jiyin": {
+      "trigger": {
+        "loc": "jiyin",
+        "quest": "CR_MQ33_JiYin",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "極陰島終年被陰氣籠罩，島上妖物皆偏陰寒。傳說紫羅極火就藏在島心。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "旁白",
+          "text": "你以自身靈力抵禦陰氣，一路殺進島心。"
+        }
+      }
+    },
+    "d3_yuanying": {
+      "trigger": {
+        "loc": "tianxing_cheng",
+        "quest": "CR_MQ34_YuanYing",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "結丹到元嬰，是天南千年難遇的關卡。你找到了一處靈氣充足的閉關之地。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "旁白",
+          "text": "（提示：結丹等級到達上限（60）後，點『突破』；備好突破丹。）"
+        }
+      }
+    },
+    "d3_end": {
+      "trigger": {
+        "onQuestDone": "CR_MQ34_YuanYing"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "第四卷·亂星海 完。金丹化元嬰，你已站到人界修士的高處。北方大晉，還有更多未解之事。"
+        }
+      }
+    },
+    "d4_luoyun": {
+      "trigger": {
+        "loc": "luoyun",
+        "quest": "CR_MQ40_LuoYun",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "落雲宗執事",
+          "text": "（打量你）客卿之位，需有真本事。你叫什麼名字？",
+          "choices": [
+            {
+              "text": "報上化名",
+              "next": "alias",
+              "effects": [
+                {
+                  "rep": "luoyunzong",
+                  "n": 1
+                }
+              ]
+            },
+            {
+              "text": "以真名相告",
+              "next": "real",
+              "effects": [
+                {
+                  "flag": "real_name"
+                }
+              ]
+            }
+          ]
+        },
+        "alias": {
+          "speaker": "執事",
+          "text": "好，往後便以此名行走。"
+        },
+        "real": {
+          "speaker": "執事",
+          "text": "（微怔）倒是坦蕩。"
+        }
+      }
+    },
+    "d4_guest": {
+      "trigger": {
+        "loc": "wanyao",
+        "quest": "CR_MQ40_LuoYun",
+        "obj": 1
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "客卿的第一件任務：清剿萬妖谷外圍的妖獸，保護宗門商路。"
+        }
+      }
+    },
+    "d4_kunwu": {
+      "trigger": {
+        "loc": "kunwu",
+        "quest": "CR_MQ41_KunWu",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "昆吾山秘境開啟，各方勢力蜂擁而入。天魔宗、鬼靈門、大晉皇朝——都在其中。"
+        }
+      }
+    },
+    "d4_melee": {
+      "trigger": {
+        "loc": "kunwu",
+        "quest": "CR_MQ41_KunWu",
+        "obj": 1
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "秘境內亂戰四起，敵友難分。你只能先解決眼前的妖物。"
+        }
+      }
+    },
+    "d4_treasure": {
+      "trigger": {
+        "loc": "kunwu",
+        "quest": "CR_MQ41_KunWu",
+        "obj": 2
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "混戰稍歇，你在一處斷壁下發現了一件被遺落的寶物。",
+          "choices": [
+            {
+              "text": "悄悄收入懷中",
+              "next": "take",
+              "effects": [
+                {
+                  "flag": "kunwu_treasure"
+                },
+                {
+                  "item": "lingye",
+                  "n": 1
+                }
+              ]
+            },
+            {
+              "text": "交給落雲宗，換取聲望",
+              "next": "give",
+              "effects": [
+                {
+                  "flag": "kunwu_treasure"
+                },
+                {
+                  "rep": "luoyunzong",
+                  "n": 2
+                },
+                {
+                  "item": "lingshi",
+                  "n": 300
+                }
+              ]
+            }
+          ]
+        },
+        "take": {
+          "speaker": "旁白",
+          "text": "你沒有聲張。"
+        },
+        "give": {
+          "speaker": "旁白",
+          "text": "宗門長老對你另眼相看。"
+        }
+      }
+    },
+    "d4_xuangu": {
+      "trigger": {
+        "loc": "guiling_hq",
+        "quest": "CR_MQ42_XuanGu",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "玄骨老祖",
+          "text": "（陰惻惻）小輩，你身上有我看得上的東西。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "旁白",
+          "text": "一場硬仗無可避免。"
+        }
+      }
+    },
+    "d4_tihun": {
+      "trigger": {
+        "loc": "wanyao",
+        "quest": "CR_MQ42_XuanGu",
+        "obj": 1
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "萬妖谷深處，一隻啼魂獸靜靜地看著你。",
+          "choices": [
+            {
+              "text": "以誠相待，結下契約",
+              "next": "pact",
+              "effects": [
+                {
+                  "level": 2
+                }
+              ]
+            },
+            {
+              "text": "以力降服，強行契約",
+              "next": "force",
+              "effects": [
+                {
+                  "hpFrac": -0.2
+                },
+                {
+                  "level": 3
+                }
+              ]
+            }
+          ]
+        },
+        "pact": {
+          "speaker": "旁白",
+          "text": "牠低鳴一聲，靈識相通。"
+        },
+        "force": {
+          "speaker": "旁白",
+          "text": "牠不情不願，但也終究認了你。"
+        }
+      }
+    },
+    "d4_dayan": {
+      "trigger": {
+        "loc": "luoyun",
+        "quest": "CR_MQ43_DaYan",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "大衍神君",
+          "text": "（最後一縷神識）小輩，我將畢生傀儡術傳予你。莫要辜負。",
+          "choices": [
+            {
+              "text": "鄭重接下傳承",
+              "next": "ok",
+              "effects": [
+                {
+                  "flag": "dayan_legacy"
+                },
+                {
+                  "level": 2
+                }
+              ]
+            },
+            {
+              "text": "只取所需，不欠人情",
+              "next": "need",
+              "effects": [
+                {
+                  "flag": "dayan_legacy"
+                }
+              ]
+            }
+          ]
+        },
+        "ok": {
+          "speaker": "旁白",
+          "text": "神識融入識海，你只覺得頭腦一陣清明。"
+        },
+        "need": {
+          "speaker": "旁白",
+          "text": "神君淡淡一笑，神魂隨之散去。"
+        }
+      }
+    },
+    "d4_puppet": {
+      "trigger": {
+        "loc": "haiyun",
+        "quest": "CR_MQ43_DaYan",
+        "obj": 1
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "傀儡術大成，需要大量實戰驗證。你在海雲府的暗巷裡反覆演練。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "旁白",
+          "text": "（提示：把等級提升到 75 即可。）"
+        }
+      }
+    },
+    "d4_end": {
+      "trigger": {
+        "onQuestDone": "CR_MQ43_DaYan"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "第五卷·大晉 完。大衍傳承終於落幕，你的傀儡術大成。是時候，回鄉了。"
+        }
+      }
+    },
+    "d5_home": {
+      "trigger": {
+        "loc": "qingniu",
+        "quest": "CR_MQ50_GuiXiang",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "青牛鎮還是老樣子，只是熟悉的面孔已所剩無幾。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "旁白",
+          "text": "你站在墳前，靜靜站了很久。"
+        }
+      }
+    },
+    "d5_daochang": {
+      "trigger": {
+        "loc": "huangfeng",
+        "quest": "CR_MQ50_GuiXiang",
+        "obj": 1
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "你要在天南建立道場，作為往後修行的根據地。",
+          "choices": [
+            {
+              "text": "設在黃楓谷後山：有舊誼庇護",
+              "next": "hf",
+              "effects": [
+                {
+                  "flag": "daochang"
+                },
+                {
+                  "rep": "huangfenggu",
+                  "n": 2
+                }
+              ]
+            },
+            {
+              "text": "另尋靈脈：清靜無擾",
+              "next": "new",
+              "effects": [
+                {
+                  "flag": "daochang"
+                },
+                {
+                  "item": "lingshi",
+                  "n": 500
+                }
+              ]
+            }
+          ]
+        },
+        "hf": {
+          "speaker": "旁白",
+          "text": "舊日同門紛紛前來道賀。"
+        },
+        "new": {
+          "speaker": "旁白",
+          "text": "靈脈之上，你布下重重禁制。"
+        }
+      }
+    },
+    "d5_daolv": {
+      "trigger": {
+        "loc": "yanyue",
+        "quest": "CR_MQ51_DaoLv",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "南宮婉",
+          "text": "（靜靜看著你）這麼多年了。我一直在等你一句話。",
+          "choices": [
+            {
+              "text": "結為道侶，攜手同行",
+              "next": "yes",
+              "effects": [
+                {
+                  "rep": "yanyuezong",
+                  "n": 2
+                },
+                {
+                  "flag": "daolv"
+                }
+              ]
+            },
+            {
+              "text": "大道艱險，願先守護你",
+              "next": "guard",
+              "effects": [
+                {
+                  "rep": "yanyuezong",
+                  "n": 1
+                },
+                {
+                  "flag": "daolv"
+                }
+              ]
+            }
+          ]
+        },
+        "yes": {
+          "speaker": "旁白",
+          "text": "她微微一笑，眼角似有淚光。"
+        },
+        "guard": {
+          "speaker": "旁白",
+          "text": "她輕輕點頭，並未再多說。"
+        }
+      }
+    },
+    "d5_insight": {
+      "trigger": {
+        "loc": "xuese",
+        "quest": "CR_MQ52_HuaShen",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "血色禁地深處，一片空明。你盤膝而坐，感悟天地法則。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "旁白",
+          "text": "時間、空間、生死……無數念頭如潮水湧來。",
+          "effects": [
+            {
+              "flag": "law_insight"
+            },
+            {
+              "level": 2
+            }
+          ]
+        }
+      }
+    },
+    "d5_huashen": {
+      "trigger": {
+        "loc": "huangfeng",
+        "quest": "CR_MQ52_HuaShen",
+        "obj": 1
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "法則已悟，只差臨門一腳。",
+          "choices": [
+            {
+              "text": "順勢突破，一氣呵成",
+              "next": "fast",
+              "effects": [
+                {
+                  "setRealm": "deity_transformation"
+                },
+                {
+                  "level": 2
+                }
+              ]
+            },
+            {
+              "text": "謹慎守心，穩紮穩打",
+              "next": "slow",
+              "effects": [
+                {
+                  "setRealm": "deity_transformation"
+                },
+                {
+                  "item": "lingshi",
+                  "n": 300
+                }
+              ]
+            }
+          ]
+        },
+        "fast": {
+          "speaker": "旁白",
+          "text": "天地元氣如潮匯入，化神成功！"
+        },
+        "slow": {
+          "speaker": "旁白",
+          "text": "你多花了些時間，終於水到渠成，化神成功！"
+        }
+      }
+    },
+    "d5_node": {
+      "trigger": {
+        "loc": "jixi",
+        "quest": "CR_MQ53_FeiSheng",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "人界靈氣稀薄，化神修士難再精進。傳說極西之地藏著一處空間節點。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "旁白",
+          "text": "你順著風沙深處的空間波動，一路探尋。"
+        }
+      }
+    },
+    "d5_ascend": {
+      "trigger": {
+        "loc": "jixi",
+        "quest": "CR_MQ53_FeiSheng",
+        "obj": 1
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "節點裂開一道縫隙，另一頭是完全不同的天地。",
+          "choices": [
+            {
+              "text": "毅然踏入",
+              "next": "go",
+              "effects": [
+                {
+                  "flag": "ascended"
+                },
+                {
+                  "level": 3
+                }
+              ]
+            },
+            {
+              "text": "回首最後看一眼人界",
+              "next": "look",
+              "effects": [
+                {
+                  "flag": "ascended"
+                },
+                {
+                  "item": "lingshi",
+                  "n": 300
+                }
+              ]
+            }
+          ]
+        },
+        "go": {
+          "speaker": "旁白",
+          "text": "空間之力包裹全身，眼前一白。"
+        },
+        "look": {
+          "speaker": "旁白",
+          "text": "你在心底向這片土地告別，然後一步踏出。"
+        }
+      }
+    },
+    "d5_end": {
+      "trigger": {
+        "onQuestDone": "CR_MQ53_FeiSheng"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "第六卷·化神與飛升 完。人界篇落幕，靈界的大門，已在你面前打開。（可於傳送陣前往天淵大陸）"
+        }
+      }
+    },
+    "d6_arrive": {
+      "trigger": {
+        "arrive": "tianyuan",
+        "quest": "CR_DLC1_TianYuan",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "天淵城，人族在靈界的最後屏障。城牆高聳如山，守軍嚴陣以待。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "天淵守軍",
+          "text": "新來的？正好，獸潮就要到了。"
+        }
+      }
+    },
+    "d6_beast": {
+      "trigger": {
+        "loc": "mozu_rift",
+        "quest": "CR_DLC1_TianYuan",
+        "obj": 1
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "魔族空間裂縫邊，獸潮洶湧而至。這一戰，是你在靈界站穩腳跟的第一步。"
+        }
+      }
+    },
+    "d6_end": {
+      "trigger": {
+        "onQuestDone": "CR_DLC1_TianYuan"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "靈界 DLC・天淵城篇 完。更多內容，敬請期待。"
+        }
+      }
+    }
+  }
+}

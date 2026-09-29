@@ -21,6 +21,14 @@ def load(name: str):
         return json.load(fh)
 
 
+def load_merged(pattern: str, key: str):
+    out = {}
+    for f in sorted(DATA.glob(pattern)):
+        with f.open(encoding="utf-8") as fh:
+            out.update(json.load(fh).get(key, {}))
+    return out
+
+
 def unique_ids(items, label):
     seen = set()
     for it in items:
@@ -92,7 +100,8 @@ def main() -> int:
             warnings.append(f"treasures/{t['id']}: owner {o} 不在 characters.json")
 
     # 主線 → 地區、Quest EditorID
-    qr = load("quests")["arcs"]
+    qr = load_merged("quests*.json", "arcs")
+    all_regions = {g["id"] for w in load("regions")["worlds"] for g in w["regions"]}
     all_locs = {l["id"] for w in load("regions")["worlds"] for g in w["regions"] for l in g["locations"]}
     for arc_id, rules in qr.items():
         arc = next((a for a in arcs["arcs"] if a["id"] == arc_id), None)
@@ -108,8 +117,12 @@ def main() -> int:
             for o in rule["objectives"]:
                 if o["type"] in ("visit", "kill") and o["loc"] != "total" and o["loc"] not in all_locs:
                     errors.append(f"quests/{qid}: 未知地點 {o['loc']}")
+                if o["type"] == "arrive" and o["loc"] not in all_regions:
+                    errors.append(f"quests/{qid}: 未知區域 {o['loc']}")
+                if o["type"] not in ("visit", "kill", "arrive", "level", "realm", "item", "flag", "treasure"):
+                    errors.append(f"quests/{qid}: 未知條件類型 {o['type']}")
     all_q = {q["id"] for a in arcs["arcs"] for q in a["quests"]}
-    for did, d in load("dialogues")["dialogues"].items():
+    for did, d in load_merged("dialogues*.json", "dialogues").items():
         t = d["trigger"]
         if "quest" in t and t["quest"] not in all_q:
             errors.append(f"dialogues/{did}: 未知任務 {t['quest']}")
@@ -117,6 +130,8 @@ def main() -> int:
             errors.append(f"dialogues/{did}: 未知任務 {t['onQuestDone']}")
         if "loc" in t and t["loc"] not in all_locs:
             errors.append(f"dialogues/{did}: 未知地點 {t['loc']}")
+        if "arrive" in t and t["arrive"] not in all_regions:
+            errors.append(f"dialogues/{did}: 未知區域 {t['arrive']}")
         nodes = d["nodes"]
         if "start" not in nodes:
             errors.append(f"dialogues/{did}: 缺 start 節點")
@@ -129,6 +144,21 @@ def main() -> int:
             for e in effs:
                 if "rep" in e and e["rep"] not in sect_ids:
                     errors.append(f"dialogues/{did}/{nid}: 未知門派 {e['rep']}")
+    dlg = load_merged("dialogues*.json", "dialogues")
+    set_flags = {e["flag"] for d in dlg.values() for n in d["nodes"].values()
+                 for e in list(n.get("effects", [])) + [x for c in n.get("choices", []) for x in c.get("effects", [])] if "flag" in e}
+    for arc_id, rules in qr.items():
+        arc = next((a for a in arcs["arcs"] if a["id"] == arc_id), None)
+        for qid, rule in rules.items():
+            for i, o in enumerate(rule["objectives"]):
+                if o["type"] == "flag" and o["flag"] not in set_flags:
+                    errors.append(f"quests/{qid}: 目標 {i} 的旗標 {o['flag']} 沒有任何對話會設定")
+    for did, d in dlg.items():
+        t = d["trigger"]
+        if "quest" in t:
+            n_obj = next((len(q["objectives"]) for a in arcs["arcs"] for q in a["quests"] if q["id"] == t["quest"]), 0)
+            if not 0 <= t["obj"] < n_obj:
+                errors.append(f"dialogues/{did}: obj {t['obj']} 超出範圍")
     for a in arcs["arcs"]:
         for reg in a["region"].split("/"):
             if reg not in region_ids:

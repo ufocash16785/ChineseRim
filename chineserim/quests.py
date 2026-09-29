@@ -1,9 +1,12 @@
-"""任務系統：依 data/quests.json 的條件推進 story_arcs.json 的任務。
-進度存在 Character.quest（隨存檔保存）。visit/kill 條件從目標啟用時開始累計。"""
-
+"""任務系統：依 data/quests.json 的條件推進 story_arcs.json 的任務，卷與卷之間自動銜接。
+進度存在 Character.quest（隨存檔保存）。visit/kill/arrive 條件從目標啟用時開始累計。"""
 from . import dialogue
 
-ARC = "arc0_qixuanmen"
+COUNTED = ("visit", "kill", "arrive")
+
+
+def arc_order(data):
+    return [a["id"] for a in data.arcs if a["id"] in data.quest_rules]
 
 
 def _arc(data, arc_id):
@@ -14,15 +17,16 @@ def _rules(data, arc_id):
     return data.quest_rules.get(arc_id, {})
 
 
-def ensure(ch, arc_id=ARC):
+def ensure(ch, data=None):
     if not ch.quest:
-        ch.quest = {"arc": arc_id, "q": 0, "o": 0, "baseline": dict(ch.counters), "done": False}
+        first = arc_order(data)[0] if data else "arc0_qixuanmen"
+        ch.quest = {"arc": first, "q": 0, "o": 0, "baseline": dict(ch.counters), "done": False, "completed": []}
     return ch.quest
 
 
 def _met(cond, ch, base):
     t, n = cond["type"], cond.get("n", 1)
-    if t in ("visit", "kill"):
+    if t in COUNTED:
         key = f"{t}:{cond['loc']}"
         return ch.counters.get(key, 0) - base.get(key, 0) >= n
     if t == "level":
@@ -33,26 +37,49 @@ def _met(cond, ch, base):
         return ch.count(cond["item"]) >= n
     if t == "flag":
         return bool(ch.flags.get(cond["flag"]))
+    if t == "treasure":
+        return ch.treasures.get(cond["id"], 0) >= n
     return False
 
 
 def _progress_text(cond, ch, base):
     t, n = cond["type"], cond.get("n", 1)
-    if t in ("visit", "kill"):
+    if t in COUNTED:
         key = f"{t}:{cond['loc']}"
         return f"{min(n, ch.counters.get(key, 0) - base.get(key, 0))}/{n}"
     if t == "flag":
         return "1/1" if ch.flags.get(cond["flag"]) else "0/1"
+    if t == "treasure":
+        return f"{min(n, ch.treasures.get(cond['id'], 0))}/{n}"
     cur = {"level": ch.level, "realm": ch.realm}.get(t, ch.count(cond.get("item", "")))
     return f"{min(n, cur)}/{n}"
 
 
-def update(data, ch):
+def _reward(realms, ch, reward, msgs):
+    for item, n in reward.items():
+        if item == "level":
+            realms.gain_level(ch, n)
+            msgs.append(f"  修為精進：等級 +{n}")
+        else:
+            ch.add(item, n)
+            msgs.append(f"  獎勵 {item} ×{n}")
+
+
+def update(data, ch, realms):
     """推進任務；回傳新訊息列表。"""
-    q = ensure(ch)
+    q = ensure(ch, data)
+    q.setdefault("completed", [])
     msgs = []
-    arc = _arc(data, q["arc"])
-    while not q["done"]:
+    order = arc_order(data)
+    while True:
+        if q["done"]:                       # 舊存檔：上一卷已完成但後面還有卷
+            i = order.index(q["arc"])
+            if i + 1 >= len(order):
+                break
+            q.update(arc=order[i + 1], q=0, o=0, done=False, baseline=dict(ch.counters))
+            msgs.append(f"══ {_arc(data, q['arc'])['name']} ══")
+            continue
+        arc = _arc(data, q["arc"])
         quest = arc["quests"][q["q"]]
         rule = _rules(data, q["arc"]).get(quest["id"])
         if not rule:
@@ -65,22 +92,21 @@ def update(data, ch):
         q["baseline"] = dict(ch.counters)
         if q["o"] >= len(rule["objectives"]):
             msgs.append(f"★ 任務完成：{quest['name']}")
-            for item, n in rule.get("reward", {}).items():
-                ch.add(item, n)
-                msgs.append(f"  獎勵 {item} ×{n}")
-            q.setdefault("completed", []).append(quest["id"])
+            _reward(realms, ch, rule.get("reward", {}), msgs)
+            q["completed"].append(quest["id"])
             q["q"] += 1
             q["o"] = 0
             if q["q"] >= len(arc["quests"]):
-                q["done"] = True
                 msgs.append(f"★★ {arc['name']} 完成！")
+                q["done"] = True            # 下一輪迴圈決定是否銜接下一卷
     return msgs
 
 
 def view(data, ch):
-    q = ensure(ch)
+    q = ensure(ch, data)
     arc = _arc(data, q["arc"])
-    out = {"arc": arc["name"], "done": q["done"], "quests": []}
+    last = arc_order(data)[-1] == q["arc"]
+    out = {"arc": arc["name"], "done": q["done"] and last, "quests": []}
     for i, quest in enumerate(arc["quests"]):
         rule = _rules(data, q["arc"]).get(quest["id"], {"objectives": []})
         state = "done" if q["done"] or i < q["q"] else "active" if i == q["q"] else "locked"
@@ -89,7 +115,9 @@ def view(data, ch):
             if state == "done" or (state == "active" and j < q["o"]):
                 objs.append({"text": text, "state": "done"})
             elif state == "active" and j == q["o"]:
-                objs.append({"text": text, "state": "active", "progress": (dialogue.gating_hint(data, ch, quest["id"], j) if dialogue.gating(data, ch, quest["id"], j) else _progress_text(rule["objectives"][j], ch, q["baseline"])) if rule["objectives"] else ""})
+                hint = dialogue.gating_hint(data, ch, quest["id"], j) if dialogue.gating(data, ch, quest["id"], j) else ""
+                prog = hint or (_progress_text(rule["objectives"][j], ch, q["baseline"]) if rule["objectives"] else "")
+                objs.append({"text": text, "state": "active", "progress": prog})
             else:
                 objs.append({"text": text, "state": "locked"})
         out["quests"].append({"name": quest["name"], "state": state, "objectives": objs})

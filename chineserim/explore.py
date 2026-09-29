@@ -10,6 +10,11 @@ DEEP = {"秘境", "聖地"}
 ELEMENTS = ["金", "木", "水", "火", "土", "雷", "冰", "風"]
 BEASTS = ["青狼", "毒蛛", "鐵背熊", "赤焰蛇", "碧水蟒", "山魈", "血翼蝠"]
 LINGJIE_MIN_REALM = 5
+DEEP_GATE = {"xuese": 1}      # 秘境進入所需境界（預設 2＝築基）；血色禁地練氣期即可進入
+
+
+def min_realm(loc_id):
+    return DEEP_GATE.get(loc_id, 2)
 
 
 class WorldMap:
@@ -114,8 +119,8 @@ def visit(world, realms, ch, region_id, loc_id, rng=None, day=0, fight_wild=True
     rng = rng or random.Random()
     loc = find_location(world, region_id, loc_id)
     t = loc["type"]
-    if t in DEEP and ch.realm < 2:
-        return [f"{loc['name']}靈壓駭人，築基以下不得深入"], 0
+    if t in DEEP and ch.realm < min_realm(loc_id):
+        return [f"{loc['name']}靈壓駭人，境界不足，不得深入"], 0
     ch.counters[f"visit:{loc_id}"] = ch.counters.get(f"visit:{loc_id}", 0) + 1
     if t in SAFE:
         ch.hp = ch.max_hp

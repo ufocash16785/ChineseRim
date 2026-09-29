@@ -8,7 +8,7 @@ from . import dialogue, quests, treasures
 from .character import Character
 from .data import ROOT, GameData
 from .elements import ADV_MULT, DIS_MULT, PAIRS, PARENT
-from .explore import DEEP, WorldMap, is_wild, kill_reward, visit
+from .explore import DEEP, WorldMap, is_wild, kill_reward, min_realm, visit
 from .realms import RealmSystem
 
 SAVE_VERSION = 1
@@ -32,7 +32,7 @@ class Session:
         self.hero.add("lingshi", 500)
         self.day, self.region = 0, "tiannan"
         self.log = ["你是青牛鎮少年韓立。點區域旅行、點地點探索；先去看看家鄉青牛鎮吧。"]
-        quests.ensure(self.hero)
+        quests.ensure(self.hero, self.data)
 
     # ---- 存檔 ----
     def to_dict(self):
@@ -72,29 +72,29 @@ class Session:
                 if self.hero.count("lingye") > n:
                     self.log.append(f"第 {d} 日月圓，掌天瓶凝出一滴靈液")
 
-    def _after(self, loc=None):
+    def _after(self, loc=None, arrive=None):
         """任務推進與對話觸發。loc 為剛造訪的地點（用於地點型對話）。"""
         h = self.hero
-        if loc and not h.dialogue:
-            did = dialogue.find_trigger(self.data, h, loc)
+        if (loc or arrive) and not h.dialogue:
+            did = dialogue.find_trigger(self.data, h, loc, arrive)
             if did:
-                dialogue.start(self.data, h, did, self.log)
-                # 簡報播完才開始累計；但這次造訪本身算數
+                dialogue.start(self.data, h, did, self.log, self.rs)
+                # 簡報播完才開始累計；但這次造訪／抵達本身算數
                 h.quest["baseline"] = dict(h.counters)
-                k = f"visit:{loc}"
+                k = f"visit:{loc}" if loc else f"arrive:{arrive}"
                 h.quest["baseline"][k] = max(0, h.quest["baseline"].get(k, 0) - 1)
-        self.log.extend(quests.update(self.data, h))
+        self.log.extend(quests.update(self.data, h, self.rs))
         if not h.dialogue:
             did = dialogue.find_trigger(self.data, h)
             if did:
-                dialogue.start(self.data, h, did, self.log)
+                dialogue.start(self.data, h, did, self.log, self.rs)
 
     def act(self, kind, **q):
         h = self.hero
         if kind == "choose":
             if h.dialogue:
                 idx = int(q["i"]) if q.get("i") not in (None, "") else None
-                dialogue.choose(self.data, h, idx, self.log)
+                dialogue.choose(self.data, h, idx, self.log, self.rs)
                 self._after()
                 self.save()
             return
@@ -102,6 +102,7 @@ class Session:
             return          # 對話進行中，先做完對話
         if q.get("hp") not in (None, ""):
             h.hp = max(1.0, min(h.max_hp, float(q["hp"])))    # 卷軸前端即時戰鬥的血量
+        arrived = ok = None
         if kind == "kill":
             self.log.extend(kill_reward(self.rs, h, self.rng, q.get("loc", "total"), q.get("deep") == "1"))
         elif kind == "die":
@@ -114,7 +115,10 @@ class Session:
             self.log.append(msg + (f"（耗時 {days} 日）" if ok else ""))
             if ok:
                 self.region = q["to"]
+                key = f"arrive:{q['to']}"
+                h.counters[key] = h.counters.get(key, 0) + 1
                 self.advance(days)
+                arrived = q["to"]
         elif kind == "visit":
             msgs, days = visit(self.world, self.rs, h, self.region, q["loc"], self.rng, fight_wild=q.get("nofight") != "1")
             self.log.extend(msgs)
@@ -132,7 +136,7 @@ class Session:
             self.new_game()
             self.save()
             return
-        self._after(q.get("loc") if kind == "visit" else None)
+        self._after(q.get("loc") if kind == "visit" else None, arrived if kind == "travel" and ok else None)
         self.save()
 
     def snapshot(self):
@@ -152,6 +156,6 @@ class Session:
             "world": [{"id": g["id"], "name": g["name"], "x": g["coords"][0], "y": g["coords"][1], "world": g["world_name"],
                        "locked": not w.can_enter(h, g["id"]), "days": w.travel_days(h, self.region, g["id"])}
                       for g in w.regions.values()],
-            "locations": [{"id": l["id"], "name": l["name"], "type": l["type"], "wild": is_wild(l["type"]), "deep": l["type"] in DEEP, "note": l.get("note", ""), "x": x, "y": y}
+            "locations": [{"id": l["id"], "name": l["name"], "type": l["type"], "wild": is_wild(l["type"]), "deep": l["type"] in DEEP, "min_realm": min_realm(l["id"]), "note": l.get("note", ""), "x": x, "y": y}
                           for l, x, y in w.location_layout(self.region)],
         }

@@ -1,0 +1,891 @@
+{
+  "description": "第二、三卷劇情對話。",
+  "dialogues": {
+    "d1_fangshi": {
+      "trigger": {
+        "loc": "tiannan_fangshi",
+        "quest": "CR_MQ10_RuMen",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "攤主",
+          "text": "小哥面生。修士們在坊市裡都拿靈石說話——沒靈石，再好的東西也只能看。這顆突破丹，一百靈石，賣不賣？",
+          "choices": [
+            {
+              "text": "買下（100 靈石）",
+              "next": "buy",
+              "effects": [
+                {
+                  "item": "lingshi",
+                  "n": -100
+                },
+                {
+                  "item": "pill",
+                  "n": 1
+                }
+              ],
+              "require": {
+                "item": "lingshi",
+                "n": 100
+              }
+            },
+            {
+              "text": "只想逛逛，多問問行情",
+              "next": "look",
+              "effects": [
+                {
+                  "level": 1
+                }
+              ]
+            }
+          ]
+        },
+        "buy": {
+          "speaker": "攤主",
+          "text": "爽快。記住，丹藥要在境界瓶頸時吃才有用，平時吃了是浪費。"
+        },
+        "look": {
+          "speaker": "旁白",
+          "text": "你在攤位間穿梭，記下了幾種常見靈草的價格，也聽懂了『下品、中品靈石』的兌換規矩。"
+        }
+      }
+    },
+    "d1_huangfeng": {
+      "trigger": {
+        "loc": "huangfeng",
+        "quest": "CR_MQ10_RuMen",
+        "obj": 1
+      },
+      "nodes": {
+        "start": {
+          "speaker": "李化元",
+          "text": "你的資質……四靈根，算不得上乘。不過黃楓谷收徒，看重的是心性與肯吃苦。你願入我門下嗎？",
+          "choices": [
+            {
+              "text": "恭敬行禮：弟子願意",
+              "next": "yes",
+              "effects": [
+                {
+                  "rep": "huangfenggu",
+                  "n": 2
+                }
+              ]
+            },
+            {
+              "text": "坦言資質平庸，願以勤補拙",
+              "next": "honest",
+              "effects": [
+                {
+                  "rep": "huangfenggu",
+                  "n": 1
+                },
+                {
+                  "level": 1
+                }
+              ]
+            }
+          ]
+        },
+        "yes": {
+          "speaker": "李化元",
+          "text": "好。往後在谷中，守規矩，少說話，多做事。"
+        },
+        "honest": {
+          "speaker": "李化元",
+          "text": "（微微頷首）能自知者不多。留下吧。"
+        }
+      }
+    },
+    "d1_baiyao": {
+      "trigger": {
+        "loc": "huangfeng",
+        "quest": "CR_MQ10_RuMen",
+        "obj": 2
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "你被派去看管百藥園。園中的靈草長得慢，年份不夠就入不了丹方。你摸了摸懷裡的小瓶。",
+          "choices": [
+            {
+              "text": "悄悄滴一滴靈液在藥苗上",
+              "next": "bottle",
+              "effects": [
+                {
+                  "item": "lingye",
+                  "n": -1
+                },
+                {
+                  "item": "lingshi",
+                  "n": 50
+                },
+                {
+                  "level": 3
+                }
+              ],
+              "require": {
+                "item": "lingye",
+                "n": 1
+              }
+            },
+            {
+              "text": "老老實實澆水除蟲",
+              "next": "plain",
+              "effects": [
+                {
+                  "level": 1
+                }
+              ]
+            }
+          ]
+        },
+        "bottle": {
+          "speaker": "旁白",
+          "text": "幾日後，那株藥苗竟長成了三十年份的模樣。你告誡自己：這件事，絕不能讓任何人知道。"
+        },
+        "plain": {
+          "speaker": "旁白",
+          "text": "日復一日，你摸清了每種靈草的脾氣。慢，但穩。"
+        }
+      }
+    },
+    "d1_xuese": {
+      "trigger": {
+        "loc": "xuese",
+        "quest": "CR_MQ11_XueSe",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "血色禁地的入口被一層淡紅色的霧氣籠罩，每十年才開一次。門派長老再三叮囑：進去的人，不是每個都能出來。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "旁白",
+          "text": "你握緊法器，踏入紅霧。"
+        }
+      }
+    },
+    "d1_yanyue": {
+      "trigger": {
+        "loc": "yanyue",
+        "quest": "CR_MQ11_XueSe",
+        "obj": 1
+      },
+      "nodes": {
+        "start": {
+          "speaker": "南宮婉",
+          "text": "（清冷的目光掃過你）黃楓谷的？血色禁地裡，合歡宗的王蟬也會出現。你我兩派，是聯手，還是各走各的？",
+          "choices": [
+            {
+              "text": "聯手，人多有個照應",
+              "next": "team",
+              "effects": [
+                {
+                  "rep": "yanyuezong",
+                  "n": 1
+                },
+                {
+                  "flag": "helped_yanyue"
+                }
+              ]
+            },
+            {
+              "text": "各走各的，但互不相擾",
+              "next": "solo",
+              "effects": [
+                {
+                  "flag": "solo_xuese"
+                }
+              ]
+            }
+          ]
+        },
+        "team": {
+          "speaker": "南宮婉",
+          "text": "……也好。別拖後腿。"
+        },
+        "solo": {
+          "speaker": "南宮婉",
+          "text": "隨你。"
+        }
+      }
+    },
+    "d1_ruins": {
+      "trigger": {
+        "loc": "xuese",
+        "quest": "CR_MQ11_XueSe",
+        "obj": 2
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "禁地深處，一座殘破的洞府靜靜立著。石壁上刻著劍痕，你依著痕跡推演，竟悟出了一套劍訣的入門法門。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "旁白",
+          "text": "青元劍訣——你在心裡默唸這個名字。"
+        }
+      }
+    },
+    "d1_material": {
+      "trigger": {
+        "loc": "huangfeng",
+        "quest": "CR_MQ11_XueSe",
+        "obj": 3
+      },
+      "nodes": {
+        "start": {
+          "speaker": "李化元",
+          "text": "築基丹的材料，谷中庫房有一部分。其餘的，你自己想辦法湊齊。",
+          "choices": [
+            {
+              "text": "領取庫房材料，欠下人情",
+              "next": "lend",
+              "effects": [
+                {
+                  "flag": "zhuji_material"
+                },
+                {
+                  "rep": "huangfenggu",
+                  "n": 1
+                }
+              ]
+            },
+            {
+              "text": "自行湊齊，不欠人情",
+              "next": "own",
+              "effects": [
+                {
+                  "flag": "zhuji_material"
+                },
+                {
+                  "item": "lingshi",
+                  "n": -100
+                }
+              ]
+            }
+          ]
+        },
+        "lend": {
+          "speaker": "旁白",
+          "text": "你領了材料，心裡記下這份人情。"
+        },
+        "own": {
+          "speaker": "旁白",
+          "text": "你花光了零碎積蓄，總算把藥材備齊。"
+        }
+      }
+    },
+    "d1_alchemy": {
+      "trigger": {
+        "loc": "huangfeng",
+        "quest": "CR_MQ12_ZhuJi",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "丹爐前，火候差一分，整爐藥材就會報廢。你想起了那只小瓶。",
+          "choices": [
+            {
+              "text": "用靈液催熟藥材（消耗 1 靈液）",
+              "next": "liquid",
+              "effects": [
+                {
+                  "item": "lingye",
+                  "n": -1
+                },
+                {
+                  "item": "pill",
+                  "n": 2
+                },
+                {
+                  "flag": "zhuji_pill_made"
+                }
+              ],
+              "require": {
+                "item": "lingye",
+                "n": 1
+              }
+            },
+            {
+              "text": "按老方子，穩妥煉製",
+              "next": "plain",
+              "effects": [
+                {
+                  "item": "pill",
+                  "n": 1
+                },
+                {
+                  "flag": "zhuji_pill_made"
+                }
+              ]
+            }
+          ]
+        },
+        "liquid": {
+          "speaker": "旁白",
+          "text": "丹成之時，丹香滿室。你一次煉出了兩顆成色極佳的築基丹。"
+        },
+        "plain": {
+          "speaker": "旁白",
+          "text": "雖不算完美，但終究成了一顆築基丹。"
+        }
+      }
+    },
+    "d1_seclusion": {
+      "trigger": {
+        "loc": "huangfeng",
+        "quest": "CR_MQ12_ZhuJi",
+        "obj": 1
+      },
+      "nodes": {
+        "start": {
+          "speaker": "李化元",
+          "text": "築基是修仙路上第一道真正的門檻。修到練氣圓滿，感到瓶頸鬆動時，再服丹閉關。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "旁白",
+          "text": "（提示：等級到達上限後，點『突破』按鈕；服用突破丹可大幅提高成功率，失敗則損失一半 HP。）"
+        }
+      }
+    },
+    "d1_battle": {
+      "trigger": {
+        "loc": "yuanwu",
+        "quest": "CR_MQ13_ZhengMo",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "魔道六宗大舉入侵，越國七派各守一方。戰場上喊殺聲此起彼伏。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "旁白",
+          "text": "你握緊法器，走進硝煙之中。"
+        }
+      }
+    },
+    "d1_dayan": {
+      "trigger": {
+        "loc": "jihe",
+        "quest": "CR_MQ13_ZhengMo",
+        "obj": 1
+      },
+      "nodes": {
+        "start": {
+          "speaker": "大衍神君",
+          "text": "（一縷神識從虛空中浮現）小輩，你身上有意思的東西不少。老夫看中你了。",
+          "choices": [
+            {
+              "text": "不動聲色，探他來意",
+              "next": "probe",
+              "effects": [
+                {
+                  "level": 1
+                }
+              ]
+            },
+            {
+              "text": "拔劍相向，不肯受制",
+              "next": "fight",
+              "effects": [
+                {
+                  "hpFrac": -0.3
+                }
+              ]
+            }
+          ]
+        },
+        "probe": {
+          "speaker": "大衍神君",
+          "text": "（輕笑）謹慎。這份謹慎，日後救你性命。"
+        },
+        "fight": {
+          "speaker": "旁白",
+          "text": "一道無形的威壓把你震退數步。你咬牙站穩，知道此刻力量懸殊，只能先記下這筆帳。"
+        }
+      }
+    },
+    "d1_nangong": {
+      "trigger": {
+        "loc": "yanyue",
+        "quest": "CR_MQ13_ZhengMo",
+        "obj": 2
+      },
+      "nodes": {
+        "start": {
+          "speaker": "南宮婉",
+          "text": "魔道還有兩處據點未破。你可願與我同去？",
+          "choices": [
+            {
+              "text": "並肩作戰",
+              "next": "yes",
+              "effects": [
+                {
+                  "rep": "yanyuezong",
+                  "n": 1
+                },
+                {
+                  "flag": "nangong_bond"
+                }
+              ]
+            },
+            {
+              "text": "我另有安排，先行一步",
+              "next": "no"
+            }
+          ]
+        },
+        "yes": {
+          "speaker": "旁白",
+          "text": "兩人默契漸生。戰後，她朝你點了點頭。"
+        },
+        "no": {
+          "speaker": "旁白",
+          "text": "你獨自踏上歸路，心中隱約有些遺憾。"
+        }
+      }
+    },
+    "d1_retreat": {
+      "trigger": {
+        "loc": "jixi",
+        "quest": "CR_MQ13_ZhengMo",
+        "obj": 3
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "正魔大戰以正道慘勝告終，但越國元氣大傷。你決定暫別此地，四處遊歷。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "旁白",
+          "text": "極西之地風沙漫天。前路未卜，你的修為，也已今非昔比。"
+        }
+      }
+    },
+    "d1_end": {
+      "trigger": {
+        "onQuestDone": "CR_MQ13_ZhengMo"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "第二卷·天南 完。你已築基成功，手握青元劍訣，也結識了南宮婉。更大的風浪，正在前方等你。"
+        }
+      }
+    },
+    "d2_bamboo": {
+      "trigger": {
+        "loc": "taiyue",
+        "quest": "CR_MQ20_LianQi",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "傳聞太岳山脈深處，有一片萬年青竹，是煉製飛劍的絕佳材料。你循著傳聞，一路斬妖開路。"
+        }
+      }
+    },
+    "d2_forge": {
+      "trigger": {
+        "loc": "huangfeng",
+        "quest": "CR_MQ20_LianQi",
+        "obj": 1
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "青竹與金精備齊，該煉劍了。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "旁白",
+          "text": "（提示：築基期以上、備足靈石，點畫面下方『祭煉青竹蜂雲劍』，即可煉製並升階法寶。）"
+        }
+      }
+    },
+    "d2_lingshou": {
+      "trigger": {
+        "loc": "lingshou",
+        "quest": "CR_MQ21_ShiJinChong",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "靈獸山弟子",
+          "text": "噬金蟲？那可是稀罕的靈蟲，以金屬為食，成群時足以蝕穿法寶。你想要，得拿東西來換。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "旁白",
+          "text": "你以幾份材料換得了一小批蟲卵。"
+        }
+      }
+    },
+    "d2_nest": {
+      "trigger": {
+        "loc": "huangfeng",
+        "quest": "CR_MQ21_ShiJinChong",
+        "obj": 1
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "蟲卵孵化在即，你該選一處合適的地方建蟲巢。",
+          "choices": [
+            {
+              "text": "以靈液加速培育",
+              "next": "liquid",
+              "effects": [
+                {
+                  "item": "lingye",
+                  "n": -1
+                },
+                {
+                  "flag": "insect_nest"
+                },
+                {
+                  "level": 2
+                }
+              ],
+              "require": {
+                "item": "lingye",
+                "n": 1
+              }
+            },
+            {
+              "text": "耐心以靈草慢慢餵養",
+              "next": "slow",
+              "effects": [
+                {
+                  "flag": "insect_nest"
+                },
+                {
+                  "item": "lingshi",
+                  "n": 100
+                }
+              ]
+            }
+          ]
+        },
+        "liquid": {
+          "speaker": "旁白",
+          "text": "靈液的加持下，蟲群長得極快。"
+        },
+        "slow": {
+          "speaker": "旁白",
+          "text": "數月如一日，蟲群漸漸壯大，你也攢下了不少靈草。"
+        }
+      }
+    },
+    "d2_pill": {
+      "trigger": {
+        "loc": "jiazhou",
+        "quest": "CR_MQ22_JieDan",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "藥鋪掌櫃",
+          "text": "結丹靈藥不常見。你若沒有現成的，我這裡有一顆，兩百靈石。",
+          "choices": [
+            {
+              "text": "買下（200 靈石）",
+              "next": "buy",
+              "effects": [
+                {
+                  "item": "lingshi",
+                  "n": -200
+                },
+                {
+                  "item": "pill",
+                  "n": 1
+                }
+              ],
+              "require": {
+                "item": "lingshi",
+                "n": 200
+              }
+            },
+            {
+              "text": "我已有備用",
+              "next": "have"
+            }
+          ]
+        },
+        "buy": {
+          "speaker": "掌櫃",
+          "text": "收好，這種東西，一輩子只用一次。"
+        },
+        "have": {
+          "speaker": "掌櫃",
+          "text": "有備無患，好。"
+        }
+      }
+    },
+    "d2_site": {
+      "trigger": {
+        "loc": "taiyue",
+        "quest": "CR_MQ22_JieDan",
+        "obj": 1
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "結丹閉關，最忌被人打擾。你需選一處地方。",
+          "choices": [
+            {
+              "text": "太岳山脈幽谷：靈氣濃郁",
+              "next": "valley",
+              "effects": [
+                {
+                  "flag": "seclusion_site"
+                },
+                {
+                  "level": 1
+                }
+              ]
+            },
+            {
+              "text": "黃楓谷密室：有門派庇護",
+              "next": "secret",
+              "effects": [
+                {
+                  "flag": "seclusion_site"
+                },
+                {
+                  "rep": "huangfenggu",
+                  "n": 1
+                }
+              ]
+            }
+          ]
+        },
+        "valley": {
+          "speaker": "旁白",
+          "text": "你在幽谷中布下禁制，靈氣如絲絲縷縷纏繞周身。"
+        },
+        "secret": {
+          "speaker": "旁白",
+          "text": "密室安靜，門派長老也暗中替你護法。"
+        }
+      }
+    },
+    "d2_core": {
+      "trigger": {
+        "loc": "huangfeng",
+        "quest": "CR_MQ22_JieDan",
+        "obj": 2
+      },
+      "nodes": {
+        "start": {
+          "speaker": "李化元",
+          "text": "結丹，就是把散亂的真氣凝為一顆金丹。九死一生。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "旁白",
+          "text": "（提示：築基等級到達上限（40）後，點『突破』。可預先備好突破丹。）"
+        }
+      }
+    },
+    "d2_alliance": {
+      "trigger": {
+        "loc": "jiazhou",
+        "quest": "CR_MQ23_MuLan",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "聯盟使者",
+          "text": "慕蘭人南侵，天南各派合力抗敵，正缺你這般築基以上的修士。可願加入天南修士聯盟？",
+          "choices": [
+            {
+              "text": "義不容辭",
+              "next": "yes",
+              "effects": [
+                {
+                  "rep": "tiannan_alliance",
+                  "n": 2
+                }
+              ]
+            },
+            {
+              "text": "我為自保，只出一次力",
+              "next": "half",
+              "effects": [
+                {
+                  "rep": "tiannan_alliance",
+                  "n": 1
+                },
+                {
+                  "item": "lingshi",
+                  "n": 100
+                }
+              ]
+            }
+          ]
+        },
+        "yes": {
+          "speaker": "旁白",
+          "text": "你在名冊上寫下名字。"
+        },
+        "half": {
+          "speaker": "旁白",
+          "text": "使者面色微沉，但還是收下了你的名字，並給了些酬勞。"
+        }
+      }
+    },
+    "d2_arrive_mulan": {
+      "trigger": {
+        "arrive": "mulan",
+        "quest": "CR_MQ23_MuLan",
+        "obj": 1
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "踏過界河，眼前是望不到邊的草原。遠處慕蘭人的營火連成一線。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "旁白",
+          "text": "無盡草海裡妖獸與巡騎並行出沒，正是練手的好地方。"
+        }
+      }
+    },
+    "d2_mupeiling": {
+      "trigger": {
+        "loc": "mulan_camp",
+        "quest": "CR_MQ23_MuLan",
+        "obj": 2
+      },
+      "nodes": {
+        "start": {
+          "speaker": "慕沛靈",
+          "text": "（她從營帳中走出，眼神複雜）你是天南的修士？我不想與你為敵，但我的族人在南下。",
+          "choices": [
+            {
+              "text": "勸她放下兵刃",
+              "next": "talk",
+              "effects": [
+                {
+                  "level": 1
+                }
+              ]
+            },
+            {
+              "text": "不再多言，準備迎戰",
+              "next": "fight"
+            }
+          ]
+        },
+        "talk": {
+          "speaker": "慕沛靈",
+          "text": "……我會盡力。但我不保證他們會聽。"
+        },
+        "fight": {
+          "speaker": "旁白",
+          "text": "話已說盡，剩下的，就只能靠拳頭。"
+        }
+      }
+    },
+    "d2_repel": {
+      "trigger": {
+        "loc": "mulan_camp",
+        "quest": "CR_MQ23_MuLan",
+        "obj": 3
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "慕蘭主力被擊退，天南聯盟守住了元武國。這一戰的名字，會被各派記入史冊。"
+        }
+      }
+    },
+    "d2_quhun": {
+      "trigger": {
+        "loc": "tianlan",
+        "quest": "CR_MQ24_QuHun",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "天瀾聖地內，你看穿了曲魂的陰謀——他早已暗中與魔道勾結。",
+          "choices": [
+            {
+              "text": "設局引他現形",
+              "next": "trap",
+              "effects": [
+                {
+                  "item": "lingshi",
+                  "n": 100
+                },
+                {
+                  "level": 1
+                }
+              ]
+            },
+            {
+              "text": "當眾揭穿，不留餘地",
+              "next": "expose",
+              "effects": [
+                {
+                  "hpFrac": -0.2
+                }
+              ]
+            }
+          ]
+        },
+        "trap": {
+          "speaker": "旁白",
+          "text": "你布下一局，曲魂果然中計。"
+        },
+        "expose": {
+          "speaker": "旁白",
+          "text": "話音未落，對方氣機暴漲。你被逼退，但也把事情鬧大了。"
+        }
+      }
+    },
+    "d2_wuxing": {
+      "trigger": {
+        "loc": "grass_sea",
+        "quest": "CR_MQ24_QuHun",
+        "obj": 1
+      },
+      "nodes": {
+        "start": {
+          "speaker": "曲魂",
+          "text": "五行輪在手，你還能撐幾個回合？（五色靈光繞身，氣勢逼人）",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "旁白",
+          "text": "（提示：善用五行相剋，剋制的屬性傷害 ×1.5。用 Q 切換法術屬性。）"
+        }
+      }
+    },
+    "d2_end": {
+      "trigger": {
+        "onQuestDone": "CR_MQ24_QuHun"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "第三卷·慕蘭大戰與結丹 完。你已結成金丹，天南也保住了。但海外，還有更大的天地。"
+        }
+      }
+    }
+  }
+}

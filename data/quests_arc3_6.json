@@ -1,0 +1,243 @@
+{
+  "description": "第四至六卷與 DLC 任務規則。",
+  "arcs": {
+    "arc3_luanxinghai": {
+      "CR_MQ30_DuHai": {
+        "objectives": [
+          {
+            "type": "kill",
+            "loc": "wubian",
+            "n": 3
+          },
+          {
+            "type": "arrive",
+            "loc": "luanxinghai"
+          }
+        ],
+        "reward": {
+          "lingshi": 300,
+          "lingye": 1
+        }
+      },
+      "CR_MQ31_TianXingCheng": {
+        "objectives": [
+          {
+            "type": "visit",
+            "loc": "tianxing_cheng"
+          },
+          {
+            "type": "flag",
+            "flag": "faction_chosen"
+          }
+        ],
+        "reward": {
+          "pill": 1,
+          "lingshi": 300
+        }
+      },
+      "CR_MQ32_XuTian": {
+        "objectives": [
+          {
+            "type": "visit",
+            "loc": "xutian"
+          },
+          {
+            "type": "kill",
+            "loc": "xutian",
+            "n": 2
+          },
+          {
+            "type": "flag",
+            "flag": "xutian_ding"
+          }
+        ],
+        "reward": {
+          "lingye": 2,
+          "lingshi": 500,
+          "level": 4
+        }
+      },
+      "CR_MQ33_JiYin": {
+        "objectives": [
+          {
+            "type": "kill",
+            "loc": "jiyin",
+            "n": 3
+          }
+        ],
+        "reward": {
+          "pill": 2,
+          "lingshi": 400,
+          "level": 3
+        }
+      },
+      "CR_MQ34_YuanYing": {
+        "objectives": [
+          {
+            "type": "realm",
+            "n": 4
+          }
+        ],
+        "reward": {
+          "lingshi": 600,
+          "level": 2
+        }
+      }
+    },
+    "arc4_dajin": {
+      "CR_MQ40_LuoYun": {
+        "objectives": [
+          {
+            "type": "visit",
+            "loc": "luoyun"
+          },
+          {
+            "type": "kill",
+            "loc": "wanyao",
+            "n": 3
+          }
+        ],
+        "reward": {
+          "lingshi": 500,
+          "level": 3
+        }
+      },
+      "CR_MQ41_KunWu": {
+        "objectives": [
+          {
+            "type": "visit",
+            "loc": "kunwu"
+          },
+          {
+            "type": "kill",
+            "loc": "kunwu",
+            "n": 4
+          },
+          {
+            "type": "flag",
+            "flag": "kunwu_treasure"
+          }
+        ],
+        "reward": {
+          "lingye": 2,
+          "lingshi": 700,
+          "level": 3
+        }
+      },
+      "CR_MQ42_XuanGu": {
+        "objectives": [
+          {
+            "type": "visit",
+            "loc": "guiling_hq"
+          },
+          {
+            "type": "kill",
+            "loc": "wanyao",
+            "n": 3
+          }
+        ],
+        "reward": {
+          "lingshi": 700,
+          "pill": 1,
+          "level": 3
+        }
+      },
+      "CR_MQ43_DaYan": {
+        "objectives": [
+          {
+            "type": "flag",
+            "flag": "dayan_legacy"
+          },
+          {
+            "type": "level",
+            "n": 75
+          }
+        ],
+        "reward": {
+          "pill": 2,
+          "level": 2
+        }
+      }
+    },
+    "arc5_huashen": {
+      "CR_MQ50_GuiXiang": {
+        "objectives": [
+          {
+            "type": "visit",
+            "loc": "qingniu"
+          },
+          {
+            "type": "flag",
+            "flag": "daochang"
+          }
+        ],
+        "reward": {
+          "lingshi": 800
+        }
+      },
+      "CR_MQ51_DaoLv": {
+        "objectives": [
+          {
+            "type": "visit",
+            "loc": "yanyue"
+          }
+        ],
+        "reward": {
+          "lingshi": 500
+        }
+      },
+      "CR_MQ52_HuaShen": {
+        "objectives": [
+          {
+            "type": "flag",
+            "flag": "law_insight"
+          },
+          {
+            "type": "realm",
+            "n": 5
+          }
+        ],
+        "reward": {
+          "level": 5,
+          "lingshi": 1000
+        }
+      },
+      "CR_MQ53_FeiSheng": {
+        "objectives": [
+          {
+            "type": "visit",
+            "loc": "jixi"
+          },
+          {
+            "type": "flag",
+            "flag": "ascended"
+          }
+        ],
+        "reward": {
+          "lingshi": 2000,
+          "pill": 3,
+          "level": 5
+        }
+      }
+    },
+    "arc6_lingjie": {
+      "CR_DLC1_TianYuan": {
+        "objectives": [
+          {
+            "type": "arrive",
+            "loc": "tianyuan"
+          },
+          {
+            "type": "kill",
+            "loc": "mozu_rift",
+            "n": 5
+          }
+        ],
+        "reward": {
+          "lingshi": 3000,
+          "level": 10
+        }
+      }
+    }
+  }
+}

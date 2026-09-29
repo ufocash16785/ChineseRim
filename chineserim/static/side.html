@@ -64,7 +64,7 @@ function spawn(l,k){const scale=1+S.realm_index*(l.deep?1.6:1);const el=ALL[Math
   const hp=60*scale*(l.deep?2:1);return{zone:l.id,deep:l.deep,x:l.wx-300+k*300+Math.random()*100,y:GY,hp,maxhp:hp,el,name:BEASTS[Math.floor(Math.random()*BEASTS.length)],dir:Math.random()<.5?-1:1,home:l.wx,hit:0,dead:0,scale,w:l.deep?56:40,h:l.deep?44:30,k}}
 function ui(){
   const q=S.quest.quests.find(x=>x.state=='active');
-  $('quest').innerHTML=q?`<b>▶ ${q.name}</b>`+q.objectives.filter(o=>o.state!='locked').map(o=>`<div>${o.state=='done'?'☑':'☐'} ${o.text}${o.progress&&o.state=='active'?' <small>('+o.progress+')</small>':''}</div>`).join(''):(S.quest.done?'第一卷完成':'');
+  $('quest').innerHTML=q?`<b>▶ ${q.name}</b>`+q.objectives.filter(o=>o.state!='locked').map(o=>`<div>${o.state=='done'?'☑':'☐'} ${o.text}${o.progress&&o.state=='active'?' <small>('+o.progress+')</small>':''}</div>`).join(''):(S.quest.done?'全部任務完成':'');
   $('top').innerHTML=`<b>${S.name}</b><span>${S.realm}·${S.sub}</span><span>Lv ${S.level}/${S.cap}${S.bottleneck?' <b style=color:#e6a>【瓶頸→按突破】</b>':''}</span>
   <span>HP <span class=bar><i style="width:${100*S.hp/S.max_hp}%;background:#c44"></i></span> ${S.hp}/${S.max_hp}</span><span>靈石 ${S.lingshi}　丹 ${S.pills}　靈液 ${S.lingye}</span><span>第 ${S.day} 日・${S.region_name}</span><span>法術 <b style="color:${ECOL[S.elements[spellIdx%S.elements.length]]}">${S.elements[spellIdx%S.elements.length]}</b></span>`;
   const d=S.dialogue,dl=$('dlg');dl.style.display=d?'block':'none';
@@ -82,8 +82,8 @@ function onPress(k){
 function interact(){
   if(nearPortal()){openTravel();return}
   const l=nearLoc();if(!l)return;
-  if(l.wild){toast('這裡是野外，斬殺妖獸修煉吧');return}
-  if(l.deep){if(S.realm_index<2){post('visit',{loc:l.id,nofight:1});return}unlocked[l.id]=true;post('visit',{loc:l.id,nofight:1});return}
+  if(l.wild){post('visit',{loc:l.id,nofight:1});return}
+  if(l.deep){if(S.realm_index>=l.min_realm)unlocked[l.id]=true;post('visit',{loc:l.id,nofight:1});return}
   post('visit',{loc:l.id})}
 function openTravel(){const t=$('trv');t.style.display='block';
   t.innerHTML='<b>傳送陣・選擇目的地</b>'+S.world.filter(w=>w.id!=S.region).map(w=>`<button ${w.locked?'disabled':''} onclick="go('${w.id}')">${w.name}（${w.days} 日）${w.locked?' 🔒 需化神飛升':''}</button>`).join('')+'<button onclick="$(\'trv\').style.display=\'none\'">取消</button>'}
@@ -122,7 +122,7 @@ function update(dt){
       if(hero.hp<=0){hero.hp=1;post('die');hero.x=300;hero.y=GY;beasts.forEach(k=>{if(!k.dead)k.hit=0})}}}
   for(const f of fx){f.t-=dt;f.y-=30*dt}fx=fx.filter(f=>f.t>0);
   cam=Math.max(0,Math.min(worldLen-W,hero.x-W/2));
-  const l=nearLoc();$('prompt').textContent=nearPortal()?'E：傳送陣（前往其他區域）':l&&!l.wild?`E：進入 ${l.name.replace(/（.*/,'')}${l.deep&&S.realm_index<2?'（需築基）':''}`:'';
+  const l=nearLoc();$('prompt').textContent=nearPortal()?'E：傳送陣（前往其他區域）':l?(l.wild?`E：探查 ${l.name.replace(/（.*/,'')}`:`E：進入 ${l.name.replace(/（.*/,'')}${l.deep&&S.realm_index<l.min_realm?'（境界不足）':''}`:'';
 }
 function tree(x,y,s,c){g.fillStyle='#3b2a1a';g.fillRect(x-4*s,y-40*s,8*s,40*s);g.fillStyle=c;g.beginPath();g.arc(x,y-56*s,26*s,0,7);g.fill()}
 function draw(){

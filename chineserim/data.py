@@ -9,6 +9,14 @@ def _load(p):
     return json.loads(pathlib.Path(p).read_text(encoding="utf-8"))
 
 
+def _merge(d, pattern, key):
+    """依檔名順序合併 data/<pattern> 中的 key（同 id 後者覆蓋）。"""
+    out = {}
+    for f in sorted(pathlib.Path(d).glob(pattern)):
+        out.update(_load(f).get(key, {}))
+    return out
+
+
 class GameData:
     def __init__(self, data_dir=None, mod_dir=None):
         d = pathlib.Path(data_dir or ROOT / "data")
@@ -24,8 +32,8 @@ class GameData:
         self.pills = {t["id"]: t for t in tr.get("pills", [])}
         self.characters = {c["id"]: c for c in _load(d / "characters.json")["characters"]}
         self.arcs = _load(d / "story_arcs.json")["arcs"]
-        self.dialogues = _load(d / "dialogues.json")["dialogues"]
-        self.quest_rules = _load(d / "quests.json")["arcs"]
+        self.dialogues = _merge(d, "dialogues*.json", "dialogues")
+        self.quest_rules = _merge(d, "quests*.json", "arcs")
         self.regions = _load(d / "regions.json")["worlds"]
         self.config = {"elemAdvMult": 1.5, "elemDisMult": 0.75}
         if mod_dir:

@@ -6,7 +6,7 @@ def _quest_at(ch):
     return q.get("q"), q.get("o"), q.get("done")
 
 
-def find_trigger(data, ch, loc=None):
+def find_trigger(data, ch, loc=None, arrive=None):
     """回傳第一個符合條件且尚未看過的對話 id。"""
     completed = set(ch.quest.get("completed", []))
     quest_ids = None
@@ -15,9 +15,9 @@ def find_trigger(data, ch, loc=None):
             continue
         t = d["trigger"]
         if "onQuestDone" in t:
-            if loc is None and t["onQuestDone"] in completed:
+            if loc is None and arrive is None and t["onQuestDone"] in completed:
                 return did
-        elif loc is not None and t["loc"] == loc:
+        elif (loc is not None and t.get("loc") == loc) or (arrive is not None and t.get("arrive") == arrive):
             if quest_ids is None:
                 arc = next(a for a in data.arcs if a["id"] == ch.quest["arc"])
                 quest_ids = [x["id"] for x in arc["quests"]]
@@ -27,13 +27,22 @@ def find_trigger(data, ch, loc=None):
     return None
 
 
-def _apply(ch, effects, data, log):
+def _apply(ch, effects, data, log, realms=None):
     for e in effects or []:
         if "flag" in e:
             ch.flags[e["flag"]] = True
         elif "item" in e:
-            ch.add(e["item"], e.get("n", 1))
-            log.append(f"  獲得 {e['item']} ×{e.get('n', 1)}")
+            n = e.get("n", 1)
+            if n >= 0:
+                ch.add(e["item"], n)
+                log.append(f"  獲得 {e['item']} ×{n}")
+            else:
+                ch.remove(e["item"], min(-n, ch.count(e["item"])))
+                log.append(f"  消耗 {e['item']} ×{-n}")
+        elif "setRealm" in e and realms:
+            realms.set_realm(ch, e["setRealm"])
+            ch.level = max(ch.level, realms.realm(ch)["levelRange"][0])
+            log.append(f"  你突破至{realms.realm(ch)['name']}！")
         elif "rep" in e:
             ch.sects[e["rep"]] = max(-4, min(4, ch.sects.get(e["rep"], 0) + e.get("n", 1)))
             log.append(f"  {data.sects[e['rep']]['name']}聲望 {ch.sects[e['rep']]}/4")
@@ -44,16 +53,16 @@ def _apply(ch, effects, data, log):
             ch.level += e["level"]     # 對話獎勵可能略超上限；突破前 gain_level 仍會夾回
 
 
-def _enter(data, ch, did, node_id, log):
+def _enter(data, ch, did, node_id, log, realms=None):
     node = data.dialogues[did]["nodes"][node_id]
     ch.dialogue = {"id": did, "node": node_id}
     log.append(f"「{node['speaker']}」{node['text']}")
-    _apply(ch, node.get("effects"), data, log)
+    _apply(ch, node.get("effects"), data, log, realms)
 
 
-def start(data, ch, did, log):
+def start(data, ch, did, log, realms=None):
     ch.flags["seen:" + did] = True
-    _enter(data, ch, did, "start", log)
+    _enter(data, ch, did, "start", log, realms)
 
 
 def _ok(ch, req):
@@ -74,7 +83,7 @@ def view(data, ch):
     return {"speaker": node["speaker"], "text": node["text"], "choices": choices, "cont": not node.get("choices")}
 
 
-def choose(data, ch, idx, log):
+def choose(data, ch, idx, log, realms=None):
     """idx=None 表示『繼續』。回傳對話是否仍在進行。"""
     did = ch.dialogue["id"]
     node = data.dialogues[did]["nodes"][ch.dialogue["node"]]
@@ -83,12 +92,12 @@ def choose(data, ch, idx, log):
             return True
         c = node["choices"][idx]
         log.append(f"▷ {c['text']}")
-        _apply(ch, c.get("effects"), data, log)
+        _apply(ch, c.get("effects"), data, log, realms)
         nxt = c.get("next")
     else:
         nxt = node.get("next")
     if nxt:
-        _enter(data, ch, did, nxt, log)
+        _enter(data, ch, did, nxt, log, realms)
         return True
     ch.dialogue = {}
     return False
@@ -105,5 +114,8 @@ def gating_hint(data, ch, quest_id, obj):
         t = d["trigger"]
         if not ch.flags.get("seen:" + did) and t.get("quest") == quest_id and t.get("obj") == obj:
             names = {l["id"]: l["name"] for w in data.regions for g in w["regions"] for l in g["locations"]}
+            if "arrive" in t:
+                rn = {g["id"]: g["name"] for w in data.regions for g in w["regions"]}
+                return f"劇情：前往「{rn.get(t['arrive'], t['arrive'])}」"
             return f"劇情：前往「{names.get(t['loc'], t['loc'])}」"
     return ""
