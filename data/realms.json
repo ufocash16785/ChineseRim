@@ -1,128 +1,396 @@
 {
   "$schema": "./schema/realms.schema.json",
   "description": "修仙境界體系。每個境界對應 Skyrim 玩家等級區間（PlayerLevel）與突破條件。子階段 sub = 初期/中期/後期（練氣期為 1~13 層）。",
-  "worlds": ["人界", "靈界", "仙界"],
+  "worlds": [
+    "人界",
+    "靈界",
+    "仙界"
+  ],
   "realms": [
     {
       "id": "mortal",
       "name": "凡人／煉體",
       "world": "人界",
       "order": 0,
-      "sub": ["外門弟子", "內門弟子", "武學宗師"],
-      "levelRange": [1, 5],
+      "sub": [
+        "外門弟子",
+        "內門弟子",
+        "武學宗師"
+      ],
+      "levelRange": [
+        1,
+        5
+      ],
       "lifespan": 100,
-      "breakthrough": { "type": "none", "note": "測出靈根即可進入練氣期（七玄門墨大夫劇情）" },
-      "skyrim": { "healthBase": 100, "magickaBase": 20, "staminaBase": 120, "canUseSpells": false }
+      "breakthrough": {
+        "type": "none",
+        "note": "測出靈根即可進入練氣期（七玄門墨大夫劇情）"
+      },
+      "skyrim": {
+        "healthBase": 100,
+        "magickaBase": 20,
+        "staminaBase": 120,
+        "canUseSpells": false
+      },
+      "stats": {
+        "hp": 100,
+        "mp": 20,
+        "stamina": 120
+      }
     },
     {
       "id": "qi_refining",
       "name": "練氣期",
       "world": "人界",
       "order": 1,
-      "sub": ["1層", "2層", "3層", "4層", "5層", "6層", "7層", "8層", "9層", "10層", "11層", "12層", "13層"],
-      "levelRange": [5, 20],
+      "sub": [
+        "1層",
+        "2層",
+        "3層",
+        "4層",
+        "5層",
+        "6層",
+        "7層",
+        "8層",
+        "9層",
+        "10層",
+        "11層",
+        "12層",
+        "13層"
+      ],
+      "levelRange": [
+        5,
+        20
+      ],
       "lifespan": 150,
-      "breakthrough": { "type": "pill_or_chance", "items": ["築基丹"], "note": "練氣圓滿（12~13層）後服築基丹突破；無靈根/偽靈根者需借外力（掌天瓶靈液催熟靈藥）" },
-      "skyrim": { "healthBase": 120, "magickaBase": 150, "staminaBase": 120, "canUseSpells": true, "perkPointsPerSub": 1 }
+      "breakthrough": {
+        "type": "pill_or_chance",
+        "items": [
+          "築基丹"
+        ],
+        "note": "練氣圓滿（12~13層）後服築基丹突破；無靈根/偽靈根者需借外力（掌天瓶靈液催熟靈藥）"
+      },
+      "skyrim": {
+        "healthBase": 120,
+        "magickaBase": 150,
+        "staminaBase": 120,
+        "canUseSpells": true,
+        "perkPointsPerSub": 1
+      },
+      "stats": {
+        "hp": 120,
+        "mp": 150,
+        "stamina": 120
+      }
     },
     {
       "id": "foundation",
       "name": "築基期",
       "world": "人界",
       "order": 2,
-      "sub": ["初期", "中期", "後期", "圓滿"],
-      "levelRange": [20, 40],
+      "sub": [
+        "初期",
+        "中期",
+        "後期",
+        "圓滿"
+      ],
+      "levelRange": [
+        20,
+        40
+      ],
       "lifespan": 250,
-      "breakthrough": { "type": "pill", "items": ["結金丹（結丹丹藥）"], "note": "築基後期結丹機率極低，需結丹靈藥輔助；築基可御器飛行、神識外放", "unlocks": ["御器飛行", "神識", "辨識靈物", "法器→法寶煉製"] },
-      "skyrim": { "healthBase": 200, "magickaBase": 350, "staminaBase": 180, "canFly": "glide" }
+      "breakthrough": {
+        "type": "pill",
+        "items": [
+          "結金丹（結丹丹藥）"
+        ],
+        "note": "築基後期結丹機率極低，需結丹靈藥輔助；築基可御器飛行、神識外放",
+        "unlocks": [
+          "御器飛行",
+          "神識",
+          "辨識靈物",
+          "法器→法寶煉製"
+        ]
+      },
+      "skyrim": {
+        "healthBase": 200,
+        "magickaBase": 350,
+        "staminaBase": 180,
+        "canFly": "glide"
+      },
+      "stats": {
+        "hp": 200,
+        "mp": 350,
+        "stamina": 180
+      }
     },
     {
       "id": "core_formation",
       "name": "結丹期",
       "world": "人界",
       "order": 3,
-      "sub": ["初期", "中期", "後期", "圓滿"],
-      "levelRange": [40, 60],
+      "sub": [
+        "初期",
+        "中期",
+        "後期",
+        "圓滿"
+      ],
+      "levelRange": [
+        40,
+        60
+      ],
       "lifespan": 500,
-      "breakthrough": { "type": "pill_and_trial", "items": ["元嬰丹／天蘭丹"], "note": "結丹→元嬰為天南千年一遇之難關；需元嬰級丹藥＋心境", "unlocks": ["金丹之力（法術威力×2）", "法寶祭煉", "築基以下神識鎮壓"] },
-      "skyrim": { "healthBase": 350, "magickaBase": 700, "staminaBase": 250, "canFly": "full" }
+      "breakthrough": {
+        "type": "pill_and_trial",
+        "items": [
+          "元嬰丹／天蘭丹"
+        ],
+        "note": "結丹→元嬰為天南千年一遇之難關；需元嬰級丹藥＋心境",
+        "unlocks": [
+          "金丹之力（法術威力×2）",
+          "法寶祭煉",
+          "築基以下神識鎮壓"
+        ]
+      },
+      "skyrim": {
+        "healthBase": 350,
+        "magickaBase": 700,
+        "staminaBase": 250,
+        "canFly": "full"
+      },
+      "stats": {
+        "hp": 350,
+        "mp": 700,
+        "stamina": 250
+      }
     },
     {
       "id": "nascent_soul",
       "name": "元嬰期",
       "world": "人界",
       "order": 4,
-      "sub": ["初期", "中期", "後期", "圓滿"],
-      "levelRange": [60, 80],
+      "sub": [
+        "初期",
+        "中期",
+        "後期",
+        "圓滿"
+      ],
+      "levelRange": [
+        60,
+        80
+      ],
       "lifespan": 1000,
-      "breakthrough": { "type": "insight", "items": [], "note": "化神需感悟天地法則，人界靈氣稀薄極難突破", "unlocks": ["元嬰出竅", "元嬰自爆（禁術）", "奪舍", "分神傀儡"] },
-      "skyrim": { "healthBase": 600, "magickaBase": 1200, "staminaBase": 350, "specialForm": "元嬰化身（Summon 自身分身）" }
+      "breakthrough": {
+        "type": "insight",
+        "items": [],
+        "note": "化神需感悟天地法則，人界靈氣稀薄極難突破",
+        "unlocks": [
+          "元嬰出竅",
+          "元嬰自爆（禁術）",
+          "奪舍",
+          "分神傀儡"
+        ]
+      },
+      "skyrim": {
+        "healthBase": 600,
+        "magickaBase": 1200,
+        "staminaBase": 350,
+        "specialForm": "元嬰化身（Summon 自身分身）"
+      },
+      "stats": {
+        "hp": 600,
+        "mp": 1200,
+        "stamina": 350
+      }
     },
     {
       "id": "deity_transformation",
       "name": "化神期",
       "world": "人界",
       "order": 5,
-      "sub": ["初期", "中期", "後期", "圓滿"],
-      "levelRange": [80, 100],
+      "sub": [
+        "初期",
+        "中期",
+        "後期",
+        "圓滿"
+      ],
+      "levelRange": [
+        80,
+        100
+      ],
       "lifespan": 2000,
-      "breakthrough": { "type": "ascension", "note": "人界頂點；化神後期可借空間節點飛升靈界（韓立人界結局）", "unlocks": ["法則之力初窺", "撕裂空間短距瞬移", "飛升靈界"] },
-      "skyrim": { "healthBase": 1000, "magickaBase": 2000, "staminaBase": 500 }
+      "breakthrough": {
+        "type": "ascension",
+        "note": "人界頂點；化神後期可借空間節點飛升靈界（韓立人界結局）",
+        "unlocks": [
+          "法則之力初窺",
+          "撕裂空間短距瞬移",
+          "飛升靈界"
+        ]
+      },
+      "skyrim": {
+        "healthBase": 1000,
+        "magickaBase": 2000,
+        "staminaBase": 500
+      },
+      "stats": {
+        "hp": 1000,
+        "mp": 2000,
+        "stamina": 500
+      }
     },
     {
       "id": "void_refining",
       "name": "煉虛期",
       "world": "靈界",
       "order": 6,
-      "sub": ["初期", "中期", "後期", "圓滿"],
-      "levelRange": [100, 130],
+      "sub": [
+        "初期",
+        "中期",
+        "後期",
+        "圓滿"
+      ],
+      "levelRange": [
+        100,
+        130
+      ],
       "lifespan": 5000,
-      "breakthrough": { "type": "insight", "note": "靈界 DLC 內容" },
-      "skyrim": { "dlc": "ChineseRim_LingJie.esp" }
+      "breakthrough": {
+        "type": "insight",
+        "note": "靈界 DLC 內容"
+      },
+      "skyrim": {
+        "dlc": "ChineseRim_LingJie.esp"
+      }
     },
     {
       "id": "body_integration",
       "name": "合體期",
       "world": "靈界",
       "order": 7,
-      "sub": ["初期", "中期", "後期", "圓滿"],
-      "levelRange": [130, 160],
+      "sub": [
+        "初期",
+        "中期",
+        "後期",
+        "圓滿"
+      ],
+      "levelRange": [
+        130,
+        160
+      ],
       "lifespan": 10000,
-      "breakthrough": { "type": "insight", "note": "靈界 DLC 內容" },
-      "skyrim": { "dlc": "ChineseRim_LingJie.esp" }
+      "breakthrough": {
+        "type": "insight",
+        "note": "靈界 DLC 內容"
+      },
+      "skyrim": {
+        "dlc": "ChineseRim_LingJie.esp"
+      }
     },
     {
       "id": "mahayana",
       "name": "大乘期",
       "world": "靈界",
       "order": 8,
-      "sub": ["初期", "中期", "後期", "圓滿"],
-      "levelRange": [160, 200],
+      "sub": [
+        "初期",
+        "中期",
+        "後期",
+        "圓滿"
+      ],
+      "levelRange": [
+        160,
+        200
+      ],
       "lifespan": 30000,
-      "breakthrough": { "type": "ascension", "note": "渡真仙劫飛升仙界" },
-      "skyrim": { "dlc": "ChineseRim_LingJie.esp" }
+      "breakthrough": {
+        "type": "ascension",
+        "note": "渡真仙劫飛升仙界"
+      },
+      "skyrim": {
+        "dlc": "ChineseRim_LingJie.esp"
+      }
     },
     {
       "id": "true_immortal",
       "name": "真仙",
       "world": "仙界",
       "order": 9,
-      "sub": ["初期", "中期", "後期", "圓滿"],
-      "levelRange": [200, 999],
-      "breakthrough": { "type": "insight", "note": "真仙→金仙→太乙→大羅→道祖；仙界篇不在初版範圍" },
-      "skyrim": { "dlc": "future" }
+      "sub": [
+        "初期",
+        "中期",
+        "後期",
+        "圓滿"
+      ],
+      "levelRange": [
+        200,
+        999
+      ],
+      "breakthrough": {
+        "type": "insight",
+        "note": "真仙→金仙→太乙→大羅→道祖；仙界篇不在初版範圍"
+      },
+      "skyrim": {
+        "dlc": "future"
+      }
     }
   ],
   "spiritRoots": {
     "description": "靈根 = 角色創建時選擇的『種族』(Skyrim Race)，決定五行親和與修煉速度。",
-    "elements": ["金", "木", "水", "火", "土"],
+    "elements": [
+      "金",
+      "木",
+      "水",
+      "火",
+      "土"
+    ],
     "types": [
-      { "id": "heavenly", "name": "天靈根", "count": 1, "speed": 2.0, "note": "單屬性極品，修煉最快（如：極少數天才）" },
-      { "id": "variant", "name": "變異靈根", "count": 1, "speed": 1.8, "elements": ["雷", "冰", "風", "暗"], "note": "如南宮婉所屬掩月宗擅收此類；雷靈根、冰靈根等" },
-      { "id": "dual", "name": "雙靈根", "count": 2, "speed": 1.5 },
-      { "id": "triple", "name": "三靈根", "count": 3, "speed": 1.2 },
-      { "id": "quad", "name": "四靈根", "count": 4, "speed": 1.0, "note": "韓立為四靈根（偽靈根），修煉極慢，依靠掌天瓶催熟靈藥與大衍決彌補" },
-      { "id": "penta", "name": "五靈根", "count": 5, "speed": 0.8, "note": "五行雜靈根，最差資質" }
+      {
+        "id": "heavenly",
+        "name": "天靈根",
+        "count": 1,
+        "speed": 2.0,
+        "note": "單屬性極品，修煉最快（如：極少數天才）"
+      },
+      {
+        "id": "variant",
+        "name": "變異靈根",
+        "count": 1,
+        "speed": 1.8,
+        "elements": [
+          "雷",
+          "冰",
+          "風",
+          "暗"
+        ],
+        "note": "如南宮婉所屬掩月宗擅收此類；雷靈根、冰靈根等"
+      },
+      {
+        "id": "dual",
+        "name": "雙靈根",
+        "count": 2,
+        "speed": 1.5
+      },
+      {
+        "id": "triple",
+        "name": "三靈根",
+        "count": 3,
+        "speed": 1.2
+      },
+      {
+        "id": "quad",
+        "name": "四靈根",
+        "count": 4,
+        "speed": 1.0,
+        "note": "韓立為四靈根（偽靈根），修煉極慢，依靠掌天瓶催熟靈藥與大衍決彌補"
+      },
+      {
+        "id": "penta",
+        "name": "五靈根",
+        "count": 5,
+        "speed": 0.8,
+        "note": "五行雜靈根，最差資質"
+      }
     ]
   }
 }

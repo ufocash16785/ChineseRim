@@ -75,6 +75,20 @@
                 "type": "boolean"
               }
             }
+          },
+          "stats": {
+            "type": "object",
+            "properties": {
+              "hp": {
+                "type": "number"
+              },
+              "mp": {
+                "type": "number"
+              },
+              "stamina": {
+                "type": "number"
+              }
+            }
           }
         }
       }
