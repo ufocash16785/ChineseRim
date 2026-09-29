@@ -1,79 +1,15 @@
 """瀏覽器介面（世界地圖探索）：python -m chineserim.web  → http://127.0.0.1:8765"""
 import json
-import random
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
 
-from . import treasures
-from .character import Character
-from .data import GameData
-from .explore import WorldMap, visit
-from .realms import RealmSystem
+from .session import Session
 
-data = GameData()
-rng = random.Random()
-rs = RealmSystem(data, rng)
-world = WorldMap(data)
-hero = Character("韓立", elements=["金", "木", "水", "火"], root_type="quad")
-rs.set_realm(hero, "mortal")
-hero.add("lingshi", 500)
-state = {"day": 0, "region": "tiannan", "log": ["你站在天南。點地圖上的區域旅行，點區域內的地點探索。"]}
-rs.on("CR_OnRealmChanged", lambda actor, order, sub, old: state["log"].append(f"★ 境界變更 → {data.realms[order]['name']}"))
-
-
-def advance(days):
-    d0 = state["day"]
-    state["day"] += days
-    for d in range(d0 + 1, state["day"] + 1):
-        if d % treasures.MOON_CYCLE_DAYS == 0:
-            n = hero.count("lingye")
-            treasures.tick_zhangtianping(rs, hero, d, 22)
-            if hero.count("lingye") > n:
-                state["log"].append(f"第 {d} 日月圓，掌天瓶凝出一滴靈液")
-
-
-def snapshot():
-    r = rs.realm(hero)
-    reg = world.regions[state["region"]]
-    return {
-        "name": hero.name, "realm": r["name"], "sub": r["sub"][hero.sub], "level": hero.level, "cap": r["levelRange"][1],
-        "hp": round(hero.hp), "max_hp": hero.max_hp, "mp": hero.mp, "elements": hero.elements,
-        "lingshi": hero.count("lingshi"), "lingye": hero.count("lingye"), "pills": hero.count("pill"),
-        "day": state["day"], "treasures": hero.treasures, "sects": {data.sects[k]["name"]: v for k, v in hero.sects.items()},
-        "bottleneck": rs.at_bottleneck(hero), "log": state["log"][-14:], "realm_index": hero.realm,
-        "realms": [x["name"] for x in data.realms[:6]],
-        "region": state["region"], "region_name": reg["name"],
-        "world": [{"id": g["id"], "name": g["name"], "x": g["coords"][0], "y": g["coords"][1], "world": g["world_name"],
-                   "locked": not world.can_enter(hero, g["id"]), "days": world.travel_days(hero, state["region"], g["id"])}
-                  for g in world.regions.values()],
-        "locations": [{"id": l["id"], "name": l["name"], "type": l["type"], "note": l.get("note", ""), "x": x, "y": y}
-                      for l, x, y in world.location_layout(state["region"])],
-    }
-
-
-def act(path, q):
-    log = state["log"]
-    if path == "/travel":
-        ok, days, msg = world.travel(hero, state["region"], q["to"])
-        log.append(msg + (f"（耗時 {days} 日）" if ok else ""))
-        if ok:
-            state["region"] = q["to"]
-            advance(days)
-    elif path == "/visit":
-        msgs, days = visit(world, rs, hero, state["region"], q["loc"], rng)
-        log.extend(msgs)
-        advance(days)
-    elif path == "/act":
-        c = q["c"]
-        if c == "break":
-            ok = rs.attempt_breakthrough(hero, "pill" if hero.count("pill") else None)
-            log.append("突破成功！" if ok else "突破失敗或尚未到瓶頸（失敗損失一半 HP）")
-        elif c == "refine":
-            log.append("青竹蜂雲劍祭煉成功" if treasures.refine(rs, hero, "qingzhu_fengyunjian") else "祭煉條件不足（築基以上＋靈石）")
-        elif c == "rest":
-            hero.hp = hero.max_hp
-            advance(7)
-            log.append("閉關 7 日，傷勢痊癒")
+session = Session()
+try:
+    session.load()
+except Exception as e:   # 壞檔不擋開局
+    print("讀檔失敗，改開新局：", e)
 
 
 PAGE = """<!doctype html><meta charset=utf-8><title>凡人修仙傳</title>
@@ -93,6 +29,8 @@ h3{margin:8px 0 4px}small{color:#9a9686}
 <h3 id=rt></h3><svg id=rm viewBox="0 0 100 100"></svg></div>
 <div class=col><div id=s></div>
 <button onclick="a('/act?c=break')">突破</button><button onclick="a('/act?c=refine')">祭煉青竹蜂雲劍</button><button onclick="a('/act?c=rest')">閉關 7 日</button>
+<button onclick="if(confirm('確定重開新局？（會覆蓋存檔）'))a('/act?c=new')">新遊戲</button> <small>自動存檔</small>
+<h3 id=qt></h3><div id=qs></div>
 <h3>紀錄</h3><div id=log></div></div></div>
 <script>
 const COL={"人界":"#4a8","靈界":"#a6d"};
@@ -105,6 +43,8 @@ s.innerHTML=`<div class=realms>${d.realms.map((n,i)=>`<span class="${i==d.realm_
 等級 ${d.level}/${d.cap}${d.bottleneck?' <b style=color:#e6a>【瓶頸】</b>':''}${bar(d.level,d.cap,'#b8893a')}
 HP ${d.hp}/${d.max_hp}${bar(d.hp,d.max_hp,'#c44')}
 <p>靈石 ${d.lingshi}　突破丹 ${d.pills}　靈液 ${d.lingye}　法寶 ${JSON.stringify(d.treasures)}<br>門派聲望 ${JSON.stringify(d.sects)}</p>`;
+qt.textContent='任務：'+d.quest.arc+(d.quest.done?'（完成）':'');
+qs.innerHTML=d.quest.quests.filter(q=>q.state!='locked').map(q=>`<div style="margin:4px 0;opacity:${q.state=='done'?.5:1}"><b>${q.state=='done'?'✔ ':'▶ '}${q.name}</b>`+(q.state=='active'?q.objectives.map(o=>`<div style="margin-left:14px;font-size:13px">${o.state=='done'?'☑':'☐'} ${o.text}${o.progress?' <small>('+o.progress+')</small>':''}</div>`).join(''):'')+'</div>').join('');
 log.innerHTML=d.log.map(x=>'<div>'+x+'</div>').join('');log.scrollTop=1e6;
 wm.innerHTML=d.world.map(g=>`<g class="node ${g.locked?'lock':''}" onclick="a('/travel?to=${g.id}')"><circle cx=${g.x} cy=${100-g.y} r=${g.id==d.region?4.5:3.2} fill="${COL[g.world]}" stroke="${g.id==d.region?'#fc6':'#000'}" stroke-width=.8></circle>
 <text x=${g.x} y=${100-g.y+7} text-anchor=middle>${g.name}${g.id==d.region?'':' ('+g.days+'日)'}${g.locked?'🔒':''}</text></g>`).join('');
@@ -125,13 +65,14 @@ class H(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == "/state":
-            self._send(json.dumps(snapshot(), ensure_ascii=False), "application/json")
+            self._send(json.dumps(session.snapshot(), ensure_ascii=False), "application/json")
         else:
             self._send(PAGE, "text/html")
 
     def do_POST(self):
         u = urlparse(self.path)
-        act(u.path, {k: v[0] for k, v in parse_qs(u.query).items()})
+        q = {k: v[0] for k, v in parse_qs(u.query).items()}
+        session.act(q.pop("c", u.path.strip("/")), **q)
         self._send("{}", "application/json")
 
     def log_message(self, *a):

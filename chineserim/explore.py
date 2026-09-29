@@ -93,6 +93,7 @@ def visit(world, realms, ch, region_id, loc_id, rng=None, day=0):
     t = loc["type"]
     if t in DEEP and ch.realm < 2:
         return [f"{loc['name']}靈壓駭人，築基以下不得深入"], 0
+    ch.counters[f"visit:{loc_id}"] = ch.counters.get(f"visit:{loc_id}", 0) + 1
     if t in SAFE:
         ch.hp = ch.max_hp
         msg = [f"在{loc['name']}休整，HP 回滿。"]
@@ -111,6 +112,8 @@ def visit(world, realms, ch, region_id, loc_id, rng=None, day=0):
         return msg, 2
     ok, log, gold = fight(ch, rng, deep=t in DEEP)
     if ok:
+        for k in (f"kill:{loc_id}", "kill:total"):
+            ch.counters[k] = ch.counters.get(k, 0) + 1
         ch.add("lingshi", gold)
         realms.gain_level(ch, 3 if t not in DEEP else 8)
         if t in DEEP and rng.random() < 0.6:

@@ -17,3 +17,4 @@ Source/Deps/*
 !Source/Deps/README.md
 tools/setup_dev.log
 tools/config.local.json
+saves/

@@ -1,0 +1,48 @@
+{
+  "description": "可執行的任務規則（獨立引擎用）。questId 對應 story_arcs.json 的 quests[].id，objectives 依序對應該任務的 objectives 文字。條件 type：visit/kill（自任務目標啟用後累計 n 次，loc 為地點 id 或 total）、level、realm、item。",
+  "arcs": {
+    "arc0_qixuanmen": {
+      "CR_MQ00_QingNiu": {
+        "objectives": [
+          { "type": "visit", "loc": "qingniu" },
+          { "type": "visit", "loc": "caixia" },
+          { "type": "level", "n": 2 }
+        ],
+        "reward": { "lingshi": 30 }
+      },
+      "CR_MQ01_WaiMen": {
+        "objectives": [
+          { "type": "visit", "loc": "caixia", "n": 2 },
+          { "type": "level", "n": 3 },
+          { "type": "level", "n": 4 }
+        ],
+        "reward": { "lingshi": 50 }
+      },
+      "CR_MQ02_MoDaiFu": {
+        "objectives": [
+          { "type": "kill", "loc": "taiyue", "n": 1 },
+          { "type": "level", "n": 5 },
+          { "type": "item", "item": "lingye", "n": 1 }
+        ],
+        "reward": { "pill": 1, "lingshi": 100 }
+      },
+      "CR_MQ03_DuoShe": {
+        "objectives": [
+          { "type": "visit", "loc": "caixia" },
+          { "type": "kill", "loc": "total", "n": 2 },
+          { "type": "realm", "n": 1 },
+          { "type": "visit", "loc": "caixia" }
+        ],
+        "reward": { "lingshi": 150 }
+      },
+      "CR_MQ04_YuZiTong": {
+        "objectives": [
+          { "type": "kill", "loc": "total", "n": 3 },
+          { "type": "level", "n": 7 },
+          { "type": "visit", "loc": "yuejing" }
+        ],
+        "reward": { "lingshi": 300 }
+      }
+    }
+  }
+}

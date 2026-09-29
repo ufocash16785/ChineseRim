@@ -79,3 +79,57 @@ class ExploreTest(unittest.TestCase):
     def test_layout(self):
         pts = self.w.location_layout("tiannan")
         self.assertEqual(len(pts), 18)
+
+
+class SaveQuestTest(unittest.TestCase):
+    def setUp(self):
+        import tempfile, pathlib
+        from chineserim.session import Session
+        self.Session = Session
+        self.path = pathlib.Path(tempfile.mkdtemp()) / "s.json"
+        self.s = Session(self.path, seed=5)
+
+    def test_save_roundtrip(self):
+        self.s.act("visit", loc="qingniu")
+        self.s.act("travel", to="dajin")
+        snap = self.s.to_dict()
+        s2 = self.Session(self.path, seed=9)
+        self.assertTrue(s2.load())
+        self.assertEqual(s2.to_dict()["hero"], snap["hero"])
+        self.assertEqual((s2.day, s2.region), (snap["day"], snap["region"]))
+
+    def test_bad_version(self):
+        with self.assertRaises(ValueError):
+            self.s.from_dict({"version": 99})
+
+    def test_quest_flow(self):
+        s = self.s
+        s.act("visit", loc="qingniu")
+        self.assertEqual(s.hero.quest["o"], 1)
+        s.act("visit", loc="caixia")            # 門派：+2 等級
+        s.act("visit", loc="caixia")
+        self.assertGreaterEqual(s.hero.quest["q"], 1)        # 第一個任務已完成
+        self.assertIn("lingshi", s.hero.inventory)
+        v = s.snapshot()["quest"]
+        self.assertEqual(v["quests"][0]["state"], "done")
+        # 存檔後任務進度保留
+        s2 = self.Session(self.path)
+        s2.load()
+        self.assertEqual(s2.hero.quest, s.hero.quest)
+
+    def test_full_arc_reachable(self):
+        s = self.s
+        h = s.hero
+        for _ in range(400):
+            if h.quest["done"]:
+                break
+            for loc in ("qingniu", "caixia", "taiyue", "yuejing"):
+                s.act("visit", loc=loc)
+            if s.rs.at_bottleneck(h):
+                h.add("pill")
+                s.act("break")
+            h.hp = h.max_hp
+            h.add("lingshi", 10)
+            s.day += 30
+            s.act("rest")
+        self.assertTrue(h.quest["done"])

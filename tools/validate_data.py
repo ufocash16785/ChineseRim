@@ -92,6 +92,22 @@ def main() -> int:
             warnings.append(f"treasures/{t['id']}: owner {o} 不在 characters.json")
 
     # 主線 → 地區、Quest EditorID
+    qr = load("quests")["arcs"]
+    all_locs = {l["id"] for w in load("regions")["worlds"] for g in w["regions"] for l in g["locations"]}
+    for arc_id, rules in qr.items():
+        arc = next((a for a in arcs["arcs"] if a["id"] == arc_id), None)
+        if not arc:
+            errors.append(f"quests/{arc_id}: story_arcs 無此卷")
+            continue
+        qmap = {q["id"]: q for q in arc["quests"]}
+        for qid, rule in rules.items():
+            if qid not in qmap:
+                errors.append(f"quests/{qid}: story_arcs 無此任務")
+            elif len(rule["objectives"]) != len(qmap[qid]["objectives"]):
+                errors.append(f"quests/{qid}: 目標數 {len(rule['objectives'])} != story_arcs {len(qmap[qid]['objectives'])}")
+            for o in rule["objectives"]:
+                if o["type"] in ("visit", "kill") and o["loc"] != "total" and o["loc"] not in all_locs:
+                    errors.append(f"quests/{qid}: 未知地點 {o['loc']}")
     for a in arcs["arcs"]:
         for reg in a["region"].split("/"):
             if reg not in region_ids:

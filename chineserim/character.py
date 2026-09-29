@@ -33,3 +33,5 @@ class Character:
             return False
         self.inventory[item] -= n
         return True
+    counters: dict = field(default_factory=dict)    # visit:<loc> / kill:<loc> / kill:total
+    quest: dict = field(default_factory=dict)

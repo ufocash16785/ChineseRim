@@ -24,6 +24,7 @@ class GameData:
         self.pills = {t["id"]: t for t in tr.get("pills", [])}
         self.characters = {c["id"]: c for c in _load(d / "characters.json")["characters"]}
         self.arcs = _load(d / "story_arcs.json")["arcs"]
+        self.quest_rules = _load(d / "quests.json")["arcs"]
         self.regions = _load(d / "regions.json")["worlds"]
         self.config = {"elemAdvMult": 1.5, "elemDisMult": 0.75}
         if mod_dir:
