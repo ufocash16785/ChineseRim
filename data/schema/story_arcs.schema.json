@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "story_arcs",
+  "description": "主線分卷與任務鏈。每個 arc 對應一個 Skyrim Quest 章節（CR_MQ##），quests 為主線 Quest EditorID。playerRealm 為該卷玩家預期境界。內容忠實原作順序，細節（如具體任務目標）為遊戲化改寫。",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "arcs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "region": {
+            "type": "string"
+          },
+          "playerRealm": {
+            "type": "string"
+          },
+          "levelRange": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "summary": {
+            "type": "string"
+          },
+          "quests": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "objectives": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "arcs"
+  ]
+}

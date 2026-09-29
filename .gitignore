@@ -1,0 +1,19 @@
+# 編譯產物
+Scripts/*.pex
+dll/build/
+dll/out/
+*.bsa
+*.esm.bak
+*.esp.bak
+# CK 暫存
+*.ckp
+*.CKSAVE
+Data/Backup/
+# 本機
+.vs/
+.vscode/
+__pycache__/
+Source/Deps/*
+!Source/Deps/README.md
+tools/setup_dev.log
+tools/config.local.json

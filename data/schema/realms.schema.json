@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "realms",
+  "description": "修仙境界體系。每個境界對應 Skyrim 玩家等級區間（PlayerLevel）與突破條件。子階段 sub = 初期/中期/後期（練氣期為 1~13 層）。",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "worlds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "realms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "world": {
+            "type": "string"
+          },
+          "order": {
+            "type": "number"
+          },
+          "sub": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "levelRange": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "lifespan": {
+            "type": "number"
+          },
+          "breakthrough": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "note": {
+                "type": "string"
+              }
+            }
+          },
+          "skyrim": {
+            "type": "object",
+            "properties": {
+              "healthBase": {
+                "type": "number"
+              },
+              "magickaBase": {
+                "type": "number"
+              },
+              "staminaBase": {
+                "type": "number"
+              },
+              "canUseSpells": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "spiritRoots": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "elements": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "types": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "count": {
+                "type": "number"
+              },
+              "speed": {
+                "type": "number"
+              },
+              "note": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "worlds",
+    "realms",
+    "spiritRoots"
+  ]
+}

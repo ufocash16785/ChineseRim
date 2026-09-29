@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "regions",
+  "description": "世界地理。每個 region 對應一個 Skyrim Worldspace（或大型內部 Cell 群）。coords 為設計文件示意地圖上的相對座標（0~100），非原作官方座標。verified=false 表示需與原文對照。",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "worlds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "regions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "worldspace": {
+                  "type": "string"
+                },
+                "esp": {
+                  "type": "string"
+                },
+                "size": {
+                  "type": "string"
+                },
+                "coords": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "summary": {
+                  "type": "string"
+                },
+                "nations": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "locations": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "nation": {
+                        "type": "string"
+                      },
+                      "note": {
+                        "type": "string"
+                      },
+                      "verified": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "worlds"
+  ]
+}

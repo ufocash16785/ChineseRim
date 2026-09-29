@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "sects",
+  "description": "門派與勢力。每個 sect 對應一個 Skyrim Faction（FormID 由 ESM 分配，此處為 EditorID）。alignment: 正道/魔道/妖修/凡俗/異族。reputation 用 Skyrim Faction Rank 實作（-4 敵對 ~ 4 核心弟子）。",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "sects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "editorId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "region": {
+            "type": "string"
+          },
+          "alignment": {
+            "type": "string"
+          },
+          "tier": {
+            "type": "string"
+          },
+          "hq": {
+            "type": "string"
+          },
+          "leader": {
+            "type": "string"
+          },
+          "notable": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "focus": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "note": {
+            "type": "string"
+          },
+          "verified": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "relations": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "pairs": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "sects",
+    "relations"
+  ]
+}

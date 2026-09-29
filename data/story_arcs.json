@@ -1,0 +1,104 @@
+{
+  "$schema": "./schema/story_arcs.schema.json",
+  "description": "主線分卷與任務鏈。每個 arc 對應一個 Skyrim Quest 章節（CR_MQ##），quests 為主線 Quest EditorID。playerRealm 為該卷玩家預期境界。內容忠實原作順序，細節（如具體任務目標）為遊戲化改寫。",
+  "arcs": [
+    {
+      "id": "arc0_qixuanmen",
+      "name": "第一卷·七玄門",
+      "region": "tiannan",
+      "playerRealm": "mortal → qi_refining",
+      "levelRange": [1, 8],
+      "summary": "青牛鎮少年韓立被三叔帶往七玄門測試入門，成為外門弟子；在神手谷拜墨大夫為師學長春功，意外獲得神秘小瓶；墨大夫奪舍之謀被韓立反殺，韓立殺死余子童，離開七玄門。",
+      "quests": [
+        { "id": "CR_MQ00_QingNiu", "name": "離鄉", "objectives": ["與家人告別", "隨三叔前往彩霞山", "通過七玄門入門測試"] },
+        { "id": "CR_MQ01_WaiMen", "name": "外門弟子", "objectives": ["完成基礎武學訓練（教學：戰鬥、格擋）", "結識厲飛雨、張鐵", "被選入神手谷"] },
+        { "id": "CR_MQ02_MoDaiFu", "name": "神手谷的墨大夫", "objectives": ["為墨大夫採藥（教學：採集/煉藥）", "修煉長春功至第三層", "月圓之夜發現小瓶秘密"] },
+        { "id": "CR_MQ03_DuoShe", "name": "奪舍", "objectives": ["察覺墨大夫真意", "布置毒陷（非正面戰鬥）", "擊殺墨大夫", "受託照顧墨家"] },
+        { "id": "CR_MQ04_YuZiTong", "name": "野狼幫攻山", "objectives": ["守衛七玄門", "擊殺余子童", "離開七玄門，前往越京"] }
+      ]
+    },
+    {
+      "id": "arc1_tiannan",
+      "name": "第二卷·天南（黃楓谷·血色禁地·正魔大戰）",
+      "region": "tiannan",
+      "playerRealm": "qi_refining → foundation",
+      "levelRange": [8, 30],
+      "summary": "韓立入黃楓谷成為李化元弟子，於百藥園修行；參加血色禁地試煉獲青元劍訣與築基機緣；魔道六宗入侵越國，正魔大戰爆發，韓立築基並與南宮婉結識。",
+      "quests": [
+        { "id": "CR_MQ10_RuMen", "name": "黃楓谷入門", "objectives": ["坊市見聞（教學：靈石交易）", "拜入黃楓谷", "百藥園任務鏈（煉丹教學）"] },
+        { "id": "CR_MQ11_XueSe", "name": "血色試煉", "objectives": ["進入血色禁地", "與掩月宗弟子聯手/對抗合歡宗王蟬", "探索上古遺跡，獲得青元劍訣", "取得築基丹材料"] },
+        { "id": "CR_MQ12_ZhuJi", "name": "築基", "objectives": ["以靈液催熟藥材煉製築基丹", "閉關突破（首次『突破』系統）"] },
+        { "id": "CR_MQ13_ZhengMo", "name": "正魔大戰", "objectives": ["越國多地戰場（大型戰役系統）", "遭遇大衍神君", "與南宮婉並肩作戰", "撤離越國"] }
+      ]
+    },
+    {
+      "id": "arc2_mulan",
+      "name": "第三卷·慕蘭大戰與結丹",
+      "region": "tiannan/mulan",
+      "playerRealm": "foundation → core_formation",
+      "levelRange": [30, 50],
+      "summary": "韓立在天南各國遊歷、煉製青竹蜂雲劍、收服噬金蟲；慕蘭人南侵，天南修士聯盟於元武國迎戰；韓立結丹，並與曲魂多次交手。",
+      "quests": [
+        { "id": "CR_MQ20_LianQi", "name": "青竹蜂雲劍", "objectives": ["收集萬年青竹、金精", "煉製首批飛劍（煉器教學）"] },
+        { "id": "CR_MQ21_ShiJinChong", "name": "噬金蟲", "objectives": ["靈獸山交易", "建立蟲巢並培育"] },
+        { "id": "CR_MQ22_JieDan", "name": "結丹", "objectives": ["取得結丹靈藥", "選擇閉關地", "突破結丹"] },
+        { "id": "CR_MQ23_MuLan", "name": "元武國戰場", "objectives": ["加入天南聯盟", "多階段戰役：草原→界河→元武國", "與慕沛靈相遇", "擊退慕蘭主力"] },
+        { "id": "CR_MQ24_QuHun", "name": "曲魂的算計", "objectives": ["識破曲魂陰謀", "五行輪之戰"] }
+      ]
+    },
+    {
+      "id": "arc3_luanxinghai",
+      "name": "第四卷·亂星海",
+      "region": "luanxinghai",
+      "playerRealm": "core_formation → nascent_soul",
+      "levelRange": [50, 65],
+      "summary": "韓立渡海至亂星海，捲入星宮與逆星盟之爭；虛天殿開啟，各方奪寶；極陰島取紫羅極火；最終突破元嬰。",
+      "quests": [
+        { "id": "CR_MQ30_DuHai", "name": "渡無邊海", "objectives": ["海上航行與海獸戰", "抵達外星海"] },
+        { "id": "CR_MQ31_TianXingCheng", "name": "天星城", "objectives": ["進入天星城", "星宮/逆星盟陣營選擇（影響後續聲望）"] },
+        { "id": "CR_MQ32_XuTian", "name": "虛天殿", "objectives": ["三百年一開的秘境", "與凌玉靈合作", "爭奪虛天鼎"] },
+        { "id": "CR_MQ33_JiYin", "name": "極陰島", "objectives": ["取紫羅極火"] },
+        { "id": "CR_MQ34_YuanYing", "name": "元嬰", "objectives": ["閉關突破元嬰（大型儀式事件）"] }
+      ]
+    },
+    {
+      "id": "arc4_dajin",
+      "name": "第五卷·大晉",
+      "region": "dajin",
+      "playerRealm": "nascent_soul",
+      "levelRange": [65, 85],
+      "summary": "韓立北上大晉，化名加入落雲宗為客卿，探索昆吾山秘境，對抗鬼靈門玄骨老祖等魔道十宗，銀月恢復，啼魂獸加入；大衍神君神魂終散。",
+      "quests": [
+        { "id": "CR_MQ40_LuoYun", "name": "落雲宗客卿", "objectives": ["以化名加入落雲宗", "客卿任務鏈"] },
+        { "id": "CR_MQ41_KunWu", "name": "昆吾山", "objectives": ["昆吾秘境開啟", "多方勢力混戰", "獲取昆吾寶物"] },
+        { "id": "CR_MQ42_XuanGu", "name": "鬼靈門", "objectives": ["對抗玄骨老祖", "啼魂獸契約"] },
+        { "id": "CR_MQ43_DaYan", "name": "大衍終章", "objectives": ["大衍神君最後傳承", "傀儡術大成"] }
+      ]
+    },
+    {
+      "id": "arc5_huashen",
+      "name": "第六卷·化神與飛升",
+      "region": "tiannan",
+      "playerRealm": "nascent_soul → deity_transformation",
+      "levelRange": [85, 100],
+      "summary": "韓立返回天南，建立道場，與南宮婉結為道侶，經百年修煉突破化神；人界靈氣不足，循空間節點飛升靈界。人界篇結局。",
+      "quests": [
+        { "id": "CR_MQ50_GuiXiang", "name": "歸鄉", "objectives": ["返回青牛鎮（凡人親族結局）", "天南道場建立（家園系統）"] },
+        { "id": "CR_MQ51_DaoLv", "name": "道侶", "objectives": ["南宮婉支線收束"] },
+        { "id": "CR_MQ52_HuaShen", "name": "化神", "objectives": ["感悟法則（解謎/試煉）", "突破化神"] },
+        { "id": "CR_MQ53_FeiSheng", "name": "飛升", "objectives": ["尋找空間節點", "穿越節點（人界結局 CG）"] }
+      ]
+    },
+    {
+      "id": "arc6_lingjie",
+      "name": "DLC·靈界（天淵城）",
+      "region": "tianyuan",
+      "playerRealm": "deity_transformation → void_refining",
+      "levelRange": [100, 130],
+      "summary": "靈界初期：天淵城守軍、獸潮、飛靈族、木族與魔族入侵。作為獨立 DLC 插件開發。",
+      "quests": [
+        { "id": "CR_DLC1_TianYuan", "name": "天淵城", "objectives": ["加入守軍", "獸潮防禦戰（Tower-defense 風格戰役）"] }
+      ]
+    }
+  ]
+}

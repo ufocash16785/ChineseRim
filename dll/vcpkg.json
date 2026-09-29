@@ -1,0 +1,11 @@
+{
+  "name": "chineserim",
+  "version-string": "0.1.0",
+  "description": "ChineseRim SKSE plugin",
+  "license": "MIT",
+  "dependencies": [
+    "commonlibsse-ng",
+    "spdlog",
+    "nlohmann-json"
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "characters",
+  "description": "角色。role: protagonist/companion/mentor/love_interest/antagonist/npc。realmByArc 記錄各卷出場時境界，供關卡設定 NPC 等級。Skyrim 實作：每名角色一個 ActorBase（EditorID CR_NPC_*），劇情境界變化用 Leveled Actor 或 SetLevel。",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "characters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "editorId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "sect": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "spiritRoot": {
+            "type": "string"
+          },
+          "realmByArc": {
+            "type": "object",
+            "properties": {
+              "qixuanmen": {
+                "type": "string"
+              },
+              "tiannan": {
+                "type": "string"
+              },
+              "luanxinghai": {
+                "type": "string"
+              },
+              "dajin": {
+                "type": "string"
+              },
+              "ascension": {
+                "type": "string"
+              },
+              "lingjie": {
+                "type": "string"
+              }
+            }
+          },
+          "signature": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "summary": {
+            "type": "string"
+          },
+          "gameNote": {
+            "type": "string"
+          },
+          "verified": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "characters"
+  ]
+}

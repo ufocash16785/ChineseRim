@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "treasures",
+  "description": "法器/法寶/靈寶、丹藥、材料。grade: 法器(練氣)→法寶(築基/結丹)→古寶(上古)→靈寶(通天靈寶)。Skyrim 實作：WEAP/ARMO/MISC + 附魔 + 專屬腳本；法寶可『祭煉』成長（Item 等級隨玩家境界重算，用 CR_TreasureGrowth 腳本）。",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "treasures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "grade": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "obtained": {
+            "type": "string"
+          },
+          "effect": {
+            "type": "string"
+          },
+          "skyrim": {
+            "type": "object",
+            "properties": {
+              "form": {
+                "type": "string"
+              },
+              "script": {
+                "type": "string"
+              },
+              "unremovable": {
+                "type": "boolean"
+              }
+            }
+          },
+          "verified": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "pills": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "tier": {
+            "type": "string"
+          },
+          "effect": {
+            "type": "string"
+          },
+          "skyrim": {
+            "type": "string"
+          },
+          "verified": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "materials": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "use": {
+            "type": "string"
+          },
+          "skyrim": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "treasures",
+    "pills",
+    "materials"
+  ]
+}

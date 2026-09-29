@@ -1,0 +1,58 @@
+{
+  "$schema": "./schema/sects.schema.json",
+  "description": "門派與勢力。每個 sect 對應一個 Skyrim Faction（FormID 由 ESM 分配，此處為 EditorID）。alignment: 正道/魔道/妖修/凡俗/異族。reputation 用 Skyrim Faction Rank 實作（-4 敵對 ~ 4 核心弟子）。",
+  "sects": [
+    { "id": "qixuanmen", "editorId": "CR_Fac_QiXuanMen", "name": "七玄門", "region": "tiannan", "alignment": "凡俗武林", "tier": "凡人門派", "hq": "彩霞山", "leader": "門主（凡人）", "notable": ["墨居仁（墨大夫）", "厲飛雨", "張鐵", "馬榕（教習）"], "focus": ["外家拳腳", "長春功（內門）", "煉體"], "note": "遊戲序章門派：外門→內門→神手谷", "verified": true },
+    { "id": "yelanggang", "editorId": "CR_Fac_YeLangGang", "name": "野狼幫", "region": "tiannan", "alignment": "凡俗武林", "tier": "凡人門派", "hq": "越國邊境", "notable": [], "focus": ["刀法", "毒"], "note": "七玄門死敵，序章結尾攻山事件", "verified": true },
+
+    { "id": "huangfenggu", "editorId": "CR_Fac_HuangFengGu", "name": "黃楓谷", "region": "tiannan", "alignment": "正道", "tier": "越國七大派", "hq": "太岳山脈·黃楓谷", "leader": "掌門（結丹）", "notable": ["李化元（韓立師父）", "馬師叔（百藥園）", "陸師兄", "莫聚"], "focus": ["丹道", "五行法術", "法器煉製"], "note": "韓立正式入門處；百藥園為煉丹教學區", "verified": true },
+    { "id": "yanyuezong", "editorId": "CR_Fac_YanYueZong", "name": "掩月宗", "region": "tiannan", "alignment": "正道", "tier": "越國七大派", "hq": "越國", "notable": ["南宮婉", "董萱兒", "陳巧倩"], "focus": ["變異靈根（冰/雷）", "陣法", "幻術"], "note": "以女修為主的正道大派", "verified": true },
+    { "id": "lingshoushan", "editorId": "CR_Fac_LingShouShan", "name": "靈獸山", "region": "tiannan", "alignment": "正道", "tier": "越國七大派", "hq": "越國", "notable": [], "focus": ["馴獸", "靈獸培育", "蟲修"], "note": "噬金蟲來源相關門派", "verified": true },
+    { "id": "tianquebao", "editorId": "CR_Fac_TianQueBao", "name": "天闕堡", "region": "tiannan", "alignment": "正道", "tier": "越國七大派", "hq": "越國", "notable": [], "focus": ["土系防禦", "堡壘陣法"], "verified": true },
+    { "id": "jujianmen", "editorId": "CR_Fac_JuJianMen", "name": "巨劍門", "region": "tiannan", "alignment": "正道", "tier": "越國七大派", "hq": "越國", "notable": [], "focus": ["劍修", "重劍"], "verified": true },
+    { "id": "huadaowu", "editorId": "CR_Fac_HuaDaoWu", "name": "化刀塢", "region": "tiannan", "alignment": "正道", "tier": "越國七大派", "hq": "越國", "notable": [], "focus": ["刀修"], "verified": true },
+    { "id": "qingxumen", "editorId": "CR_Fac_QingXuMen", "name": "清虛門", "region": "tiannan", "alignment": "正道", "tier": "越國七大派", "hq": "越國", "notable": [], "focus": ["符籙", "清靈法術"], "verified": true },
+
+    { "id": "guilingmen", "editorId": "CR_Fac_GuiLingMen", "name": "鬼靈門", "region": "tiannan", "alignment": "魔道", "tier": "魔道六宗", "hq": "越國外（本宗在大晉）", "notable": ["玄骨老祖（本宗）"], "focus": ["鬼修", "陰煞", "屍傀"], "note": "正魔大戰主謀之一；大晉有本宗", "verified": true },
+    { "id": "hehuanzong", "editorId": "CR_Fac_HeHuanZong", "name": "合歡宗", "region": "tiannan", "alignment": "魔道", "tier": "魔道六宗", "hq": "越國外", "notable": ["王蟬（少主）", "元瑤", "千葉真人"], "focus": ["雙修媚術", "幻術", "陰陽功法"], "verified": true },
+    { "id": "tiangangjianzong", "editorId": "CR_Fac_TianGangJianZong", "name": "天罡劍宗", "region": "tiannan", "alignment": "魔道", "tier": "魔道六宗", "hq": "越國外", "notable": [], "focus": ["魔劍", "劍陣"], "verified": true },
+    { "id": "wangumen", "editorId": "CR_Fac_WanGuMen", "name": "萬蠱門", "region": "tiannan", "alignment": "魔道", "tier": "魔道六宗", "hq": "越國外", "notable": [], "focus": ["蠱蟲", "毒物"], "verified": false },
+    { "id": "yaoshengmen", "editorId": "CR_Fac_YaoShengMen", "name": "妖聖門", "region": "tiannan", "alignment": "魔道", "tier": "魔道六宗", "hq": "越國外", "notable": [], "focus": ["妖獸驅使"], "note": "六宗成員名單待與原文逐一核實", "verified": false },
+    { "id": "modao6", "editorId": "CR_Fac_MoDaoLiuZong", "name": "魔道六宗聯盟（總 Faction）", "region": "tiannan", "alignment": "魔道", "tier": "聯盟", "hq": "—", "notable": [], "focus": [], "note": "父 Faction，子宗自動繼承敵對關係；第六宗名稱待核實", "verified": false },
+    { "id": "jiuguomeng", "editorId": "CR_Fac_JiuGuoMeng", "name": "九國盟", "region": "tiannan", "alignment": "正道（中立）", "tier": "聯盟", "hq": "越國周邊九國", "notable": [], "focus": ["多國散修聯合"], "note": "天南三大陣營之一，正魔大戰中立場搖擺", "verified": true },
+    { "id": "tiannan_alliance", "editorId": "CR_Fac_TianNanLianMeng", "name": "天南修士聯盟（抗慕蘭）", "region": "tiannan", "alignment": "正道", "tier": "臨時聯盟", "hq": "元武國", "notable": [], "focus": [], "note": "慕蘭大戰期間七派、六宗、九國盟暫時聯合", "verified": true },
+
+    { "id": "mulan_fashi", "editorId": "CR_Fac_MuLanFaShi", "name": "慕蘭法師（慕蘭人）", "region": "mulan", "alignment": "異族/敵對", "tier": "民族勢力", "hq": "慕蘭草原", "notable": ["慕沛靈（公主，靈界重逢）"], "focus": ["咒術（類巫術）", "聖獸信仰", "騎兵法師"], "note": "獨立法術體系：以 Skyrim 召喚/幻術系派生", "verified": true },
+    { "id": "tianlan_shengshou", "editorId": "CR_Fac_TianLanShengShou", "name": "天瀾聖獸", "region": "mulan", "alignment": "妖修", "tier": "獨立", "hq": "天瀾聖地", "notable": [], "focus": [], "note": "慕蘭人信仰的元嬰級妖獸", "verified": true },
+
+    { "id": "xinggong", "editorId": "CR_Fac_XingGong", "name": "星宮", "region": "luanxinghai", "alignment": "正道", "tier": "亂星海霸主", "hq": "天星城", "leader": "天星雙聖", "notable": ["天星雙聖", "凌玉靈（聖女）"], "focus": ["星辰法術", "陣法", "海域統御"], "verified": true },
+    { "id": "nixingmeng", "editorId": "CR_Fac_NiXingMeng", "name": "逆星盟", "region": "luanxinghai", "alignment": "魔道", "tier": "亂星海對抗勢力", "hq": "內星海", "notable": ["文詩兒"], "focus": ["反星宮聯盟", "多宗門聯合"], "verified": true },
+    { "id": "waixinghai_sanxiu", "editorId": "CR_Fac_WaiXingHaiSanXiu", "name": "外星海散修", "region": "luanxinghai", "alignment": "中立", "tier": "散修", "hq": "外星海諸島", "notable": [], "focus": [], "verified": true },
+
+    { "id": "luoyunzong", "editorId": "CR_Fac_LuoYunZong", "name": "落雲宗", "region": "dajin", "alignment": "正道", "tier": "大晉正道大宗", "hq": "昆吾山附近", "notable": [], "focus": ["昆吾山守護", "元嬰客卿制度"], "note": "韓立化名『韓』姓客卿加入", "verified": true },
+    { "id": "guilingmen_hq", "editorId": "CR_Fac_GuiLingMenBenZong", "name": "鬼靈門本宗", "region": "dajin", "alignment": "魔道", "tier": "大晉魔道十宗", "hq": "大晉", "notable": ["玄骨老祖"], "focus": ["鬼修"], "verified": true },
+    { "id": "yinluozong", "editorId": "CR_Fac_YinLuoZong", "name": "陰羅宗", "region": "dajin", "alignment": "魔道", "tier": "大晉魔道十宗", "hq": "大晉", "notable": [], "focus": ["陰羅法術"], "verified": true },
+    { "id": "tianmozong", "editorId": "CR_Fac_TianMoZong", "name": "天魔宗", "region": "dajin", "alignment": "魔道", "tier": "大晉魔道十宗", "hq": "大晉", "notable": [], "focus": ["天魔功法"], "verified": false },
+    { "id": "qianzhujiao", "editorId": "CR_Fac_QianZhuJiao", "name": "千竹教", "region": "dajin", "alignment": "正道", "tier": "大晉宗門", "hq": "大晉", "notable": [], "focus": ["竹系木行法術"], "verified": true },
+    { "id": "dajin_huangchao", "editorId": "CR_Fac_DaJinHuangChao", "name": "大晉皇朝", "region": "dajin", "alignment": "凡俗", "tier": "凡人政權", "hq": "大晉京城", "notable": [], "focus": [], "note": "凡俗政權；修士不干預凡人政治的世界規則", "verified": true },
+
+    { "id": "tianyuan_guard", "editorId": "CR_Fac_TianYuanShouJun", "name": "天淵城守軍", "region": "tianyuan", "alignment": "人族", "tier": "靈界", "hq": "天淵城", "notable": [], "focus": ["抵禦獸潮"], "verified": true },
+    { "id": "feilingzu", "editorId": "CR_Fac_FeiLingZu", "name": "飛靈族（天雲十三族）", "region": "tianyuan", "alignment": "異族", "tier": "靈界", "hq": "天雲十三族領地", "notable": [], "focus": ["飛行", "羽化"], "verified": true },
+    { "id": "muzu", "editorId": "CR_Fac_MuZu", "name": "木族", "region": "tianyuan", "alignment": "異族", "tier": "靈界", "hq": "木族領地", "notable": [], "focus": ["木行本源"], "verified": true },
+    { "id": "mozu", "editorId": "CR_Fac_MoZu", "name": "魔族", "region": "tianyuan", "alignment": "敵對", "tier": "靈界", "hq": "空間裂縫帶", "notable": [], "focus": ["魔功", "入侵"], "verified": true }
+  ],
+  "relations": {
+    "description": "Faction 初始關係矩陣（Skyrim Faction Relations）：-1 敵對、0 中立、1 友好。未列者為 0。",
+    "pairs": [
+      ["qixuanmen", "yelanggang", -1],
+      ["huangfenggu", "guilingmen", -1], ["huangfenggu", "hehuanzong", -1], ["huangfenggu", "tiangangjianzong", -1],
+      ["yanyuezong", "hehuanzong", -1], ["yanyuezong", "guilingmen", -1],
+      ["huangfenggu", "yanyuezong", 1], ["huangfenggu", "lingshoushan", 1], ["huangfenggu", "tianquebao", 1], ["huangfenggu", "jujianmen", 1], ["huangfenggu", "huadaowu", 1], ["huangfenggu", "qingxumen", 1],
+      ["guilingmen", "hehuanzong", 1], ["guilingmen", "tiangangjianzong", 1],
+      ["tiannan_alliance", "mulan_fashi", -1],
+      ["xinggong", "nixingmeng", -1],
+      ["luoyunzong", "guilingmen_hq", -1], ["luoyunzong", "yinluozong", -1],
+      ["tianyuan_guard", "mozu", -1]
+    ]
+  }
+}

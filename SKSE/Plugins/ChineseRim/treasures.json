@@ -1,0 +1,33 @@
+{
+  "$schema": "./schema/treasures.schema.json",
+  "description": "法器/法寶/靈寶、丹藥、材料。grade: 法器(練氣)→法寶(築基/結丹)→古寶(上古)→靈寶(通天靈寶)。Skyrim 實作：WEAP/ARMO/MISC + 附魔 + 專屬腳本；法寶可『祭煉』成長（Item 等級隨玩家境界重算，用 CR_TreasureGrowth 腳本）。",
+  "treasures": [
+    { "id": "zhangtianping", "name": "掌天瓶（神秘小瓶）", "grade": "通天靈寶（未知）", "type": "神器", "owner": "hanli", "obtained": "七玄門篇：厲飛雨/韓立在彩霞山意外所得", "effect": "每月圓之夜吸收月華凝聚一滴綠液，可催熟靈藥百年。", "skyrim": { "form": "MISC+Quest Item", "script": "CR_ZhangTianPing.psc：每遊戲月圓（Skyrim 日曆）產出『靈液』；靈液對植物類 Ingredient 使用可升級為高階藥材", "unremovable": true }, "verified": true },
+    { "id": "qingzhu_fengyunjian", "name": "青竹蜂雲劍", "grade": "法寶→靈寶（成長型）", "type": "飛劍群（72 把）", "owner": "hanli", "obtained": "天南篇：以青竹＋金精等材料煉製，逐步增至 72 把", "effect": "劍陣齊射、劍雨、劍網；後期融入庚精成為靈寶。", "skyrim": { "form": "SPEL（多投射物）+ 可裝備 WEAP『青竹蜂雲劍·本體』", "growth": ["12 把（結丹前）", "36 把（結丹）", "72 把（元嬰）"] }, "verified": true },
+    { "id": "shijinchong", "name": "噬金蟲", "grade": "靈蟲（成長型）", "type": "靈獸", "owner": "hanli", "obtained": "天南篇：靈獸山交易/坊市", "effect": "蟲群啃噬法寶與金屬，變異後刀槍不入。", "skyrim": { "form": "Conjuration 蟲群召喚 + 『蟲巢』家園設施餵養成長", "growth": ["百隻", "千隻", "萬隻·變異"] }, "verified": true },
+    { "id": "yuanci_shan", "name": "元磁神山", "grade": "靈寶", "type": "鎮壓型法寶", "owner": "hanli", "obtained": "靈界", "effect": "巨山鎮壓，元磁禁飛。", "skyrim": { "form": "SPEL：召喚巨山投射（區域壓制）", "dlc": "ChineseRim_LingJie.esp" }, "verified": true },
+    { "id": "xuantian_zhanling", "name": "玄天斬靈劍", "grade": "玄天之寶", "type": "劍", "owner": "hanli", "obtained": "靈界", "effect": "斬靈斷法則，斬殺元嬰級不留痕。", "skyrim": { "form": "WEAP（劇情最終武器）", "dlc": "ChineseRim_LingJie.esp" }, "verified": true },
+    { "id": "sanyan_shan", "name": "三焰扇", "grade": "法寶（火系）", "type": "扇", "owner": "hanli", "obtained": "亂星海/大晉：以太陽精火、紫羅極火等煉製", "effect": "三色火焰扇風，範圍火系毀滅。", "skyrim": { "form": "STAFF 類武器 + 火系錐形法術" }, "verified": true },
+    { "id": "ziluo_jihuo", "name": "紫羅極火", "grade": "天地異火", "type": "火焰", "owner": "hanli", "obtained": "亂星海：極陰島", "effect": "極寒紫火，冰凍與灼燒並存。", "skyrim": { "form": "SPEL：冰火雙屬性投射" }, "verified": true },
+    { "id": "xutian_ding", "name": "虛天鼎", "grade": "上古靈寶", "type": "鼎", "owner": "劇情", "obtained": "亂星海：虛天殿", "effect": "煉化萬物、封印。", "skyrim": { "form": "劇情物品/家園煉器設施升級" }, "verified": true },
+    { "id": "wuxing_lun", "name": "五行輪", "grade": "法寶", "type": "輪", "owner": "quhun", "obtained": "—", "effect": "五行轉換攻擊。", "skyrim": { "form": "Boss 專屬法術組" }, "verified": true },
+    { "id": "tihun_shou", "name": "啼魂獸", "grade": "稀有靈獸", "type": "靈獸", "owner": "hanli", "obtained": "大晉篇", "effect": "吞噬鬼物、啼鳴震魂。", "skyrim": { "form": "Creature Follower（可成長）" }, "verified": true },
+    { "id": "kuilei_set", "name": "傀儡（獸形/人形）", "grade": "法器→法寶", "type": "傀儡", "owner": "hanli", "obtained": "大衍神君傳授煉製", "effect": "自主作戰的機關傀儡。", "skyrim": { "form": "Conjuration 召喚（Dwemer 骨架重製）+ 煉器台製作" }, "verified": true }
+  ],
+  "pills": [
+    { "id": "zhuji_dan", "name": "築基丹", "tier": "築基", "effect": "練氣圓滿突破築基的必需丹藥", "skyrim": "Potion + 突破腳本旗標", "verified": true },
+    { "id": "jiejin_dan", "name": "結金丹", "tier": "結丹", "effect": "輔助結丹", "skyrim": "Potion + 旗標", "verified": false },
+    { "id": "tianlan_dan", "name": "天蘭丹／元嬰丹", "tier": "元嬰", "effect": "元嬰突破輔助（名稱待核實）", "skyrim": "Potion + 旗標", "verified": false },
+    { "id": "huangjing_dan", "name": "黃精丹（練氣輔助）", "tier": "練氣", "effect": "加速練氣修煉", "skyrim": "經驗藥水", "verified": false },
+    { "id": "lingye", "name": "掌天瓶靈液", "tier": "—", "effect": "催熟靈藥；直接服用短時大幅回復法力", "skyrim": "MISC，對 Ingredient 使用", "verified": true }
+  ],
+  "materials": [
+    { "id": "lingshi", "name": "靈石（下/中/上品）", "use": "貨幣＋施法補充", "skyrim": "取代 Septim 為主要貨幣（Gold001 替換模型與名稱）＋高品靈石為 Ingredient" },
+    { "id": "jingjin", "name": "金精", "use": "煉製青竹蜂雲劍", "skyrim": "Ingot 類材料" },
+    { "id": "qingzhu", "name": "青竹（萬年青竹）", "use": "青竹蜂雲劍劍身", "skyrim": "MISC" },
+    { "id": "lingcao", "name": "各級靈草（百年/千年/萬年）", "use": "煉丹", "skyrim": "Ingredient，可被靈液升級" },
+    { "id": "yaodan", "name": "妖丹／獸核", "use": "煉器/煉丹", "skyrim": "Ingredient（妖獸掉落）" },
+    { "id": "fuzhi", "name": "符紙／符籙", "use": "一次性法術", "skyrim": "Scroll" },
+    { "id": "zhenqi", "name": "陣旗／陣盤", "use": "布陣", "skyrim": "放置型 Activator（Campfire 風格）" }
+  ]
+}

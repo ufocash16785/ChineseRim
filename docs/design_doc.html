@@ -1,0 +1,812 @@
+<title>凡人修仙傳 ChineseRim</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --paper:#EEF0EB; --paper-2:#E3E7E0; --ink:#182423; --ink-2:#3E4F4C; --ink-3:#6E7F7B;
+  --line:#C9D1CB; --line-2:#B2BDB6;
+  --qing:#2E7A69; --qing-soft:#D6E9E2; --qing-ink:#1E5A4D;
+  --zhu:#B3382E; --zhu-soft:#F1D9D5;
+  --jin:#9E7A2C; --jin-soft:#EFE4C8;
+  --mo:#5A4A7A; --mo-soft:#E2DCEC;
+  --code-bg:#E6EAE5;
+  --shadow:0 1px 0 rgba(24,36,35,.06), 0 8px 24px -16px rgba(24,36,35,.35);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --paper:#0F1615; --paper-2:#151E1C; --ink:#DCE5E0; --ink-2:#AEBDB7; --ink-3:#7E8F89;
+    --line:#26332F; --line-2:#354541;
+    --qing:#5FC4A8; --qing-soft:#173029; --qing-ink:#8ADBC4;
+    --zhu:#E0665B; --zhu-soft:#3A1F1C;
+    --jin:#D4AE5A; --jin-soft:#3A2F17;
+    --mo:#A997D0; --mo-soft:#2A2340;
+    --code-bg:#182220;
+    --shadow:0 1px 0 rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --paper:#0F1615; --paper-2:#151E1C; --ink:#DCE5E0; --ink-2:#AEBDB7; --ink-3:#7E8F89;
+  --line:#26332F; --line-2:#354541;
+  --qing:#5FC4A8; --qing-soft:#173029; --qing-ink:#8ADBC4;
+  --zhu:#E0665B; --zhu-soft:#3A1F1C;
+  --jin:#D4AE5A; --jin-soft:#3A2F17;
+  --mo:#A997D0; --mo-soft:#2A2340;
+  --code-bg:#182220;
+  --shadow:0 1px 0 rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Noto Sans TC",-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:clamp(16px,4vw,40px);padding-block:0 80px}
+h1,h2,h3,h4{font-family:"Noto Serif TC","Songti TC","PMingLiU",serif;text-wrap:balance;margin:0;line-height:1.25}
+h2{font-size:clamp(24px,3vw,32px);font-weight:900;letter-spacing:.02em}
+h3{font-size:19px;font-weight:700;margin-block:28px 10px}
+h4{font-size:16px;font-weight:700;margin-block:18px 6px}
+p{margin:0 0 12px;max-width:72ch}
+a{color:var(--qing-ink);text-decoration-thickness:1px;text-underline-offset:3px}
+code,pre,.mono{font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;font-size:.88em}
+code{background:var(--code-bg);padding:1px 6px;border-radius:4px}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:14px 16px;overflow-x:auto;line-height:1.55;margin:10px 0 16px}
+pre code{background:none;padding:0}
+.eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--qing-ink);font-weight:700}
+.muted{color:var(--ink-3)}
+.small{font-size:13px}
+
+/* masthead */
+.masthead{padding-block:44px 22px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr auto;gap:24px;align-items:end}
+.masthead h1{font-size:clamp(40px,7vw,76px);font-weight:900;letter-spacing:.06em;line-height:1.05}
+.masthead h1 small{display:block;font-family:"JetBrains Mono",monospace;font-size:14px;letter-spacing:.3em;font-weight:600;color:var(--ink-3);margin-top:8px}
+.masthead .lede{font-size:17px;max-width:60ch;margin-top:14px;color:var(--ink-2)}
+.seal{width:96px;height:96px;border:2px solid var(--zhu);color:var(--zhu);border-radius:10px;display:grid;place-items:center;font-family:"Noto Serif TC",serif;font-weight:900;font-size:26px;letter-spacing:.1em;writing-mode:vertical-rl;text-orientation:upright;line-height:1;padding:8px;transform:rotate(-4deg);background:var(--paper)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.chip{border:1px solid var(--line-2);border-radius:999px;padding:3px 11px;font-size:12.5px;color:var(--ink-2);background:var(--paper-2)}
+.chip b{color:var(--ink);font-weight:600}
+
+/* tabs */
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);border-bottom:1px solid var(--line);display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;margin-inline:calc(-1*clamp(16px,4vw,40px));padding-inline:clamp(16px,4vw,40px)}
+.tabs::-webkit-scrollbar{display:none}
+.tab{appearance:none;background:none;border:0;border-bottom:2px solid transparent;padding:14px 12px;font:inherit;font-size:14px;font-weight:500;color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--qing-ink);border-bottom-color:var(--qing);font-weight:700}
+.tab:focus-visible{outline:2px solid var(--qing);outline-offset:-2px;border-radius:4px}
+section.panel{padding-block:36px 10px}
+section.panel[hidden]{display:none}
+.sec-head{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+.sec-head .num{font-family:"JetBrains Mono",monospace;color:var(--ink-3);font-size:13px}
+.intro{font-size:16px;color:var(--ink-2);max-width:70ch;margin-bottom:20px}
+
+/* grids & cards */
+.grid{display:grid;gap:14px}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:860px){.g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.g2,.g3,.g4{grid-template-columns:1fr}.masthead{grid-template-columns:1fr}.seal{display:none}}
+.card{background:var(--paper-2);border:1px solid var(--line);border-radius:10px;padding:16px 18px;box-shadow:var(--shadow)}
+.card h4{margin-top:0}
+.pillar{border-top:3px solid var(--qing);border-radius:0 0 10px 10px}
+.pillar.zhu{border-top-color:var(--zhu)}
+.pillar.jin{border-top-color:var(--jin)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px}
+.kv dt{color:var(--ink-3);white-space:nowrap}
+.kv dd{margin:0}
+.tag{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:4px;border:1px solid var(--line-2);color:var(--ink-2);margin:2px 4px 2px 0;background:var(--paper)}
+.tag.qing{background:var(--qing-soft);color:var(--qing-ink);border-color:transparent}
+.tag.zhu{background:var(--zhu-soft);color:var(--zhu);border-color:transparent}
+.tag.jin{background:var(--jin-soft);color:var(--jin);border-color:transparent}
+.tag.mo{background:var(--mo-soft);color:var(--mo);border-color:transparent}
+.tag.warn{border-style:dashed}
+
+/* tables */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;margin:10px 0 18px}
+table{border-collapse:collapse;width:100%;font-size:14px;min-width:560px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;background:var(--paper-2);position:sticky;top:0}
+tr:last-child td{border-bottom:0}
+td.mono{font-variant-numeric:tabular-nums}
+
+/* map */
+.map-layout{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,1fr);gap:18px;align-items:start}
+@media (max-width:860px){.map-layout{grid-template-columns:1fr}}
+.map-box{background:var(--paper-2);border:1px solid var(--line);border-radius:12px;padding:8px;overflow:hidden}
+.map-box svg{width:100%;height:auto;display:block;max-width:100%}
+.region{cursor:pointer;transition:opacity .15s}
+.region path,.region polygon,.region circle{fill:var(--qing-soft);stroke:var(--qing);stroke-width:1.2;stroke-linejoin:round}
+.region.mo path,.region.mo polygon{fill:var(--mo-soft);stroke:var(--mo)}
+.region.jin path,.region.jin polygon{fill:var(--jin-soft);stroke:var(--jin)}
+.region.zhu path,.region.zhu polygon,.region.zhu circle{fill:var(--zhu-soft);stroke:var(--zhu)}
+.region text{font-family:"Noto Serif TC",serif;font-weight:700;fill:var(--ink);font-size:13px;pointer-events:none}
+.region text.sub{font-family:"JetBrains Mono",monospace;font-weight:400;fill:var(--ink-3);font-size:8px}
+.region:hover,.region.active{opacity:1}
+.region.active path,.region.active polygon,.region.active circle{stroke-width:2.4}
+svg .sea{fill:none;stroke:var(--line-2);stroke-width:.8;stroke-dasharray:3 4}
+svg .label{font-family:"JetBrains Mono",monospace;font-size:8.5px;fill:var(--ink-3);letter-spacing:.15em}
+.loc-list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.loc-list li{display:grid;grid-template-columns:auto 1fr;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--paper-2);font-size:13.5px}
+.loc-list .t{font-size:11px;color:var(--ink-3);white-space:nowrap;padding-top:2px;min-width:44px}
+.loc-list b{font-weight:600}
+
+/* realm ladder */
+.ladder{display:grid;gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:12px 0 20px}
+.rung{display:grid;grid-template-columns:44px 1.2fr 1fr 1.6fr 1.4fr;gap:14px;padding:12px 16px;border-bottom:1px solid var(--line);align-items:start;background:var(--paper-2)}
+.rung:last-child{border-bottom:0}
+.rung.w1{background:var(--paper-2)}
+.rung.w2{background:color-mix(in srgb,var(--mo-soft) 45%,var(--paper-2))}
+.rung.w3{background:color-mix(in srgb,var(--jin-soft) 45%,var(--paper-2))}
+.rung .o{font-family:"JetBrains Mono",monospace;color:var(--ink-3);font-size:12px;padding-top:4px}
+.rung .n{font-family:"Noto Serif TC",serif;font-weight:900;font-size:18px}
+.rung .n small{display:block;font-family:"JetBrains Mono",monospace;font-weight:400;font-size:11px;color:var(--ink-3);letter-spacing:.05em}
+.rung .s{font-size:13px}
+.rung .lv{font-family:"JetBrains Mono",monospace;font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--ink-2)}
+.rung .b{font-size:13px;color:var(--ink-2)}
+.ladder-head{display:grid;grid-template-columns:44px 1.2fr 1fr 1.6fr 1.4fr;gap:14px;padding:8px 16px;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);border-bottom:1px solid var(--line);background:var(--paper)}
+@media (max-width:860px){.ladder-head{display:none}.rung{grid-template-columns:36px 1fr}.rung .s,.rung .lv,.rung .b{grid-column:2}}
+
+/* filters */
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 16px}
+.fbtn{appearance:none;font:inherit;font-size:13px;padding:5px 12px;border-radius:999px;border:1px solid var(--line-2);background:var(--paper-2);color:var(--ink-2);cursor:pointer}
+.fbtn[aria-pressed="true"]{background:var(--qing);color:#fff;border-color:var(--qing)}
+.fbtn:focus-visible{outline:2px solid var(--qing);outline-offset:2px}
+.sect{border-left:3px solid var(--qing)}
+.sect.mo{border-left-color:var(--mo)}
+.sect.zhu{border-left-color:var(--zhu)}
+.sect.jin{border-left-color:var(--jin)}
+.sect.grey{border-left-color:var(--line-2)}
+.sect h4{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.sect h4 .ed{font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:400;color:var(--ink-3)}
+.char{display:grid;grid-template-columns:52px 1fr;gap:14px}
+.avatar{width:52px;height:52px;border-radius:8px;display:grid;place-items:center;font-family:"Noto Serif TC",serif;font-weight:900;font-size:22px;background:var(--qing-soft);color:var(--qing-ink)}
+.avatar.zhu{background:var(--zhu-soft);color:var(--zhu)}
+.avatar.jin{background:var(--jin-soft);color:var(--jin)}
+.avatar.mo{background:var(--mo-soft);color:var(--mo)}
+.char h4{margin:0 0 2px}
+.char .role{font-size:12px;color:var(--ink-3);letter-spacing:.05em}
+
+/* misc */
+.callout{border:1px solid var(--line);border-left:4px solid var(--jin);background:var(--paper-2);border-radius:8px;padding:12px 16px;margin:14px 0}
+.callout.zhu{border-left-color:var(--zhu)}
+.callout.qing{border-left-color:var(--qing)}
+.timeline{display:grid;gap:0;border-left:2px solid var(--line-2);margin:14px 0 10px 8px;padding-left:22px}
+.phase{position:relative;padding-bottom:22px}
+.phase::before{content:"";position:absolute;left:-29px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--paper);border:2px solid var(--qing)}
+.phase.done::before{background:var(--qing)}
+.phase h4{margin:0 0 4px}
+.phase .when{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink-3)}
+.phase ul{margin:6px 0 0;padding-left:18px;font-size:14px}
+ul.tight{margin:4px 0 10px;padding-left:20px}
+ul.tight li{margin-bottom:3px}
+.wuxing{max-width:360px;margin:8px auto 4px}
+.wuxing text{font-family:"Noto Serif TC",serif;font-weight:900;font-size:16px;fill:var(--ink)}
+.wuxing .sheng{stroke:var(--qing);stroke-width:2;fill:none;marker-end:url(#arrowQ)}
+.wuxing .ke{stroke:var(--zhu);stroke-width:1.4;fill:none;stroke-dasharray:4 3;marker-end:url(#arrowZ)}
+.wuxing circle{fill:var(--paper-2);stroke:var(--line-2);stroke-width:1.2}
+pre.mermaid{background:var(--paper-2);border:1px solid var(--line);text-align:center}
+footer{border-top:1px solid var(--line);margin-top:40px;padding-top:18px;font-size:13px;color:var(--ink-3)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<header class="masthead">
+  <div>
+    <div class="eyebrow">單人桌機 RPG · 上古卷軸 5 全面轉換模組（Total Conversion）</div>
+    <h1>凡人修仙傳<small>CHINESERIM · GAME DESIGN &amp; TECHNICAL SPEC</small></h1>
+    <p class="lede">以《凡人修仙傳》人界六卷為藍本，忠實還原天南、亂星海、大晉的地圖、門派、角色與功法；建構在 Skyrim Special Edition 引擎之上，戰鬥系統、資料格式與模組載入完全沿用 Skyrim 生態，任何 Skyrim 模組作者都能直接為它擴充。</p>
+    <div class="meta">
+      <span class="chip">版本 <b>0.1 設計稿</b></span>
+      <span class="chip">引擎 <b>Creation Engine (Skyrim SE 1.6.x)</b></span>
+      <span class="chip">主插件 <b>ChineseRim.esm</b></span>
+      <span class="chip">語言 <b>繁中 / 簡中 / EN</b></span>
+      <span class="chip">專案目錄 <b>G:\AI\game\ChineseRim</b></span>
+    </div>
+  </div>
+  <div class="seal" aria-hidden="true">凡人</div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="章節">
+  <button class="tab" role="tab" data-tab="overview" aria-selected="true">總覽</button>
+  <button class="tab" role="tab" data-tab="world">世界地圖</button>
+  <button class="tab" role="tab" data-tab="realms">境界</button>
+  <button class="tab" role="tab" data-tab="sects">門派勢力</button>
+  <button class="tab" role="tab" data-tab="characters">角色</button>
+  <button class="tab" role="tab" data-tab="techniques">功法法寶</button>
+  <button class="tab" role="tab" data-tab="combat">戰鬥系統</button>
+  <button class="tab" role="tab" data-tab="modding">模組架構</button>
+  <button class="tab" role="tab" data-tab="story">主線任務</button>
+  <button class="tab" role="tab" data-tab="roadmap">開發路線</button>
+  <button class="tab" role="tab" data-tab="sources">來源與授權</button>
+</nav>
+
+<main>
+<!-- ============ 總覽 ============ -->
+<section class="panel" id="overview" role="tabpanel">
+  <div class="sec-head"><span class="num">01</span><h2>總覽</h2></div>
+  <p class="intro">一句話：玩家扮演韓立（或自創修士），從青牛鎮的凡人少年開始，在一張忠於原著的開放地圖上拜師、修煉、突破、結仇、奪寶，走完人界六卷的歷程。遊戲本體是一個 Skyrim SE 的全面轉換模組（與《Enderal》相同的發行模式），玩家需擁有 Skyrim SE。</p>
+
+  <div class="grid g3">
+    <div class="card pillar"><h4>忠實還原</h4><p class="small">地圖、門派、角色、功法、境界全部以 <code>data/*.json</code> 為單一資料來源，每一條都標記 <code>verified</code>，方便對照原文逐條校訂。劇情按原著六卷順序推進，關鍵事件（墨大夫奪舍、血色試煉、正魔大戰、慕蘭大戰、虛天殿、昆吾山、飛升）皆為主線任務。</p></div>
+    <div class="card pillar jin"><h4>Skyrim 相容</h4><p class="small">不重寫戰鬥。保留 Skyrim 的 Actor Value、技能、Keyword、裝備欄位、動畫行為圖與 Perk 架構，只在其上「換皮＋加層」：法術即 Skyrim 法術、功法即 Perk 樹、法寶即附魔武器＋腳本。MCO、Precision、TK Dodge、Nemesis 等戰鬥模組原生可用。</p></div>
+    <div class="card pillar zhu"><h4>方便擴充</h4><p class="small">主檔 <code>ChineseRim.esm</code> 提供 Faction、Keyword、Perk 樹與 Papyrus API；各卷地圖為獨立 <code>.esp</code>。第三方只要丟一個 JSON 到 <code>SKSE/Plugins/ChineseRim/</code> 就能新增功法、丹藥、門派；或用 SPID 把功法分派給任何 NPC。</p></div>
+  </div>
+
+  <h3>為什麼用 Skyrim 引擎做全面轉換，而不是自製引擎？</h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>需求</th><th>自製引擎 / Unity / Unreal</th><th>Skyrim SE 全面轉換（採用）</th></tr></thead>
+    <tbody>
+      <tr><td>「戰鬥相容 Skyrim 模組」</td><td>只能模仿格式，無法直接載入 .esp/.bsa/.nif/.hkx，動畫與行為圖無法共用</td><td>天生相容：同一個引擎、同一套檔案格式與載入器</td></tr>
+      <tr><td>開放世界工具鏈</td><td>需自建地形、天氣、NPC 排程、對話系統、任務系統</td><td>Creation Kit 內建 Worldspace、Radiant AI、Quest/Dialogue 編輯器</td></tr>
+      <tr><td>模組社群與教材</td><td>從零建立</td><td>Nexus、xEdit、SKSE、Papyrus 文件與十餘年教學現成</td></tr>
+      <tr><td>發行</td><td>需自行處理版權與商店</td><td>Enderal 模式：免費模組，玩家需擁有 Skyrim SE；不得重製 Bethesda 資產</td></tr>
+      <tr><td>代價</td><td>—</td><td>受限於 Creation Engine：飛行需框架、大規模戰役需分段、境界數值上限需壓縮到 Skyrim 等級尺度</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>核心玩法迴圈</h3>
+  <div class="grid g4">
+    <div class="card"><h4>探索</h4><p class="small">開放地圖：天南諸國、坊市、秘境（血色禁地、虛天殿、昆吾山）。以 Skyrim 的 Location/Encounter Zone 控制難度。</p></div>
+    <div class="card"><h4>修煉</h4><p class="small">打坐吸收靈氣（時間推進）、服丹、悟功法；修煉進度 = 經驗值。靈根決定速度。</p></div>
+    <div class="card"><h4>突破</h4><p class="small">境界瓶頸鎖住升級：練氣圓滿需築基丹，築基後期需結丹靈藥。突破是事件（閉關、天劫式考驗），可失敗。</p></div>
+    <div class="card"><h4>門派・戰鬥・煉製</h4><p class="small">門派聲望 = Faction Rank；煉丹 = Alchemy、煉器 = Smithing+Enchanting、布陣 = 放置物；法寶隨境界祭煉成長。</p></div>
+  </div>
+
+  <h3>範圍</h3>
+  <div class="grid g2">
+    <div class="card"><h4>初版（v1.0）</h4><ul class="tight small"><li>人界六卷主線（七玄門 → 飛升），約 40 個主線任務</li><li>天南主世界 + 慕蘭草原、亂星海群島、大晉節點地圖</li><li>五境界（凡人 → 化神）、六種靈根</li><li>約 30 個門派勢力、25 位具名角色、12 部功法、14 個法術、11 件法寶</li></ul></div>
+    <div class="card"><h4>DLC / 社群擴充</h4><ul class="tight small"><li>靈界：天淵城、獸潮、天雲十三族（<code>ChineseRim_LingJie.esp</code>）</li><li>煉虛 → 大乘境界</li><li>社群門派包、功法包（JSON 直接掛載）</li><li>仙界篇不列入規劃</li></ul></div>
+  </div>
+</section>
+
+<!-- ============ 世界地圖 ============ -->
+<section class="panel" id="world" role="tabpanel" hidden>
+  <div class="sec-head"><span class="num">02</span><h2>世界地圖</h2></div>
+  <p class="intro">人界四大區塊各為一個 Skyrim Worldspace。示意圖為本專案自繪的相對位置圖（非原著官方地圖）：天南在南、慕蘭草原居中、大晉在北、無邊海與亂星海在東。點選區域可查看其中的城鎮、門派與秘境，以及對應的 Worldspace 與插件。</p>
+  <div class="map-layout">
+    <div class="map-box">
+      <svg viewBox="0 0 640 520" role="img" aria-label="人界示意地圖">
+        <defs>
+          <pattern id="waves" width="14" height="10" patternUnits="userSpaceOnUse"><path d="M0 5 Q3.5 1 7 5 T14 5" class="sea"/></pattern>
+        </defs>
+        <rect x="0" y="0" width="640" height="520" fill="url(#waves)" opacity=".55"/>
+        <text x="470" y="470" class="label">無 邊 海</text>
+        <text x="14" y="505" class="label">極 西 之 地 →</text>
+
+        <g class="region jin" data-region="dajin" tabindex="0" role="button" aria-label="大晉">
+          <path d="M60 30 L420 22 L470 90 L440 165 L300 190 L150 175 L70 130 Z"/>
+          <text x="230" y="95" text-anchor="middle" font-size="22">大 晉</text>
+          <text x="230" y="118" text-anchor="middle" class="sub">CR_DaJin · ChineseRim_DaJin.esp</text>
+          <text x="330" y="60" class="sub">昆吾山</text><circle cx="322" cy="62" r="2.5"/>
+          <text x="140" y="150" class="sub">落雲宗</text><circle cx="132" cy="152" r="2.5"/>
+          <text x="400" y="150" class="sub">海雲府</text><circle cx="392" cy="152" r="2.5"/>
+        </g>
+
+        <g class="region mo" data-region="mulan" tabindex="0" role="button" aria-label="慕蘭草原">
+          <path d="M90 190 L300 205 L430 185 L420 260 L300 285 L120 270 Z"/>
+          <text x="255" y="235" text-anchor="middle" font-size="18">慕 蘭 草 原</text>
+          <text x="255" y="255" text-anchor="middle" class="sub">CR_MuLan</text>
+          <text x="330" y="212" class="sub">天瀾聖地</text><circle cx="322" cy="214" r="2.5"/>
+        </g>
+
+        <g class="region" data-region="tiannan" tabindex="0" role="button" aria-label="天南">
+          <path d="M70 290 L300 300 L410 285 L430 380 L380 470 L220 490 L80 440 Z"/>
+          <text x="240" y="380" text-anchor="middle" font-size="24">天 南</text>
+          <text x="240" y="402" text-anchor="middle" class="sub">CR_TianNan · ChineseRim_TianNan.esp（主世界）</text>
+          <text x="120" y="440" class="sub">青牛鎮</text><circle cx="112" cy="442" r="2.5"/>
+          <text x="160" y="410" class="sub">七玄門</text><circle cx="152" cy="412" r="2.5"/>
+          <text x="200" y="335" class="sub">黃楓谷</text><circle cx="192" cy="337" r="2.5"/>
+          <text x="290" y="325" class="sub">掩月宗</text><circle cx="282" cy="327" r="2.5"/>
+          <text x="330" y="355" class="sub">血色禁地</text><circle cx="322" cy="357" r="2.5"/>
+          <text x="250" y="305" class="sub">元武國</text><circle cx="242" cy="307" r="2.5"/>
+          <text x="330" y="440" class="sub">越京</text><circle cx="322" cy="442" r="2.5"/>
+        </g>
+
+        <g class="region zhu" data-region="luanxinghai" tabindex="0" role="button" aria-label="亂星海">
+          <path d="M470 220 L560 200 L610 250 L600 330 L540 350 L480 300 Z"/>
+          <circle cx="500" cy="380" r="14"/><circle cx="560" cy="400" r="10"/><circle cx="590" cy="360" r="8"/><circle cx="470" cy="420" r="9"/>
+          <text x="540" y="270" text-anchor="middle" font-size="18">亂 星 海</text>
+          <text x="540" y="288" text-anchor="middle" class="sub">CR_LuanXingHai</text>
+          <text x="522" y="318" class="sub">天星城</text><circle cx="514" cy="320" r="2.5"/>
+          <text x="512" y="405" class="sub">虛天殿</text>
+          <text x="556" y="425" class="sub">極陰島</text>
+        </g>
+      </svg>
+    </div>
+    <div>
+      <div id="region-detail"></div>
+    </div>
+  </div>
+
+  <h3>靈界（DLC）</h3>
+  <div id="lingjie-regions" class="grid g2"></div>
+
+  <div class="callout">
+    <b>地圖建置策略。</b> 天南主世界以 Creation Kit 匯入高度圖（建議尺寸 128×128 Cell，與原版天際相當）；慕蘭草原共用天南插件但獨立 Worldspace；亂星海以海面為主，島嶼為 Location，配合船隻快速旅行；大晉初版只建州府、落雲宗與昆吾山等劇情節點，其餘以「傳送陣＋地圖標記」呈現，留給後續擴充填滿。
+  </div>
+</section>
+
+<!-- ============ 境界 ============ -->
+<section class="panel" id="realms" role="tabpanel" hidden>
+  <div class="sec-head"><span class="num">03</span><h2>境界體系</h2></div>
+  <p class="intro">境界是遊戲的骨幹進度條。Skyrim 的玩家等級（1–100）對應人界五境，每一境再切初/中/後期；升級到境界上限時會被「瓶頸」鎖住，必須完成突破事件（丹藥＋閉關＋考驗）才能繼續。靈界境界留給 DLC，等級 100 以上。</p>
+  <div id="ladder"></div>
+  <h3>靈根（角色創建）</h3>
+  <p>靈根取代 Skyrim 的種族選擇：決定五行親和（對應法術傷害加成）與修煉速度倍率（經驗值倍率）。「原作模式」鎖定韓立的四靈根＋掌天瓶；「自由模式」可自選。</p>
+  <div id="roots" class="grid g3"></div>
+</section>
+
+<!-- ============ 門派 ============ -->
+<section class="panel" id="sects" role="tabpanel" hidden>
+  <div class="sec-head"><span class="num">04</span><h2>門派與勢力</h2></div>
+  <p class="intro">每個門派是一個 Skyrim Faction；聲望用 Faction Rank（-4 死敵 ～ 4 核心弟子）表示，門派任務、店鋪折扣、洞府使用權、功法解鎖都以 Rank 為條件。正魔陣營以父 Faction 統一敵對關係，子宗自動繼承。</p>
+  <div class="filters" id="sect-filters"></div>
+  <div id="sect-list" class="grid g2"></div>
+</section>
+
+<!-- ============ 角色 ============ -->
+<section class="panel" id="characters" role="tabpanel" hidden>
+  <div class="sec-head"><span class="num">05</span><h2>角色</h2></div>
+  <p class="intro">具名角色各有一個 ActorBase，境界隨劇情推進（用 Leveled Actor 或腳本 <code>SetLevel</code>）。同伴（銀月、厲飛雨、南宮婉）走 Skyrim 追隨者框架，因此 NFF、AFT 等追隨者模組可直接管理他們。</p>
+  <div class="filters" id="char-filters"></div>
+  <div id="char-list" class="grid g2"></div>
+</section>
+
+<!-- ============ 功法法寶 ============ -->
+<section class="panel" id="techniques" role="tabpanel" hidden>
+  <div class="sec-head"><span class="num">06</span><h2>功法・法術・法寶</h2></div>
+  <p class="intro">三層設計：<b>功法</b>是 Perk 樹（長期成長）、<b>法術</b>是 Skyrim 法術（即時施放）、<b>法寶</b>是可祭煉成長的物品。每個條目都寫明對應的 Skyrim 基底，方便在 Creation Kit 裡照表建立。</p>
+  <h3>功法（Perk 樹）</h3>
+  <div id="gongfa" class="grid g2"></div>
+  <h3>法術</h3>
+  <div id="spells"></div>
+  <h3>境界神通（被動能力）</h3>
+  <div id="abilities" class="grid g2"></div>
+  <h3>法寶與靈獸</h3>
+  <div id="treasures" class="grid g2"></div>
+  <h3>丹藥與材料</h3>
+  <div class="grid g2">
+    <div><div id="pills"></div></div>
+    <div><div id="materials"></div></div>
+  </div>
+</section>
+
+<!-- ============ 戰鬥 ============ -->
+<section class="panel" id="combat" role="tabpanel" hidden>
+  <div class="sec-head"><span class="num">07</span><h2>戰鬥系統</h2></div>
+  <p class="intro">原則：<b>不改 Skyrim 的骨架，只換血肉</b>。所有玩家與 NPC 仍用原版的三大屬性、18 項技能、裝備欄位與動畫行為圖，因此任何為 Skyrim 寫的戰鬥模組（動作、閃避、鎖定、命中判定、AI）不需修改即可套用。修仙元素透過「對照層」實作。</p>
+
+  <h3>系統對照表</h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>修仙概念</th><th>Skyrim 基底（保留不改）</th><th>ChineseRim 加層</th></tr></thead>
+    <tbody>
+      <tr><td>法力／靈力</td><td>Magicka</td><td>基礎值隨境界表 <code>realms.json</code> 重算；靈石可補充</td></tr>
+      <tr><td>體魄／肉身</td><td>Health</td><td>煉體功法提升；元嬰期以上可「元嬰出竅」</td></tr>
+      <tr><td>真氣／耐力</td><td>Stamina</td><td>御風訣、輕身術消耗</td></tr>
+      <tr><td>五行法術</td><td>Destruction / Alteration / Restoration 法術</td><td>新增 Keyword <code>CR_Kw_Elem_Jin/Mu/Shui/Huo/Tu</code>；五行相剋倍率由 <code>CR_ElementResolver</code> 在 OnHit 計算</td></tr>
+      <tr><td>神識</td><td>Illusion / Detect Life</td><td>範圍與威壓隨境界；大衍決加成</td></tr>
+      <tr><td>功法</td><td>Perk 樹</td><td>以功法命名的自訂 Perk 樹（保留原版 18 技能作為底層經驗來源）</td></tr>
+      <tr><td>法器／法寶</td><td>Weapon / Armor + Enchantment</td><td><code>CR_TreasureGrowth</code>：物品等級隨玩家境界重算；祭煉介面</td></tr>
+      <tr><td>飛劍／劍陣</td><td>多投射物法術 + Bound Weapon</td><td>青竹蜂雲劍：12 / 36 / 72 把三階</td></tr>
+      <tr><td>靈獸</td><td>Conjuration 召喚 / Creature Follower</td><td>蟲巢餵養成長；啼魂獸可升級</td></tr>
+      <tr><td>傀儡</td><td>Dwemer Automaton 骨架</td><td>重製為木/金傀儡外觀；煉器台製作</td></tr>
+      <tr><td>煉丹</td><td>Alchemy</td><td>丹爐取代煉金台；靈液可升級藥材</td></tr>
+      <tr><td>煉器</td><td>Smithing + Enchanting</td><td>煉器台、祭煉台</td></tr>
+      <tr><td>陣法</td><td>放置型 Activator（Campfire 風格）</td><td>陣旗/陣盤：防禦、隱匿、傳送</td></tr>
+      <tr><td>靈石</td><td>Gold001（Septim）</td><td>替換模型與名稱為下品靈石；中/上品靈石為 Ingredient</td></tr>
+      <tr><td>門派聲望</td><td>Faction Rank</td><td>-4 ～ 4</td></tr>
+      <tr><td>突破</td><td>Level Up 事件</td><td><code>CR_Breakthrough</code> 攔截升級，未達條件則鎖住</td></tr>
+      <tr><td>辟穀</td><td>Survival Mode 飢餓</td><td>築基後免疫飢餓 Keyword</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="grid g2">
+    <div>
+      <h3>五行相生相剋</h3>
+      <svg class="wuxing" viewBox="0 0 320 320" role="img" aria-label="五行相生相剋圖">
+        <defs>
+          <marker id="arrowQ" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--qing)"/></marker>
+          <marker id="arrowZ" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--zhu)"/></marker>
+        </defs>
+        <!-- 木(160,40) 火(268,118) 土(227,246) 金(93,246) 水(52,118) -->
+        <path class="sheng" d="M182 52 L246 104"/>
+        <path class="sheng" d="M264 142 L236 222"/>
+        <path class="sheng" d="M203 250 L117 250"/>
+        <path class="sheng" d="M84 222 L56 142"/>
+        <path class="sheng" d="M74 104 L138 52"/>
+        <path class="ke" d="M166 64 L220 224"/>
+        <path class="ke" d="M206 240 L74 138"/>
+        <path class="ke" d="M76 122 L244 122"/>
+        <path class="ke" d="M252 138 L104 232"/>
+        <path class="ke" d="M100 228 L154 66"/>
+        <g><circle cx="160" cy="40" r="24"/><text x="160" y="46" text-anchor="middle">木</text></g>
+        <g><circle cx="268" cy="118" r="24"/><text x="268" y="124" text-anchor="middle">火</text></g>
+        <g><circle cx="227" cy="246" r="24"/><text x="227" y="252" text-anchor="middle">土</text></g>
+        <g><circle cx="93" cy="246" r="24"/><text x="93" y="252" text-anchor="middle">金</text></g>
+        <g><circle cx="52" cy="118" r="24"/><text x="52" y="124" text-anchor="middle">水</text></g>
+        <text x="160" y="300" text-anchor="middle" style="font-size:11px;fill:var(--ink-3);font-family:'Noto Sans TC',sans-serif;font-weight:400">實線＝相生（外圈）　虛線＝相剋（星形）</text>
+      </svg>
+      <p class="small">傷害倍率：剋制 ×1.5、被剋 ×0.75、相生對友方加持 +15%。變異屬性（雷/冰/風）各自對應一個五行父屬性（雷→木、冰→水、風→木）以繼承剋制關係。</p>
+    </div>
+    <div>
+      <h3>戰鬥節奏</h3>
+      <ul class="tight small">
+        <li><b>凡人階段（七玄門）</b>：純近戰 + 格擋，Skyrim 原味；教學關。</li>
+        <li><b>練氣</b>：法術 + 法器（飛劍作為投射武器）；靈石有限，逼迫玩家在坊市與採集間取捨。</li>
+        <li><b>築基</b>：神識開啟（敵人境界可視）、御器飛行（滑翔級）、符籙一次性法術。</li>
+        <li><b>結丹</b>：金丹威壓讓低境界敵人恐懼；法寶祭煉；劍陣。</li>
+        <li><b>元嬰</b>：元嬰出竅（高風險高輸出）、傀儡軍、奪舍（NPC 專屬）。</li>
+        <li><b>Boss 設計</b>：忠實原作的「不能正面打」戰鬥（墨大夫：毒＋陷阱；曲魂：破解五行輪），以任務階段控制。</li>
+      </ul>
+      <h3>飛行</h3>
+      <p class="small">Creation Engine 沒有原生玩家飛行。分兩級：<b>築基</b>使用滑翔（Paraglider 類框架，社群成熟）；<b>結丹以上</b>整合開源飛行框架（以 SKSE 插件實作，參考 Flying Mod / Skyrim Flying 的 havok 處理）。飛行時禁用 MCO 近戰動畫集，切換至「御劍」動畫圖（DAR/OAR 條件）。元磁神光可使目標「禁飛」。</p>
+      <h3>相容性守則</h3>
+      <ul class="tight small">
+        <li>不刪除、不改名原版 Actor Value、Keyword、Skill、裝備 Slot、Race 骨架（靈根為 Race 的子分類，骨架用 Nord 標準骨架）。</li>
+        <li>不覆寫原版行為圖 <code>0_master.hkx</code>；新增動畫透過 Nemesis/Pandora 補丁。</li>
+        <li>法術傷害走原版 Magic Effect，讓「法術縮放」「傷害倍率」類模組照常作用。</li>
+        <li>所有新記錄以 <code>CR_</code> 前綴，避免 EditorID 衝突。</li>
+        <li>境界數值以 Skyrim 等級 1–100 尺度壓縮（見境界表），確保等級縮放類模組不會炸掉數值。</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 模組架構 ============ -->
+<section class="panel" id="modding" role="tabpanel" hidden>
+  <div class="sec-head"><span class="num">08</span><h2>模組架構與擴充 API</h2></div>
+  <p class="intro">ChineseRim 本身就是一組 Skyrim 模組。主檔 <code>.esm</code> 放共用系統，每一卷地圖是一個 <code>.esp</code>；資料驅動層用 JContainers 讀 JSON；Papyrus API 與 Mod Event 供第三方掛接；SPID 讀取設定檔把功法分派給 NPC。</p>
+
+  <pre class="mermaid">
+flowchart TB
+  subgraph base[Skyrim SE 1.6.x + SKSE64 + Address Library]
+    SKY[Skyrim.esm / Update.esm / DLC]
+  end
+  subgraph core[ChineseRim 核心]
+    ESM[ChineseRim.esm\nFaction · Keyword · Perk 樹 · 境界 · 法術基底 · Papyrus API]
+    DLL[ChineseRim.dll (SKSE 插件)\n飛行 · 五行傷害 Hook · 突破攔截]
+    JSON[Data/SKSE/Plugins/ChineseRim/*.json\nrealms · techniques · sects · pills]
+  end
+  subgraph worlds[地圖插件]
+    TN[ChineseRim_TianNan.esp\n天南 + 慕蘭草原]
+    LX[ChineseRim_LuanXingHai.esp]
+    DJ[ChineseRim_DaJin.esp]
+    LJ[ChineseRim_LingJie.esp (DLC)]
+  end
+  subgraph deps[相依框架]
+    JC[JContainers]
+    PU[PapyrusUtil]
+    SPID[SPID / KID]
+    UI[SkyUI + MCM Helper]
+    ANIM[Nemesis/Pandora · OAR]
+  end
+  subgraph third[第三方擴充]
+    M1[MyGongfa.json → 新功法]
+    M2[MySect.esp → 新門派 (依賴 ESM)]
+    M3[任何 Skyrim 戰鬥/畫面/追隨者模組]
+  end
+  SKY --> ESM --> TN & LX & DJ & LJ
+  ESM --> DLL
+  JC --> JSON --> ESM
+  PU --> ESM
+  SPID --> ESM
+  UI --> ESM
+  ANIM --> DLL
+  M1 --> JSON
+  M2 --> ESM
+  M3 --> SKY
+  </pre>
+
+  <h3>插件清單與載入順序</h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>檔案</th><th>類型</th><th>內容</th><th>相依</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">ChineseRim.esm</td><td>主檔</td><td>境界系統、靈根 Race、五行 Keyword、Perk 樹、法術/法寶基底、所有 Faction、Papyrus API、MCM</td><td>Skyrim.esm, Update.esm, Dawnguard, Dragonborn</td></tr>
+      <tr><td class="mono">ChineseRim.dll</td><td>SKSE 插件（C++/CommonLibSSE-NG）</td><td>飛行、OnHit 五行倍率、升級攔截、JSON 熱載入</td><td>SKSE64, Address Library</td></tr>
+      <tr><td class="mono">ChineseRim_TianNan.esp</td><td>地圖</td><td>天南 + 慕蘭草原 Worldspace、第一至三卷與第六卷任務、NPC</td><td>ChineseRim.esm</td></tr>
+      <tr><td class="mono">ChineseRim_LuanXingHai.esp</td><td>地圖</td><td>亂星海、第四卷</td><td>ChineseRim.esm</td></tr>
+      <tr><td class="mono">ChineseRim_DaJin.esp</td><td>地圖</td><td>大晉節點、第五卷</td><td>ChineseRim.esm</td></tr>
+      <tr><td class="mono">ChineseRim_LingJie.esp</td><td>DLC</td><td>靈界、煉虛以上境界</td><td>ChineseRim.esm</td></tr>
+      <tr><td class="mono">ChineseRim - Textures.bsa / Meshes.bsa</td><td>資產</td><td>中式建築、服飾、法器模型；不含任何 Bethesda 資產重製</td><td>—</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>資料驅動：JSON 直接掛載</h3>
+  <p class="small">遊戲啟動時 <code>CR_Registry</code> 掃描 <code>Data/SKSE/Plugins/ChineseRim/techniques/</code>、<code>sects/</code>、<code>pills/</code> 下所有 JSON 並合併。第三方新增一部功法只需一個檔案，並在自己的 .esp 內建立對應 Perk（EditorID 對上即可）。</p>
+  <pre><code>// Data/SKSE/Plugins/ChineseRim/techniques/MyMod_XuanYinJue.json
+{
+  "gongfa": [{
+    "id": "mymod_xuanyin_jue",
+    "name": "玄陰訣",
+    "element": "水",
+    "minRealm": "foundation",
+    "perkTree": "MyMod_Tree_XuanYin",     // 在 MyMod.esp 建立的 Perk 樹 EditorID
+    "perks": ["MyMod_Perk_XuanYin01", "MyMod_Perk_XuanYin02"],
+    "learnItem": "MyMod_Book_XuanYin"      // 功法典籍（Book）
+  }]
+}</code></pre>
+
+  <h3>Papyrus API（<code>CR_API.psc</code>）</h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>函式</th><th>說明</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">int GetRealm(Actor akActor)</td><td>回傳境界 order（0 凡人 … 5 化神 …）</td></tr>
+      <tr><td class="mono">int GetRealmSub(Actor akActor)</td><td>回傳子階（初/中/後期或練氣層數）</td></tr>
+      <tr><td class="mono">bool TryBreakthrough(Actor akActor, Form akPill)</td><td>嘗試突破；發送 <code>CR_OnBreakthrough</code> 事件，回傳成功與否</td></tr>
+      <tr><td class="mono">void RegisterGongfa(string asJsonPath)</td><td>執行期註冊功法（供 .esp 腳本用）</td></tr>
+      <tr><td class="mono">float GetElementMult(Form akSource, Actor akTarget)</td><td>五行剋制倍率查詢</td></tr>
+      <tr><td class="mono">void ModSectRep(Faction akSect, int aiDelta)</td><td>門派聲望增減，自動觸發敵對/任務解鎖</td></tr>
+      <tr><td class="mono">bool IsFlying(Actor akActor) / void SetFlight(Actor, bool)</td><td>飛行狀態</td></tr>
+      <tr><td class="mono">int GetTreasureGrade(ObjectReference akItem)</td><td>法寶祭煉等級</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Mod Events（<code>SendModEvent</code>）</h3>
+  <ul class="tight small">
+    <li><code>CR_OnRealmChanged</code>（actor, newOrder, newSub）</li>
+    <li><code>CR_OnBreakthrough</code>（actor, success, realmId）</li>
+    <li><code>CR_OnSectRankChanged</code>（actor, factionFormID, newRank）</li>
+    <li><code>CR_OnTreasureRefined</code>（item, newGrade）</li>
+    <li><code>CR_OnMoonFull</code>（掌天瓶產液；其他月相系統可掛接）</li>
+  </ul>
+
+  <h3>SPID：把功法分派給任何 NPC</h3>
+  <pre><code>; Data/ChineseRim_DISTR.ini
+; 越國七大派弟子一律獲得練氣期基礎法術
+Spell = CR_Spell_HuoDan|NONE|CR_Fac_HuangFengGu,CR_Fac_YanYueZong,CR_Fac_LingShouShan
+Perk  = CR_Perk_QingYuan01|NONE|CR_Fac_HuangFengGu|NONE|10/NONE
+; 魔道六宗成員套用魔道 Keyword，供五行/陣營判定
+Keyword = CR_Kw_MoDao|NONE|CR_Fac_MoDaoLiuZong</code></pre>
+
+  <h3>資料夾結構（Git 倉庫）</h3>
+  <pre><code>ChineseRim/
+├─ README.md
+├─ docs/                    設計文件（本頁由 tools/build_docs.py 產生）
+├─ data/                    單一資料來源 JSON（境界、地圖、門派、角色、功法、法寶、任務）
+├─ Source/Scripts/          Papyrus 原始碼 (.psc)
+├─ Scripts/                 編譯後 .pex（不進 Git）
+├─ SKSE/Plugins/ChineseRim/ 執行期 JSON（由 data/ 複製）
+├─ Interface/               MCM 設定 (MCM Helper config.json)、翻譯字串
+├─ meshes/ textures/ sound/ 資產（LFS）
+├─ dll/                     CommonLibSSE-NG 專案（ChineseRim.dll）
+└─ tools/                   建置腳本：驗證 JSON、產生文件、同步 SKSE 目錄</code></pre>
+</section>
+
+<!-- ============ 主線 ============ -->
+<section class="panel" id="story" role="tabpanel" hidden>
+  <div class="sec-head"><span class="num">09</span><h2>主線任務（人界六卷）</h2></div>
+  <p class="intro">主線依原著順序切成六卷，每卷一個 Quest 章節（<code>CR_MQ##</code>）。玩家境界與等級區間配合境界表，讓「突破」成為卷與卷之間的節點。支線（門派任務、坊市、秘境）不在此列。</p>
+  <div id="arcs"></div>
+</section>
+
+<!-- ============ 路線 ============ -->
+<section class="panel" id="roadmap" role="tabpanel" hidden>
+  <div class="sec-head"><span class="num">10</span><h2>開發路線圖</h2></div>
+  <p class="intro">以「可玩的垂直切片」為第一個里程碑：從青牛鎮走到七玄門、學長春功、殺墨大夫。切片跑通後，系統層（境界/功法/法寶）與地圖層（天南）平行推進。</p>
+  <div class="timeline">
+    <div class="phase done"><h4>Phase 0 · 前製（本文件）</h4><div class="when">已完成</div><ul><li>設計文件、資料 JSON、專案骨架、Papyrus API 草稿</li><li>決定引擎：Skyrim SE 全面轉換</li></ul></div>
+    <div class="phase"><h4>Phase 1 · 垂直切片：七玄門</h4><div class="when">約 3 個月</div><ul><li>ChineseRim.esm 骨架：境界系統、靈根 Race、五行 Keyword、MCM</li><li>青牛鎮 + 彩霞山小型 Worldspace（10×10 Cell）</li><li>第一卷五個任務、墨大夫 Boss、長春功 Perk 樹</li><li>掌天瓶月圓機制</li></ul></div>
+    <div class="phase"><h4>Phase 2 · 系統完備 + 天南主世界</h4><div class="when">約 6 個月</div><ul><li>天南高度圖與越國七派據點、坊市系統、煉丹/煉器台</li><li>青元劍訣、大衍決、明清靈目 Perk 樹；14 個法術</li><li>飛行框架（滑翔級）、突破事件、Faction 聲望</li><li>第二卷（血色禁地、正魔大戰戰役）</li></ul></div>
+    <div class="phase"><h4>Phase 3 · 慕蘭與結丹</h4><div class="when">約 3 個月</div><ul><li>慕蘭草原 Worldspace、慕蘭咒術 NPC 體系、元武國戰役</li><li>青竹蜂雲劍成長、噬金蟲蟲巢、傀儡術</li><li>完整飛行、金丹威壓</li></ul></div>
+    <div class="phase"><h4>Phase 4 · 亂星海與大晉</h4><div class="when">約 6 個月</div><ul><li>亂星海海島 Worldspace 與船隻旅行、虛天殿秘境</li><li>大晉節點地圖、昆吾山、落雲宗客卿線</li><li>元嬰出竅、啼魂獸、銀月同伴</li></ul></div>
+    <div class="phase"><h4>Phase 5 · 化神與發行 v1.0</h4><div class="when">約 3 個月</div><ul><li>第六卷、家園（道場）、道侶支線、飛升結局</li><li>繁/簡/英三語、語音（可選）</li><li>模組 API 文件、範例擴充包、Nexus 發行</li></ul></div>
+    <div class="phase"><h4>DLC · 靈界</h4><div class="when">v1.0 之後</div><ul><li>天淵城、獸潮戰役、天雲十三族、煉虛～大乘</li></ul></div>
+  </div>
+
+  <h3>工具鏈</h3>
+  <div class="grid g3">
+    <div class="card"><h4>編輯</h4><ul class="tight small"><li>Creation Kit (SE) + CK Platform Extended</li><li>SSEEdit (xEdit)：清理、衝突、批次腳本</li><li>Papyrus：Pyro / Champollion / Papyrus Compiler</li><li>CommonLibSSE-NG + CMake + vcpkg（DLL）</li></ul></div>
+    <div class="card"><h4>資產</h4><ul class="tight small"><li>Blender + PyNifly / NifSkope</li><li>Substance / GIMP（貼圖，BC7）</li><li>Outfit Studio（服飾）</li><li>Nemesis / Pandora、OAR（動畫）</li></ul></div>
+    <div class="card"><h4>測試與發行</h4><ul class="tight small"><li>Mod Organizer 2 隔離環境</li><li>Crash Logger、.NET Script Framework</li><li>Git + LFS；CI 驗證 JSON 與 Papyrus 編譯</li><li>Nexus Mods / 3DM / N 網中文社群</li></ul></div>
+  </div>
+
+  <h3>風險</h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>風險</th><th>影響</th><th>對策</th></tr></thead>
+    <tbody>
+      <tr><td>版權（原著為忘語作品，閱文集團持有 IP）</td><td>高</td><td>非商業粉絲模組；不使用官方美術與音訊；標明無官方授權；預留「改名/去 IP 化」開關</td></tr>
+      <tr><td>Bethesda 資產重製限制</td><td>高</td><td>Enderal 模式：只發布自製資產與插件，玩家需擁有 Skyrim SE</td></tr>
+      <tr><td>飛行在 Creation Engine 的穩定性</td><td>中</td><td>分級實作；築基先用滑翔；飛行僅限室外 Worldspace</td></tr>
+      <tr><td>地圖規模過大</td><td>中</td><td>天南優先，大晉以節點呈現；社群擴充填空</td></tr>
+      <tr><td>中文字型與 UI</td><td>低</td><td>SkyUI 中文字型替換（已有成熟方案）</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============ 來源 ============ -->
+<section class="panel" id="sources" role="tabpanel" hidden>
+  <div class="sec-head"><span class="num">11</span><h2>資料來源與授權</h2></div>
+  <div class="callout zhu"><b>校訂狀態。</b> 資料 JSON 中每一條目都有 <code>verified</code> 欄位。維基百科中文條目本身只涵蓋故事簡介與七玄門篇，門派全表、地理與功法細節來自原著記憶與二次資料，標記為 <code>false</code> 的條目（例如魔道六宗第六宗、部分丹藥名、部分島嶼）需對照原文章節逐一確認再鎖定。</div>
+  <h3>參考來源</h3>
+  <ul class="tight small">
+    <li><a href="https://zh.wikipedia.org/zh-tw/%E5%87%A1%E4%BA%BA%E4%BF%AE%E4%BB%99%E4%BC%A0">凡人修仙傳 — 維基百科</a>（故事簡介、七玄門篇人物）</li>
+    <li><a href="https://baike.baidu.com/item/%E5%A4%A9%E5%8D%97/67059055">天南（凡人修仙傳地區）— 百度百科</a></li>
+    <li><a href="https://www.163.com/dy/article/K73V9KI80552H59B.html">詳解《凡人修仙傳》四大修仙勢力：天南、天瀾草原、大晉、亂星海</a></li>
+    <li><a href="https://c.m.163.com/news/a/K8S7FSLK0552H59B.html">天南 32 個修仙勢力等級劃分</a></li>
+    <li><a href="https://www.sohu.com/a/932489039_122415633">天南修仙界的勢力是如何劃分的（四大陣營）</a></li>
+    <li><a href="https://weqoocu.com/2342.html">凡人修仙傳地圖全解析</a>、<a href="https://weqoocu.com/1833.html">韓立功法體系</a>、<a href="https://weqoocu.com/2463.html">韓立六大法寶與四靈寵</a></li>
+    <li><a href="https://immortalascension.com/lore/geography-spirit-realm">靈界地理全圖解</a></li>
+    <li><a href="https://zhuanlan.zhihu.com/p/1962243171338687550">韓立各階段法寶、功法</a></li>
+    <li><a href="https://www.sohu.com/a/890815931_121458245">天雲十三族的九個種族</a></li>
+  </ul>
+  <h3>技術參考</h3>
+  <ul class="tight small">
+    <li>Enderal: Forgotten Stories（Skyrim 全面轉換模組的發行與架構範本）</li>
+    <li>SKSE64、Address Library、CommonLibSSE-NG、JContainers、PapyrusUtil、SPID/KID、MCM Helper、Nemesis/Pandora、OAR</li>
+    <li>Creation Kit Wiki（Worldspace、Quest、Papyrus 參考）</li>
+  </ul>
+  <h3>授權聲明（草稿）</h3>
+  <p class="small">ChineseRim 為非商業粉絲創作，與原著作者忘語、閱文集團及任何官方改編作品無關；不包含官方文字、美術或音訊。遊戲以 Skyrim Special Edition 模組形式發布，不包含 Bethesda Softworks 的任何原始資產，使用者須自行擁有 Skyrim SE。專案程式碼（Papyrus、C++、工具腳本）以 MIT 授權釋出；自製美術資產以 CC BY-NC-SA 4.0 釋出。</p>
+</section>
+</main>
+
+<footer>ChineseRim 設計文件 · 由 <code>tools/build_docs.py</code> 自 <code>data/*.json</code> 產生 · 修改資料後重新建置即可更新本頁。</footer>
+</div>
+
+<script id="cr-data" type="application/json">{"realms":{"$schema":"./schema/realms.schema.json","description":"修仙境界體系。每個境界對應 Skyrim 玩家等級區間（PlayerLevel）與突破條件。子階段 sub = 初期/中期/後期（練氣期為 1~13 層）。","worlds":["人界","靈界","仙界"],"realms":[{"id":"mortal","name":"凡人／煉體","world":"人界","order":0,"sub":["外門弟子","內門弟子","武學宗師"],"levelRange":[1,5],"lifespan":100,"breakthrough":{"type":"none","note":"測出靈根即可進入練氣期（七玄門墨大夫劇情）"},"skyrim":{"healthBase":100,"magickaBase":20,"staminaBase":120,"canUseSpells":false}},{"id":"qi_refining","name":"練氣期","world":"人界","order":1,"sub":["1層","2層","3層","4層","5層","6層","7層","8層","9層","10層","11層","12層","13層"],"levelRange":[5,20],"lifespan":150,"breakthrough":{"type":"pill_or_chance","items":["築基丹"],"note":"練氣圓滿（12~13層）後服築基丹突破；無靈根/偽靈根者需借外力（掌天瓶靈液催熟靈藥）"},"skyrim":{"healthBase":120,"magickaBase":150,"staminaBase":120,"canUseSpells":true,"perkPointsPerSub":1}},{"id":"foundation","name":"築基期","world":"人界","order":2,"sub":["初期","中期","後期","圓滿"],"levelRange":[20,40],"lifespan":250,"breakthrough":{"type":"pill","items":["結金丹（結丹丹藥）"],"note":"築基後期結丹機率極低，需結丹靈藥輔助；築基可御器飛行、神識外放","unlocks":["御器飛行","神識","辨識靈物","法器→法寶煉製"]},"skyrim":{"healthBase":200,"magickaBase":350,"staminaBase":180,"canFly":"glide"}},{"id":"core_formation","name":"結丹期","world":"人界","order":3,"sub":["初期","中期","後期","圓滿"],"levelRange":[40,60],"lifespan":500,"breakthrough":{"type":"pill_and_trial","items":["元嬰丹／天蘭丹"],"note":"結丹→元嬰為天南千年一遇之難關；需元嬰級丹藥＋心境","unlocks":["金丹之力（法術威力×2）","法寶祭煉","築基以下神識鎮壓"]},"skyrim":{"healthBase":350,"magickaBase":700,"staminaBase":250,"canFly":"full"}},{"id":"nascent_soul","name":"元嬰期","world":"人界","order":4,"sub":["初期","中期","後期","圓滿"],"levelRange":[60,80],"lifespan":1000,"breakthrough":{"type":"insight","items":[],"note":"化神需感悟天地法則，人界靈氣稀薄極難突破","unlocks":["元嬰出竅","元嬰自爆（禁術）","奪舍","分神傀儡"]},"skyrim":{"healthBase":600,"magickaBase":1200,"staminaBase":350,"specialForm":"元嬰化身（Summon 自身分身）"}},{"id":"deity_transformation","name":"化神期","world":"人界","order":5,"sub":["初期","中期","後期","圓滿"],"levelRange":[80,100],"lifespan":2000,"breakthrough":{"type":"ascension","note":"人界頂點；化神後期可借空間節點飛升靈界（韓立人界結局）","unlocks":["法則之力初窺","撕裂空間短距瞬移","飛升靈界"]},"skyrim":{"healthBase":1000,"magickaBase":2000,"staminaBase":500}},{"id":"void_refining","name":"煉虛期","world":"靈界","order":6,"sub":["初期","中期","後期","圓滿"],"levelRange":[100,130],"lifespan":5000,"breakthrough":{"type":"insight","note":"靈界 DLC 內容"},"skyrim":{"dlc":"ChineseRim_LingJie.esp"}},{"id":"body_integration","name":"合體期","world":"靈界","order":7,"sub":["初期","中期","後期","圓滿"],"levelRange":[130,160],"lifespan":10000,"breakthrough":{"type":"insight","note":"靈界 DLC 內容"},"skyrim":{"dlc":"ChineseRim_LingJie.esp"}},{"id":"mahayana","name":"大乘期","world":"靈界","order":8,"sub":["初期","中期","後期","圓滿"],"levelRange":[160,200],"lifespan":30000,"breakthrough":{"type":"ascension","note":"渡真仙劫飛升仙界"},"skyrim":{"dlc":"ChineseRim_LingJie.esp"}},{"id":"true_immortal","name":"真仙","world":"仙界","order":9,"sub":["初期","中期","後期","圓滿"],"levelRange":[200,999],"breakthrough":{"type":"insight","note":"真仙→金仙→太乙→大羅→道祖；仙界篇不在初版範圍"},"skyrim":{"dlc":"future"}}],"spiritRoots":{"description":"靈根 = 角色創建時選擇的『種族』(Skyrim Race)，決定五行親和與修煉速度。","elements":["金","木","水","火","土"],"types":[{"id":"heavenly","name":"天靈根","count":1,"speed":2.0,"note":"單屬性極品，修煉最快（如：極少數天才）"},{"id":"variant","name":"變異靈根","count":1,"speed":1.8,"elements":["雷","冰","風","暗"],"note":"如南宮婉所屬掩月宗擅收此類；雷靈根、冰靈根等"},{"id":"dual","name":"雙靈根","count":2,"speed":1.5},{"id":"triple","name":"三靈根","count":3,"speed":1.2},{"id":"quad","name":"四靈根","count":4,"speed":1.0,"note":"韓立為四靈根（偽靈根），修煉極慢，依靠掌天瓶催熟靈藥與大衍決彌補"},{"id":"penta","name":"五靈根","count":5,"speed":0.8,"note":"五行雜靈根，最差資質"}]}},"regions":{"$schema":"./schema/regions.schema.json","description":"世界地理。每個 region 對應一個 Skyrim Worldspace（或大型內部 Cell 群）。coords 為設計文件示意地圖上的相對座標（0~100），非原作官方座標。verified=false 表示需與原文對照。","worlds":[{"id":"renjie","name":"人界","regions":[{"id":"tiannan","name":"天南","worldspace":"CR_TianNan","esp":"ChineseRim_TianNan.esp","size":"主世界，約與原版天際省同等大小（~40km²）","coords":[30,62],"summary":"凡人修仙傳開篇之地。以越國為核心的數十個凡人國家，修仙勢力分為越國七大派（正道）、魔道六宗、九國盟三大陣營。北接慕蘭草原，東臨無邊海通往亂星海，西為極西之地。","nations":["越國","風都國","元武國","車機國","紫金國","越國周邊九國（九國盟）"],"locations":[{"id":"qingniu","name":"青牛鎮（青牛村）","type":"村鎮","nation":"越國·鏡州","note":"韓立故鄉，遊戲起點","verified":true},{"id":"caixia","name":"彩霞山·七玄門","type":"門派/山","nation":"越國","note":"凡人武林門派，外門/內門；神手谷；墨大夫居所","verified":true},{"id":"yuejing","name":"越京","type":"都城","nation":"越國","note":"越國皇城，凡人政治中心","verified":true},{"id":"jiazhou","name":"嘉元城","type":"城市","nation":"越國","note":"韓立初入修仙界的坊市所在地區（待核實城名）","verified":false},{"id":"taiyue","name":"太岳山脈","type":"山脈","nation":"越國","note":"黃楓谷所在山脈；靈氣濃郁，越國七派多依山而建","verified":false},{"id":"huangfeng","name":"黃楓谷","type":"門派","nation":"越國","note":"韓立入門處，百藥園、黃楓谷洞府","verified":true},{"id":"xuese","name":"血色禁地","type":"秘境","nation":"越國","note":"七派聯合開啟的上古禁地，血色試煉；韓立獲青元劍訣、築基丹材料處","verified":true},{"id":"yanyue","name":"掩月宗","type":"門派","nation":"越國","note":"南宮婉、董萱兒所屬，多女修","verified":true},{"id":"lingshou","name":"靈獸山","type":"門派","nation":"越國","note":"馴獸門派，噬金蟲來源相關","verified":true},{"id":"tianque","name":"天闕堡","type":"門派","nation":"越國","note":"越國七派之一，堡壘型宗門","verified":true},{"id":"jujian","name":"巨劍門","type":"門派","nation":"越國","note":"越國七派之一，劍修","verified":true},{"id":"huadao","name":"化刀塢","type":"門派","nation":"越國","note":"越國七派之一，刀修","verified":true},{"id":"qingxu","name":"清虛門","type":"門派","nation":"越國","note":"越國七派之一","verified":true},{"id":"yuanwu","name":"元武國戰場","type":"戰場","nation":"元武國","note":"天南修士對抗慕蘭人入侵的前線；韓立結丹後參戰","verified":true},{"id":"jihe","name":"界河","type":"地標","nation":"天南/慕蘭邊境","note":"天南與慕蘭草原分界（待核實名稱）","verified":false},{"id":"jixi","name":"極西之地","type":"荒野","nation":"—","note":"天南極西，妖獸眾多、人跡罕至","verified":true},{"id":"wubian","name":"無邊海岸","type":"海岸","nation":"—","note":"通往亂星海的海路起點","verified":true},{"id":"tiannan_fangshi","name":"各國坊市（多處）","type":"坊市","nation":"多國","note":"修士交易所：拍賣會、租攤位、黑市；Skyrim 商人系統","verified":true}]},{"id":"mulan","name":"慕蘭草原","worldspace":"CR_MuLan","esp":"ChineseRim_TianNan.esp","size":"中型 Worldspace（草原、無盡草海）","coords":[34,38],"summary":"天南以北的廣袤草原，慕蘭人（慕蘭法師，其功法體系近似巫術）聚居之地，信奉天瀾聖獸。因草原靈氣衰竭而南侵天南，引發慕蘭大戰。","nations":["慕蘭諸部"],"locations":[{"id":"tianlan","name":"天瀾聖地","type":"聖地","note":"天瀾聖獸所在，慕蘭人精神信仰中心","verified":true},{"id":"mulan_camp","name":"慕蘭主營","type":"營地","note":"慕蘭南侵大軍集結處","verified":false},{"id":"grass_sea","name":"無盡草海","type":"荒野","note":"開放地圖探索區，妖獸、慕蘭巡騎","verified":false}]},{"id":"luanxinghai","name":"亂星海","worldspace":"CR_LuanXingHai","esp":"ChineseRim_LuanXingHai.esp","size":"海島群 Worldspace（水面為主，島嶼為 Location）","coords":[66,60],"summary":"天南以東無邊海中的群島修仙界。分內星海與外星海；星宮（天星雙聖）與逆星盟對立千年。虛天殿每三百年開啟一次。","nations":["星宮轄下諸島","逆星盟轄下諸島","外星海散修島"],"locations":[{"id":"tianxing_cheng","name":"天星城","type":"城市","note":"亂星海第一城，星宮總部所在","verified":true},{"id":"kuixing","name":"魁星島","type":"島","note":"外星海大島，韓立初到亂星海落腳處（待核實）","verified":false},{"id":"xutian","name":"虛天殿","type":"秘境","note":"上古修士遺留的空間秘境，內有虛天鼎；各方勢力爭奪","verified":true},{"id":"jiyin","name":"極陰島","type":"島","note":"極陰之地，紫羅極火所在（韓立獲取紫羅極火）","verified":true},{"id":"nanming","name":"南明島","type":"島","note":"亂星海島嶼（待核實）","verified":false},{"id":"neixinghai","name":"內星海","type":"海域","note":"星宮與逆星盟核心區","verified":true},{"id":"waixinghai","name":"外星海","type":"海域","note":"散修與小勢力，妖獸海獸出沒","verified":true}]},{"id":"dajin","name":"大晉","worldspace":"CR_DaJin","esp":"ChineseRim_DaJin.esp","size":"超大 Worldspace（初版僅建州府級節點＋秘境）","coords":[28,18],"summary":"慕蘭草原以北、人界最大的修仙國度，修士數量與實力遠超天南。正道以落雲宗等大宗為首，魔道十宗（鬼靈門本宗、陰羅宗、天魔宗等）盤踞；昆吾山秘境為關鍵劇情地。","nations":["大晉皇朝諸州府"],"locations":[{"id":"kunwu","name":"昆吾山","type":"秘境","note":"上古昆吾遺跡，落雲宗守護；虛天殿以外另一大寶藏地","verified":true},{"id":"luoyun","name":"落雲宗","type":"門派","note":"大晉正道大宗，韓立以化名加入為客卿","verified":true},{"id":"haiyun","name":"海雲府","type":"府城","note":"大晉沿海府城，通無邊海","verified":true},{"id":"guiling_hq","name":"鬼靈門本宗","type":"門派","note":"天南魔道六宗中鬼靈門的母宗；玄骨老祖","verified":true},{"id":"yinluo","name":"陰羅宗","type":"門派","note":"大晉魔道十宗之一","verified":true},{"id":"tianmo","name":"天魔宗","type":"門派","note":"大晉魔道十宗之一（部分資料歸於亂星海，需核實）","verified":false},{"id":"wanyao","name":"萬妖谷","type":"妖修聚地","note":"大晉妖修勢力","verified":false},{"id":"qianzhu","name":"千竹教","type":"門派","note":"大晉宗門，與韓立昆吾山劇情相關","verified":true}]}]},{"id":"lingjie","name":"靈界","dlc":"ChineseRim_LingJie.esp","regions":[{"id":"tianyuan","name":"天淵大陸","worldspace":"CR_TianYuan","coords":[50,50],"summary":"靈界人族最大聚居地。韓立飛升後落腳邊緣地帶，天淵城為人族對抗妖獸潮（獸潮）與魔族的前線巨城。","locations":[{"id":"tianyuan_cheng","name":"天淵城","type":"巨城","note":"人族抵禦獸潮前線，韓立以化名加入天淵城守軍","verified":true},{"id":"xuantian","name":"玄天城","type":"城市","note":"（待核實）","verified":false},{"id":"tianyun13","name":"天雲十三族領地","type":"異族領地","note":"飛靈族等十三異族，韓立曾以飛靈族身分潛入","verified":true},{"id":"muzu","name":"木族領地","type":"異族領地","note":"木族，靈界強族","verified":true},{"id":"yaozu","name":"妖族領地","type":"異族領地","note":"保留原始面貌的森林、草原、峽谷，以族群為單位散布","verified":true},{"id":"mozu_rift","name":"魔族空間裂縫帶","type":"戰區","note":"魔族入侵處，人妖交界","verified":true}]}]}]},"sects":{"$schema":"./schema/sects.schema.json","description":"門派與勢力。每個 sect 對應一個 Skyrim Faction（FormID 由 ESM 分配，此處為 EditorID）。alignment: 正道/魔道/妖修/凡俗/異族。reputation 用 Skyrim Faction Rank 實作（-4 敵對 ~ 4 核心弟子）。","sects":[{"id":"qixuanmen","editorId":"CR_Fac_QiXuanMen","name":"七玄門","region":"tiannan","alignment":"凡俗武林","tier":"凡人門派","hq":"彩霞山","leader":"門主（凡人）","notable":["墨居仁（墨大夫）","厲飛雨","張鐵","馬榕（教習）"],"focus":["外家拳腳","長春功（內門）","煉體"],"note":"遊戲序章門派：外門→內門→神手谷","verified":true},{"id":"yelanggang","editorId":"CR_Fac_YeLangGang","name":"野狼幫","region":"tiannan","alignment":"凡俗武林","tier":"凡人門派","hq":"越國邊境","notable":[],"focus":["刀法","毒"],"note":"七玄門死敵，序章結尾攻山事件","verified":true},{"id":"huangfenggu","editorId":"CR_Fac_HuangFengGu","name":"黃楓谷","region":"tiannan","alignment":"正道","tier":"越國七大派","hq":"太岳山脈·黃楓谷","leader":"掌門（結丹）","notable":["李化元（韓立師父）","馬師叔（百藥園）","陸師兄","莫聚"],"focus":["丹道","五行法術","法器煉製"],"note":"韓立正式入門處；百藥園為煉丹教學區","verified":true},{"id":"yanyuezong","editorId":"CR_Fac_YanYueZong","name":"掩月宗","region":"tiannan","alignment":"正道","tier":"越國七大派","hq":"越國","notable":["南宮婉","董萱兒","陳巧倩"],"focus":["變異靈根（冰/雷）","陣法","幻術"],"note":"以女修為主的正道大派","verified":true},{"id":"lingshoushan","editorId":"CR_Fac_LingShouShan","name":"靈獸山","region":"tiannan","alignment":"正道","tier":"越國七大派","hq":"越國","notable":[],"focus":["馴獸","靈獸培育","蟲修"],"note":"噬金蟲來源相關門派","verified":true},{"id":"tianquebao","editorId":"CR_Fac_TianQueBao","name":"天闕堡","region":"tiannan","alignment":"正道","tier":"越國七大派","hq":"越國","notable":[],"focus":["土系防禦","堡壘陣法"],"verified":true},{"id":"jujianmen","editorId":"CR_Fac_JuJianMen","name":"巨劍門","region":"tiannan","alignment":"正道","tier":"越國七大派","hq":"越國","notable":[],"focus":["劍修","重劍"],"verified":true},{"id":"huadaowu","editorId":"CR_Fac_HuaDaoWu","name":"化刀塢","region":"tiannan","alignment":"正道","tier":"越國七大派","hq":"越國","notable":[],"focus":["刀修"],"verified":true},{"id":"qingxumen","editorId":"CR_Fac_QingXuMen","name":"清虛門","region":"tiannan","alignment":"正道","tier":"越國七大派","hq":"越國","notable":[],"focus":["符籙","清靈法術"],"verified":true},{"id":"guilingmen","editorId":"CR_Fac_GuiLingMen","name":"鬼靈門","region":"tiannan","alignment":"魔道","tier":"魔道六宗","hq":"越國外（本宗在大晉）","notable":["玄骨老祖（本宗）"],"focus":["鬼修","陰煞","屍傀"],"note":"正魔大戰主謀之一；大晉有本宗","verified":true},{"id":"hehuanzong","editorId":"CR_Fac_HeHuanZong","name":"合歡宗","region":"tiannan","alignment":"魔道","tier":"魔道六宗","hq":"越國外","notable":["王蟬（少主）","元瑤","千葉真人"],"focus":["雙修媚術","幻術","陰陽功法"],"verified":true},{"id":"tiangangjianzong","editorId":"CR_Fac_TianGangJianZong","name":"天罡劍宗","region":"tiannan","alignment":"魔道","tier":"魔道六宗","hq":"越國外","notable":[],"focus":["魔劍","劍陣"],"verified":true},{"id":"wangumen","editorId":"CR_Fac_WanGuMen","name":"萬蠱門","region":"tiannan","alignment":"魔道","tier":"魔道六宗","hq":"越國外","notable":[],"focus":["蠱蟲","毒物"],"verified":false},{"id":"yaoshengmen","editorId":"CR_Fac_YaoShengMen","name":"妖聖門","region":"tiannan","alignment":"魔道","tier":"魔道六宗","hq":"越國外","notable":[],"focus":["妖獸驅使"],"note":"六宗成員名單待與原文逐一核實","verified":false},{"id":"modao6","editorId":"CR_Fac_MoDaoLiuZong","name":"魔道六宗聯盟（總 Faction）","region":"tiannan","alignment":"魔道","tier":"聯盟","hq":"—","notable":[],"focus":[],"note":"父 Faction，子宗自動繼承敵對關係；第六宗名稱待核實","verified":false},{"id":"jiuguomeng","editorId":"CR_Fac_JiuGuoMeng","name":"九國盟","region":"tiannan","alignment":"正道（中立）","tier":"聯盟","hq":"越國周邊九國","notable":[],"focus":["多國散修聯合"],"note":"天南三大陣營之一，正魔大戰中立場搖擺","verified":true},{"id":"tiannan_alliance","editorId":"CR_Fac_TianNanLianMeng","name":"天南修士聯盟（抗慕蘭）","region":"tiannan","alignment":"正道","tier":"臨時聯盟","hq":"元武國","notable":[],"focus":[],"note":"慕蘭大戰期間七派、六宗、九國盟暫時聯合","verified":true},{"id":"mulan_fashi","editorId":"CR_Fac_MuLanFaShi","name":"慕蘭法師（慕蘭人）","region":"mulan","alignment":"異族/敵對","tier":"民族勢力","hq":"慕蘭草原","notable":["慕沛靈（公主，靈界重逢）"],"focus":["咒術（類巫術）","聖獸信仰","騎兵法師"],"note":"獨立法術體系：以 Skyrim 召喚/幻術系派生","verified":true},{"id":"tianlan_shengshou","editorId":"CR_Fac_TianLanShengShou","name":"天瀾聖獸","region":"mulan","alignment":"妖修","tier":"獨立","hq":"天瀾聖地","notable":[],"focus":[],"note":"慕蘭人信仰的元嬰級妖獸","verified":true},{"id":"xinggong","editorId":"CR_Fac_XingGong","name":"星宮","region":"luanxinghai","alignment":"正道","tier":"亂星海霸主","hq":"天星城","leader":"天星雙聖","notable":["天星雙聖","凌玉靈（聖女）"],"focus":["星辰法術","陣法","海域統御"],"verified":true},{"id":"nixingmeng","editorId":"CR_Fac_NiXingMeng","name":"逆星盟","region":"luanxinghai","alignment":"魔道","tier":"亂星海對抗勢力","hq":"內星海","notable":["文詩兒"],"focus":["反星宮聯盟","多宗門聯合"],"verified":true},{"id":"waixinghai_sanxiu","editorId":"CR_Fac_WaiXingHaiSanXiu","name":"外星海散修","region":"luanxinghai","alignment":"中立","tier":"散修","hq":"外星海諸島","notable":[],"focus":[],"verified":true},{"id":"luoyunzong","editorId":"CR_Fac_LuoYunZong","name":"落雲宗","region":"dajin","alignment":"正道","tier":"大晉正道大宗","hq":"昆吾山附近","notable":[],"focus":["昆吾山守護","元嬰客卿制度"],"note":"韓立化名『韓』姓客卿加入","verified":true},{"id":"guilingmen_hq","editorId":"CR_Fac_GuiLingMenBenZong","name":"鬼靈門本宗","region":"dajin","alignment":"魔道","tier":"大晉魔道十宗","hq":"大晉","notable":["玄骨老祖"],"focus":["鬼修"],"verified":true},{"id":"yinluozong","editorId":"CR_Fac_YinLuoZong","name":"陰羅宗","region":"dajin","alignment":"魔道","tier":"大晉魔道十宗","hq":"大晉","notable":[],"focus":["陰羅法術"],"verified":true},{"id":"tianmozong","editorId":"CR_Fac_TianMoZong","name":"天魔宗","region":"dajin","alignment":"魔道","tier":"大晉魔道十宗","hq":"大晉","notable":[],"focus":["天魔功法"],"verified":false},{"id":"qianzhujiao","editorId":"CR_Fac_QianZhuJiao","name":"千竹教","region":"dajin","alignment":"正道","tier":"大晉宗門","hq":"大晉","notable":[],"focus":["竹系木行法術"],"verified":true},{"id":"dajin_huangchao","editorId":"CR_Fac_DaJinHuangChao","name":"大晉皇朝","region":"dajin","alignment":"凡俗","tier":"凡人政權","hq":"大晉京城","notable":[],"focus":[],"note":"凡俗政權；修士不干預凡人政治的世界規則","verified":true},{"id":"tianyuan_guard","editorId":"CR_Fac_TianYuanShouJun","name":"天淵城守軍","region":"tianyuan","alignment":"人族","tier":"靈界","hq":"天淵城","notable":[],"focus":["抵禦獸潮"],"verified":true},{"id":"feilingzu","editorId":"CR_Fac_FeiLingZu","name":"飛靈族（天雲十三族）","region":"tianyuan","alignment":"異族","tier":"靈界","hq":"天雲十三族領地","notable":[],"focus":["飛行","羽化"],"verified":true},{"id":"muzu","editorId":"CR_Fac_MuZu","name":"木族","region":"tianyuan","alignment":"異族","tier":"靈界","hq":"木族領地","notable":[],"focus":["木行本源"],"verified":true},{"id":"mozu","editorId":"CR_Fac_MoZu","name":"魔族","region":"tianyuan","alignment":"敵對","tier":"靈界","hq":"空間裂縫帶","notable":[],"focus":["魔功","入侵"],"verified":true}],"relations":{"description":"Faction 初始關係矩陣（Skyrim Faction Relations）：-1 敵對、0 中立、1 友好。未列者為 0。","pairs":[["qixuanmen","yelanggang",-1],["huangfenggu","guilingmen",-1],["huangfenggu","hehuanzong",-1],["huangfenggu","tiangangjianzong",-1],["yanyuezong","hehuanzong",-1],["yanyuezong","guilingmen",-1],["huangfenggu","yanyuezong",1],["huangfenggu","lingshoushan",1],["huangfenggu","tianquebao",1],["huangfenggu","jujianmen",1],["huangfenggu","huadaowu",1],["huangfenggu","qingxumen",1],["guilingmen","hehuanzong",1],["guilingmen","tiangangjianzong",1],["tiannan_alliance","mulan_fashi",-1],["xinggong","nixingmeng",-1],["luoyunzong","guilingmen_hq",-1],["luoyunzong","yinluozong",-1],["tianyuan_guard","mozu",-1]]}},"characters":{"$schema":"./schema/characters.schema.json","description":"角色。role: protagonist/companion/mentor/love_interest/antagonist/npc。realmByArc 記錄各卷出場時境界，供關卡設定 NPC 等級。Skyrim 實作：每名角色一個 ActorBase（EditorID CR_NPC_*），劇情境界變化用 Leveled Actor 或 SetLevel。","characters":[{"id":"hanli","editorId":"CR_NPC_HanLi","name":"韓立","role":"protagonist","sect":["qixuanmen","huangfenggu","luoyunzong(客卿)"],"spiritRoot":"四靈根（偽靈根）","realmByArc":{"qixuanmen":"凡人→練氣","tiannan":"練氣→築基→結丹","luanxinghai":"結丹→元嬰","dajin":"元嬰","ascension":"化神","lingjie":"化神→煉虛→合體→大乘"},"signature":["掌天瓶","青竹蜂雲劍","噬金蟲","大衍決","青元劍訣","明清靈目","元磁神山"],"summary":"青牛鎮農家子，資質平庸卻性格謹慎、隱忍，靠神秘小瓶與苦修一步步登上修仙巔峰。遊戲中為玩家扮演角色（可自訂外觀、靈根）。","gameNote":"玩家角色。『原作模式』鎖定四靈根＋掌天瓶；『自由模式』可選其他靈根。","verified":true},{"id":"nangongwan","editorId":"CR_NPC_NanGongWan","name":"南宮婉","role":"love_interest","sect":["yanyuezong"],"spiritRoot":"變異靈根（冰）","realmByArc":{"tiannan":"築基→結丹","luanxinghai":"結丹","dajin":"結丹→元嬰","lingjie":"化神→合體"},"signature":["冰系法術","掩月宗陣法"],"summary":"掩月宗天才女修，冷傲高潔；血色禁地與韓立結識，正魔大戰中結下情緣，最終成為韓立道侶。","gameNote":"可招募同伴（結丹後）；有專屬支線『掩月之約』","verified":true},{"id":"mocaihuan","editorId":"CR_NPC_MoCaiHuan","name":"墨彩環","role":"love_interest","sect":["qixuanmen(家屬)"],"spiritRoot":"無","realmByArc":{"qixuanmen":"凡人","tiannan":"凡人"},"signature":[],"summary":"墨大夫之女，性格活潑刁蠻。韓立受墨大夫所託照顧墨家，後與韓立於凡俗成婚，為韓立人界凡人之妻。","gameNote":"序章重要 NPC；凡俗支線『墨府舊事』","verified":true},{"id":"ziling","editorId":"CR_NPC_ZiLing","name":"紫靈","role":"love_interest","sect":["合歡宗(掛名)→散修"],"spiritRoot":"—","realmByArc":{"tiannan":"築基→結丹","lingjie":"化神以上"},"signature":["面具","幻術"],"summary":"始終以面具遮面的神秘女修，與韓立多次相遇相助；身分與過往為長線謎團，靈界重逢。","gameNote":"多幕出場的謎題 NPC，面具身分作為收集線索支線","verified":true},{"id":"yinyue","editorId":"CR_NPC_YinYue","name":"銀月","role":"companion","sect":[],"spiritRoot":"妖魂（銀狼）","realmByArc":{"luanxinghai":"妖魂/寄身","dajin":"元嬰級妖修","lingjie":"化神→煉虛"},"signature":["銀月狼","月華法術","幻月"],"summary":"被封印的銀狼妖魂，寄身韓立體內後化形為銀髮少女，長期陪伴韓立；性情溫柔黏人，靈界後自立。","gameNote":"隨身系統同伴：可切換『寄身（被動加成）』與『化形（戰鬥同伴）』","verified":true},{"id":"lifeiyu","editorId":"CR_NPC_LiFeiYu","name":"厲飛雨","role":"companion","sect":["qixuanmen"],"spiritRoot":"無","realmByArc":{"qixuanmen":"凡人武者"},"signature":["拳腳","義氣"],"summary":"七玄門同期弟子，韓立少年時期摯友，性格豪爽仗義。","gameNote":"序章同伴；後期可觸發『故人』支線","verified":true},{"id":"zhangtie","editorId":"CR_NPC_ZhangTie","name":"張鐵","role":"npc","sect":["qixuanmen"],"spiritRoot":"無","realmByArc":{"qixuanmen":"凡人"},"signature":[],"summary":"七玄門外門同期，憨厚少年。","gameNote":"序章 NPC","verified":true},{"id":"mojuren","editorId":"CR_NPC_MoJuRen","name":"墨居仁（墨大夫）","role":"mentor→antagonist","sect":["qixuanmen"],"spiritRoot":"有靈根（練氣散修）","realmByArc":{"qixuanmen":"練氣期（受傷殘廢）"},"signature":["長春功","奪舍術"],"summary":"七玄門神手谷『墨大夫』，實為隱居散修。收韓立為徒傳授長春功，實欲奪舍韓立續命；被韓立以計反殺。臨終託付家人。","gameNote":"序章 Boss；戰鬥為『無法正面擊敗』的設計，須用毒/陷阱（忠實原作）","verified":true},{"id":"yuzitong","editorId":"CR_NPC_YuZiTong","name":"余子童","role":"antagonist","sect":["散修"],"spiritRoot":"有","realmByArc":{"qixuanmen":"練氣期"},"signature":[],"summary":"墨大夫仇家（原七玄門系列事件相關），韓立殺死的第一位修士。","gameNote":"序章末 Boss","verified":true},{"id":"lihuayuan","editorId":"CR_NPC_LiHuaYuan","name":"李化元","role":"mentor","sect":["huangfenggu"],"spiritRoot":"—","realmByArc":{"tiannan":"築基後期→結丹"},"signature":["黃楓谷法術","煉丹"],"summary":"黃楓谷長老，韓立名義師父；門派任務發布者。","gameNote":"黃楓谷任務主線 NPC","verified":true},{"id":"dongxuaner","editorId":"CR_NPC_DongXuanEr","name":"董萱兒","role":"npc","sect":["yanyuezong"],"realmByArc":{"tiannan":"築基"},"signature":["掩月宗陣法"],"summary":"掩月宗天才女修，血色禁地試煉領隊之一。","verified":true},{"id":"chenqiaoqian","editorId":"CR_NPC_ChenQiaoQian","name":"陳巧倩","role":"love_interest(未果)","sect":["yanyuezong"],"realmByArc":{"tiannan":"築基"},"signature":[],"summary":"掩月宗女修，與韓立有情感糾葛。","verified":true},{"id":"dayan","editorId":"CR_NPC_DaYanShenJun","name":"大衍神君","role":"mentor","sect":["慕蘭（原）→韓立神魂寄物"],"spiritRoot":"—","realmByArc":{"tiannan":"元嬰（神魂殘存）","luanxinghai":"神魂","dajin":"神魂（最終消散）"},"signature":["大衍決","傀儡術","神識大成"],"summary":"以神魂殘存寄身法寶的元嬰老怪，慕蘭出身。與韓立達成交易，傳授大衍決與傀儡術，是韓立修仙路上的亦師亦友。","gameNote":"隨身『導師』系統：對話解鎖功法教學、鑑定物品（Skyrim 中以隨身物品觸發對話）","verified":true},{"id":"quhun","editorId":"CR_NPC_QuHun","name":"曲魂","role":"antagonist","sect":["散修（元嬰）"],"realmByArc":{"tiannan":"元嬰"},"signature":["五行輪（五行輪迴盤）"],"summary":"天南神秘元嬰修士，圖謀韓立法寶，多次交手；為天南篇後期主要威脅之一。","gameNote":"天南篇 Boss","verified":true},{"id":"yuanyao","editorId":"CR_NPC_YuanYao","name":"元瑤","role":"companion","sect":["hehuanzong"],"realmByArc":{"tiannan":"築基","lingjie":"化神以上"},"signature":["合歡宗功法"],"summary":"合歡宗女修，天南篇與韓立多次交集，靈界重逢並成為同行者。","verified":true},{"id":"wangchan","editorId":"CR_NPC_WangChan","name":"王蟬","role":"antagonist","sect":["hehuanzong"],"realmByArc":{"tiannan":"築基"},"signature":[],"summary":"合歡宗少主，血色禁地中與韓立為敵。","verified":true},{"id":"xuangu","editorId":"CR_NPC_XuanGu","name":"玄骨老祖","role":"antagonist","sect":["guilingmen_hq"],"realmByArc":{"dajin":"元嬰後期"},"signature":["鬼道法術","骨傀"],"summary":"鬼靈門老祖，大晉篇主要反派。","verified":true},{"id":"wenshier","editorId":"CR_NPC_WenShiEr","name":"文詩兒","role":"antagonist","sect":["nixingmeng"],"realmByArc":{"luanxinghai":"元嬰"},"signature":[],"summary":"逆星盟高層，亂星海篇對抗星宮的一方。","verified":true},{"id":"lingyuling","editorId":"CR_NPC_LingYuLing","name":"凌玉靈","role":"npc","sect":["xinggong"],"realmByArc":{"luanxinghai":"結丹→元嬰"},"signature":["星辰法術"],"summary":"星宮聖女，天星雙聖之女，與韓立於虛天殿等事件中有合作。","verified":true},{"id":"tianxing2","editorId":"CR_NPC_TianXingShuangSheng","name":"天星雙聖","role":"npc","sect":["xinggong"],"realmByArc":{"luanxinghai":"元嬰後期"},"signature":["星宮陣法"],"summary":"星宮宮主夫婦，亂星海最強者。","verified":true},{"id":"mupeiling","editorId":"CR_NPC_MuPeiLing","name":"慕沛靈","role":"npc","sect":["mulan_fashi"],"realmByArc":{"tiannan":"築基→結丹","lingjie":"化神以上"},"signature":["慕蘭咒術"],"summary":"慕蘭公主，慕蘭大戰中與韓立結識，靈界重逢。","verified":true},{"id":"qingyuanzi","editorId":"CR_NPC_QingYuanZi","name":"青元子","role":"npc(遺蹟)","sect":[],"realmByArc":{},"signature":["青元劍訣（創功者）"],"summary":"仙人，青元劍訣創始者，透過遺留功法與傳承影響韓立。","gameNote":"以壁畫/殘魂形式出場","verified":true},{"id":"tihun","editorId":"CR_Pet_TiHun","name":"啼魂獸","role":"spirit_beast","sect":[],"realmByArc":{"dajin":"元嬰級妖獸","lingjie":"成長"},"signature":["吞噬鬼物","啼鳴震魂"],"summary":"韓立契約的稀有靈獸，可吞鬼靈、隨韓立征戰。","gameNote":"Skyrim 動物同伴（Creature Follower）","verified":true},{"id":"shijinchong","editorId":"CR_Pet_ShiJinChong","name":"噬金蟲群","role":"spirit_beast","sect":[],"realmByArc":{"tiannan":"幼蟲","luanxinghai":"成蟲","dajin":"變異金色噬金蟲"},"signature":["金屬蟲群","無視法寶啃噬"],"summary":"韓立招牌靈蟲，可吞金鐵、破法寶，數量成長至上萬隻。","gameNote":"以蟲群召喚法術 + 可餵養成長的物品系統實作","verified":true}]},"techniques":{"$schema":"./schema/techniques.schema.json","description":"功法（gongfa=被動成長樹/Perk Tree）、法術（spell=Skyrim SPEL）、神通（ability=境界解鎖能力）。skyrim 欄位描述對應原版系統與擴充方式。element 用五行＋變異屬性。任何 mod 可在 Data/SKSE/Plugins/ChineseRim/techniques/*.json 新增條目，遊戲啟動時由 CR_Registry 載入。","gongfa":[{"id":"changchun_gong","name":"長春功","source":"七玄門內門（墨大夫傳授）","element":"木","grade":"凡俗內功／練氣入門","minRealm":"mortal","effect":"極慢速增長真氣（Magicka）、延年益壽；內功基礎。","skyrim":{"perkTree":"CR_Tree_ChangChun","perks":["長春·一層（Magicka 恢復+10%）","長春·二層（HP 恢復+5%）","長春·三層（可感知靈氣：解鎖 Detect 靈物）"],"baseSkill":"Restoration"},"verified":true},{"id":"qingyuan_jianjue","name":"青元劍訣","source":"血色禁地遺跡（青元子傳承）","element":"木","grade":"天南頂級功法","minRealm":"qi_refining","effect":"青元劍氣、青竹蜂雲劍核心心法；結丹後可凝青元劍光；元嬰後與青竹蜂雲劍合一。","skyrim":{"perkTree":"CR_Tree_QingYuan","perks":["劍氣·青芒（Destruction 木刃投射物）","劍陣·蜂雲（多投射物齊射）","青元劍罩（護盾 Ward）","劍光斬（大範圍斬擊）"],"baseSkill":"Destruction+OneHanded"},"verified":true},{"id":"dayan_jue","name":"大衍決","source":"大衍神君","element":"無（神識）","grade":"慕蘭頂級神識功法","minRealm":"foundation","effect":"神識強度遠超同階；抵禦幻術、催動傀儡、施法無停頓（分神）。","skyrim":{"perkTree":"CR_Tree_DaYan","perks":["神識外放（Detect Life 範圍×3）","定神（免疫幻術/恐懼）","分神御器（同時操縱 2 件法寶）","傀儡操控（Conjuration 傀儡上限+2）"],"baseSkill":"Conjuration+Illusion"},"verified":true},{"id":"mingqing_lingmu","name":"明清靈目","source":"禁地/傳承（待核實出處）","element":"無","grade":"眼術秘法","minRealm":"qi_refining","effect":"破隱身、透幻術、視破陣法弱點。","skyrim":{"perkTree":"CR_Tree_MingQing","perks":["靈目·初開（看穿隱身 Invisibility）","靈目·辨陣（顯示陣法節點）","靈目·真視（弱點暴擊+15%）"],"baseSkill":"Illusion"},"verified":false},{"id":"yuanci_shenguang","name":"元磁神光","source":"元磁神山（靈界）","element":"土/金","grade":"靈界神通","minRealm":"void_refining","effect":"禁飛、壓制敵人法寶、元磁重力領域。","skyrim":{"perkTree":"CR_Tree_YuanCi","perks":["元磁領域（敵方減速+禁飛）","元磁鎮壓（法寶失效）"],"baseSkill":"Alteration","dlc":"ChineseRim_LingJie.esp"},"verified":true},{"id":"fansheng_zhenmo","name":"梵聖真魔功","source":"靈界·妖族/魔功傳承","element":"無（煉體）","grade":"靈界頂級煉體功法","minRealm":"deity_transformation","effect":"三頭六臂法相，體術與法力雙倍。","skyrim":{"perkTree":"CR_Tree_FanSheng","perks":["法相·三頭六臂（變身形態，類似狼人/吸血鬼領主變身）"],"baseSkill":"TwoHanded+HeavyArmor","dlc":"ChineseRim_LingJie.esp"},"verified":true},{"id":"mulan_zhoushu","name":"慕蘭咒術","source":"慕蘭法師","element":"雜","grade":"異族體系","minRealm":"qi_refining","effect":"召喚草原精魂、詛咒、獸化騎兵。","skyrim":{"perkTree":"CR_Tree_MuLan","perks":["精魂召喚","草原詛咒（減速/流血）"],"baseSkill":"Conjuration","npcOnly":true},"verified":true}],"spells":[{"id":"huodan","name":"火彈術","element":"火","school":"Destruction","minRealm":"qi_refining","tier":1,"desc":"練氣基礎法術，投射火球。","skyrimBase":"Firebolt","verified":true},{"id":"jinren","name":"金刃術","element":"金","school":"Destruction","minRealm":"qi_refining","tier":1,"desc":"凝金氣為刃，破甲。","skyrimBase":"新投射物：金刃（穿甲 25%）","verified":true},{"id":"mucizhu","name":"木刺術／藤蔓縛","element":"木","school":"Alteration","minRealm":"qi_refining","tier":1,"desc":"地面生藤纏敵。","skyrimBase":"Paralyze 短版+DoT","verified":false},{"id":"shuibo","name":"水波術／水盾","element":"水","school":"Restoration/Alteration","minRealm":"qi_refining","tier":1,"desc":"水盾抵擋火系。","skyrimBase":"Ward（對火抗性）","verified":true},{"id":"tuqiang","name":"土牆術","element":"土","school":"Alteration","minRealm":"qi_refining","tier":1,"desc":"升起土牆阻擋。","skyrimBase":"新：放置臨時 Static 障礙","verified":true},{"id":"leidun","name":"雷遁術／五雷咒（雷靈根）","element":"雷","school":"Destruction","minRealm":"foundation","tier":2,"desc":"變異雷屬性攻擊。","skyrimBase":"Chain Lightning","verified":false},{"id":"yufeng","name":"御風訣","element":"風","school":"Alteration","minRealm":"qi_refining","tier":1,"desc":"加速移動、輕身。","skyrimBase":"SpeedMult +40% 30s","verified":true},{"id":"yinshen","name":"隱身術／遁光隱匿","element":"無","school":"Illusion","minRealm":"qi_refining","tier":1,"desc":"隱匿身形。","skyrimBase":"Invisibility（可被明清靈目破除）","verified":true},{"id":"yuqi_feixing","name":"御器飛行","element":"無","school":"Alteration","minRealm":"foundation","tier":2,"desc":"築基後踏飛劍/飛舟飛行。","skyrimBase":"整合飛行框架（見 docs/combat.md 飛行章節）","verified":true},{"id":"shenshi_saodang","name":"神識掃蕩","element":"無（神識）","school":"Illusion","minRealm":"foundation","tier":2,"desc":"神識探查周遭生靈與寶物。","skyrimBase":"Detect Life + Detect Dead 合併，範圍隨境界","verified":true},{"id":"yuanying_chuqiao","name":"元嬰出竅","element":"無","school":"Conjuration","minRealm":"nascent_soul","tier":4,"desc":"元嬰離體作戰，本體無防禦。","skyrimBase":"Summon 自身分身 + 本體 Paralyze","verified":true},{"id":"duoshe","name":"奪舍術","element":"無","school":"Illusion","minRealm":"nascent_soul","tier":4,"desc":"元嬰奪取肉身（NPC 用；玩家禁用或高代價）。","skyrimBase":"劇情專用","verified":true},{"id":"chuansong","name":"傳送陣","element":"無","school":"Alteration","minRealm":"foundation","tier":2,"desc":"固定陣法間傳送。","skyrimBase":"傳送門 Activator + 靈石消耗","verified":true},{"id":"kuilei","name":"傀儡術","element":"無","school":"Conjuration","minRealm":"foundation","tier":2,"desc":"大衍神君傳授，煉製並操縱傀儡（人形/獸形）。","skyrimBase":"Dwemer Automaton 骨架重製為木/金傀儡","verified":true}],"abilities":[{"id":"shenshi","name":"神識","minRealm":"foundation","desc":"被動：顯示周遭敵人境界；高境界對低境界產生威壓（Fear）。","skyrim":"Ability + 條件式 Fear 效果"},{"id":"bigu","name":"辟穀","minRealm":"foundation","desc":"不再需要飲食（相容生存模式：關閉飢餓）。","skyrim":"Survival Mode 飢餓免疫 Keyword"},{"id":"jindan_weiya","name":"金丹威壓","minRealm":"core_formation","desc":"築基以下 NPC 見結丹修士自動臣服/逃離。","skyrim":"Faction Rank + Calm/Fear 條件"},{"id":"yuanying_zibao","name":"元嬰自爆（禁術）","minRealm":"nascent_soul","desc":"犧牲元嬰造成範圍毀滅，角色死亡。","skyrim":"劇情/最終手段技能"}]},"treasures":{"$schema":"./schema/treasures.schema.json","description":"法器/法寶/靈寶、丹藥、材料。grade: 法器(練氣)→法寶(築基/結丹)→古寶(上古)→靈寶(通天靈寶)。Skyrim 實作：WEAP/ARMO/MISC + 附魔 + 專屬腳本；法寶可『祭煉』成長（Item 等級隨玩家境界重算，用 CR_TreasureGrowth 腳本）。","treasures":[{"id":"zhangtianping","name":"掌天瓶（神秘小瓶）","grade":"通天靈寶（未知）","type":"神器","owner":"hanli","obtained":"七玄門篇：厲飛雨/韓立在彩霞山意外所得","effect":"每月圓之夜吸收月華凝聚一滴綠液，可催熟靈藥百年。","skyrim":{"form":"MISC+Quest Item","script":"CR_ZhangTianPing.psc：每遊戲月圓（Skyrim 日曆）產出『靈液』；靈液對植物類 Ingredient 使用可升級為高階藥材","unremovable":true},"verified":true},{"id":"qingzhu_fengyunjian","name":"青竹蜂雲劍","grade":"法寶→靈寶（成長型）","type":"飛劍群（72 把）","owner":"hanli","obtained":"天南篇：以青竹＋金精等材料煉製，逐步增至 72 把","effect":"劍陣齊射、劍雨、劍網；後期融入庚精成為靈寶。","skyrim":{"form":"SPEL（多投射物）+ 可裝備 WEAP『青竹蜂雲劍·本體』","growth":["12 把（結丹前）","36 把（結丹）","72 把（元嬰）"]},"verified":true},{"id":"shijinchong","name":"噬金蟲","grade":"靈蟲（成長型）","type":"靈獸","owner":"hanli","obtained":"天南篇：靈獸山交易/坊市","effect":"蟲群啃噬法寶與金屬，變異後刀槍不入。","skyrim":{"form":"Conjuration 蟲群召喚 + 『蟲巢』家園設施餵養成長","growth":["百隻","千隻","萬隻·變異"]},"verified":true},{"id":"yuanci_shan","name":"元磁神山","grade":"靈寶","type":"鎮壓型法寶","owner":"hanli","obtained":"靈界","effect":"巨山鎮壓，元磁禁飛。","skyrim":{"form":"SPEL：召喚巨山投射（區域壓制）","dlc":"ChineseRim_LingJie.esp"},"verified":true},{"id":"xuantian_zhanling","name":"玄天斬靈劍","grade":"玄天之寶","type":"劍","owner":"hanli","obtained":"靈界","effect":"斬靈斷法則，斬殺元嬰級不留痕。","skyrim":{"form":"WEAP（劇情最終武器）","dlc":"ChineseRim_LingJie.esp"},"verified":true},{"id":"sanyan_shan","name":"三焰扇","grade":"法寶（火系）","type":"扇","owner":"hanli","obtained":"亂星海/大晉：以太陽精火、紫羅極火等煉製","effect":"三色火焰扇風，範圍火系毀滅。","skyrim":{"form":"STAFF 類武器 + 火系錐形法術"},"verified":true},{"id":"ziluo_jihuo","name":"紫羅極火","grade":"天地異火","type":"火焰","owner":"hanli","obtained":"亂星海：極陰島","effect":"極寒紫火，冰凍與灼燒並存。","skyrim":{"form":"SPEL：冰火雙屬性投射"},"verified":true},{"id":"xutian_ding","name":"虛天鼎","grade":"上古靈寶","type":"鼎","owner":"劇情","obtained":"亂星海：虛天殿","effect":"煉化萬物、封印。","skyrim":{"form":"劇情物品/家園煉器設施升級"},"verified":true},{"id":"wuxing_lun","name":"五行輪","grade":"法寶","type":"輪","owner":"quhun","obtained":"—","effect":"五行轉換攻擊。","skyrim":{"form":"Boss 專屬法術組"},"verified":true},{"id":"tihun_shou","name":"啼魂獸","grade":"稀有靈獸","type":"靈獸","owner":"hanli","obtained":"大晉篇","effect":"吞噬鬼物、啼鳴震魂。","skyrim":{"form":"Creature Follower（可成長）"},"verified":true},{"id":"kuilei_set","name":"傀儡（獸形/人形）","grade":"法器→法寶","type":"傀儡","owner":"hanli","obtained":"大衍神君傳授煉製","effect":"自主作戰的機關傀儡。","skyrim":{"form":"Conjuration 召喚（Dwemer 骨架重製）+ 煉器台製作"},"verified":true}],"pills":[{"id":"zhuji_dan","name":"築基丹","tier":"築基","effect":"練氣圓滿突破築基的必需丹藥","skyrim":"Potion + 突破腳本旗標","verified":true},{"id":"jiejin_dan","name":"結金丹","tier":"結丹","effect":"輔助結丹","skyrim":"Potion + 旗標","verified":false},{"id":"tianlan_dan","name":"天蘭丹／元嬰丹","tier":"元嬰","effect":"元嬰突破輔助（名稱待核實）","skyrim":"Potion + 旗標","verified":false},{"id":"huangjing_dan","name":"黃精丹（練氣輔助）","tier":"練氣","effect":"加速練氣修煉","skyrim":"經驗藥水","verified":false},{"id":"lingye","name":"掌天瓶靈液","tier":"—","effect":"催熟靈藥；直接服用短時大幅回復法力","skyrim":"MISC，對 Ingredient 使用","verified":true}],"materials":[{"id":"lingshi","name":"靈石（下/中/上品）","use":"貨幣＋施法補充","skyrim":"取代 Septim 為主要貨幣（Gold001 替換模型與名稱）＋高品靈石為 Ingredient"},{"id":"jingjin","name":"金精","use":"煉製青竹蜂雲劍","skyrim":"Ingot 類材料"},{"id":"qingzhu","name":"青竹（萬年青竹）","use":"青竹蜂雲劍劍身","skyrim":"MISC"},{"id":"lingcao","name":"各級靈草（百年/千年/萬年）","use":"煉丹","skyrim":"Ingredient，可被靈液升級"},{"id":"yaodan","name":"妖丹／獸核","use":"煉器/煉丹","skyrim":"Ingredient（妖獸掉落）"},{"id":"fuzhi","name":"符紙／符籙","use":"一次性法術","skyrim":"Scroll"},{"id":"zhenqi","name":"陣旗／陣盤","use":"布陣","skyrim":"放置型 Activator（Campfire 風格）"}]},"story_arcs":{"$schema":"./schema/story_arcs.schema.json","description":"主線分卷與任務鏈。每個 arc 對應一個 Skyrim Quest 章節（CR_MQ##），quests 為主線 Quest EditorID。playerRealm 為該卷玩家預期境界。內容忠實原作順序，細節（如具體任務目標）為遊戲化改寫。","arcs":[{"id":"arc0_qixuanmen","name":"第一卷·七玄門","region":"tiannan","playerRealm":"mortal → qi_refining","levelRange":[1,8],"summary":"青牛鎮少年韓立被三叔帶往七玄門測試入門，成為外門弟子；在神手谷拜墨大夫為師學長春功，意外獲得神秘小瓶；墨大夫奪舍之謀被韓立反殺，韓立殺死余子童，離開七玄門。","quests":[{"id":"CR_MQ00_QingNiu","name":"離鄉","objectives":["與家人告別","隨三叔前往彩霞山","通過七玄門入門測試"]},{"id":"CR_MQ01_WaiMen","name":"外門弟子","objectives":["完成基礎武學訓練（教學：戰鬥、格擋）","結識厲飛雨、張鐵","被選入神手谷"]},{"id":"CR_MQ02_MoDaiFu","name":"神手谷的墨大夫","objectives":["為墨大夫採藥（教學：採集/煉藥）","修煉長春功至第三層","月圓之夜發現小瓶秘密"]},{"id":"CR_MQ03_DuoShe","name":"奪舍","objectives":["察覺墨大夫真意","布置毒陷（非正面戰鬥）","擊殺墨大夫","受託照顧墨家"]},{"id":"CR_MQ04_YuZiTong","name":"野狼幫攻山","objectives":["守衛七玄門","擊殺余子童","離開七玄門，前往越京"]}]},{"id":"arc1_tiannan","name":"第二卷·天南（黃楓谷·血色禁地·正魔大戰）","region":"tiannan","playerRealm":"qi_refining → foundation","levelRange":[8,30],"summary":"韓立入黃楓谷成為李化元弟子，於百藥園修行；參加血色禁地試煉獲青元劍訣與築基機緣；魔道六宗入侵越國，正魔大戰爆發，韓立築基並與南宮婉結識。","quests":[{"id":"CR_MQ10_RuMen","name":"黃楓谷入門","objectives":["坊市見聞（教學：靈石交易）","拜入黃楓谷","百藥園任務鏈（煉丹教學）"]},{"id":"CR_MQ11_XueSe","name":"血色試煉","objectives":["進入血色禁地","與掩月宗弟子聯手/對抗合歡宗王蟬","探索上古遺跡，獲得青元劍訣","取得築基丹材料"]},{"id":"CR_MQ12_ZhuJi","name":"築基","objectives":["以靈液催熟藥材煉製築基丹","閉關突破（首次『突破』系統）"]},{"id":"CR_MQ13_ZhengMo","name":"正魔大戰","objectives":["越國多地戰場（大型戰役系統）","遭遇大衍神君","與南宮婉並肩作戰","撤離越國"]}]},{"id":"arc2_mulan","name":"第三卷·慕蘭大戰與結丹","region":"tiannan/mulan","playerRealm":"foundation → core_formation","levelRange":[30,50],"summary":"韓立在天南各國遊歷、煉製青竹蜂雲劍、收服噬金蟲；慕蘭人南侵，天南修士聯盟於元武國迎戰；韓立結丹，並與曲魂多次交手。","quests":[{"id":"CR_MQ20_LianQi","name":"青竹蜂雲劍","objectives":["收集萬年青竹、金精","煉製首批飛劍（煉器教學）"]},{"id":"CR_MQ21_ShiJinChong","name":"噬金蟲","objectives":["靈獸山交易","建立蟲巢並培育"]},{"id":"CR_MQ22_JieDan","name":"結丹","objectives":["取得結丹靈藥","選擇閉關地","突破結丹"]},{"id":"CR_MQ23_MuLan","name":"元武國戰場","objectives":["加入天南聯盟","多階段戰役：草原→界河→元武國","與慕沛靈相遇","擊退慕蘭主力"]},{"id":"CR_MQ24_QuHun","name":"曲魂的算計","objectives":["識破曲魂陰謀","五行輪之戰"]}]},{"id":"arc3_luanxinghai","name":"第四卷·亂星海","region":"luanxinghai","playerRealm":"core_formation → nascent_soul","levelRange":[50,65],"summary":"韓立渡海至亂星海，捲入星宮與逆星盟之爭；虛天殿開啟，各方奪寶；極陰島取紫羅極火；最終突破元嬰。","quests":[{"id":"CR_MQ30_DuHai","name":"渡無邊海","objectives":["海上航行與海獸戰","抵達外星海"]},{"id":"CR_MQ31_TianXingCheng","name":"天星城","objectives":["進入天星城","星宮/逆星盟陣營選擇（影響後續聲望）"]},{"id":"CR_MQ32_XuTian","name":"虛天殿","objectives":["三百年一開的秘境","與凌玉靈合作","爭奪虛天鼎"]},{"id":"CR_MQ33_JiYin","name":"極陰島","objectives":["取紫羅極火"]},{"id":"CR_MQ34_YuanYing","name":"元嬰","objectives":["閉關突破元嬰（大型儀式事件）"]}]},{"id":"arc4_dajin","name":"第五卷·大晉","region":"dajin","playerRealm":"nascent_soul","levelRange":[65,85],"summary":"韓立北上大晉，化名加入落雲宗為客卿，探索昆吾山秘境，對抗鬼靈門玄骨老祖等魔道十宗，銀月恢復，啼魂獸加入；大衍神君神魂終散。","quests":[{"id":"CR_MQ40_LuoYun","name":"落雲宗客卿","objectives":["以化名加入落雲宗","客卿任務鏈"]},{"id":"CR_MQ41_KunWu","name":"昆吾山","objectives":["昆吾秘境開啟","多方勢力混戰","獲取昆吾寶物"]},{"id":"CR_MQ42_XuanGu","name":"鬼靈門","objectives":["對抗玄骨老祖","啼魂獸契約"]},{"id":"CR_MQ43_DaYan","name":"大衍終章","objectives":["大衍神君最後傳承","傀儡術大成"]}]},{"id":"arc5_huashen","name":"第六卷·化神與飛升","region":"tiannan","playerRealm":"nascent_soul → deity_transformation","levelRange":[85,100],"summary":"韓立返回天南，建立道場，與南宮婉結為道侶，經百年修煉突破化神；人界靈氣不足，循空間節點飛升靈界。人界篇結局。","quests":[{"id":"CR_MQ50_GuiXiang","name":"歸鄉","objectives":["返回青牛鎮（凡人親族結局）","天南道場建立（家園系統）"]},{"id":"CR_MQ51_DaoLv","name":"道侶","objectives":["南宮婉支線收束"]},{"id":"CR_MQ52_HuaShen","name":"化神","objectives":["感悟法則（解謎/試煉）","突破化神"]},{"id":"CR_MQ53_FeiSheng","name":"飛升","objectives":["尋找空間節點","穿越節點（人界結局 CG）"]}]},{"id":"arc6_lingjie","name":"DLC·靈界（天淵城）","region":"tianyuan","playerRealm":"deity_transformation → void_refining","levelRange":[100,130],"summary":"靈界初期：天淵城守軍、獸潮、飛靈族、木族與魔族入侵。作為獨立 DLC 插件開發。","quests":[{"id":"CR_DLC1_TianYuan","name":"天淵城","objectives":["加入守軍","獸潮防禦戰（Tower-defense 風格戰役）"]}]}]}}</script>
+<script>
+(function(){
+  const D = JSON.parse(document.getElementById('cr-data').textContent);
+  const $ = (s, r=document) => r.querySelector(s);
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const vtag = v => v === false ? '<span class="tag warn">待核實</span>' : '';
+
+  /* ---- tabs ---- */
+  const tabs = [...document.querySelectorAll('.tab')];
+  const panels = [...document.querySelectorAll('section.panel')];
+  function show(id){
+    if(!panels.some(p => p.id === id)) id = 'overview';
+    tabs.forEach(t => t.setAttribute('aria-selected', t.dataset.tab === id));
+    panels.forEach(p => p.hidden = p.id !== id);
+    if(location.hash.slice(1) !== id) history.replaceState(null, '', '#' + id);
+    try{ localStorage.setItem('cr-tab', id); }catch(e){}
+  }
+  const tabsEl = $('.tabs'), mainEl = $('main');
+  tabs.forEach(t => t.addEventListener('click', () => {
+    show(t.dataset.tab);
+    const y = mainEl.getBoundingClientRect().top + window.scrollY - tabsEl.offsetHeight;
+    if(window.scrollY > y) window.scrollTo({ top: y });
+  }));
+  window.addEventListener('hashchange', () => show(location.hash.slice(1)));
+  let initial = location.hash.slice(1);
+  if(!initial){ try{ initial = localStorage.getItem('cr-tab') || ''; }catch(e){} }
+  show(initial || 'overview');
+
+  /* ---- world ---- */
+  const regionsAll = D.regions.worlds.flatMap(w => w.regions.map(r => ({...r, world: w.name, dlc: w.dlc})));
+  const byId = Object.fromEntries(regionsAll.map(r => [r.id, r]));
+  function renderRegion(id){
+    const r = byId[id]; if(!r) return;
+    document.querySelectorAll('.region').forEach(g => g.classList.toggle('active', g.dataset.region === id));
+    $('#region-detail').innerHTML = `
+      <div class="card">
+        <div class="eyebrow">${esc(r.world)} · WORLDSPACE</div>
+        <h3 style="margin-top:4px">${esc(r.name)}</h3>
+        <dl class="kv">
+          <dt>Worldspace</dt><dd><code>${esc(r.worldspace)}</code></dd>
+          <dt>插件</dt><dd><code>${esc(r.esp || r.dlc || '')}</code></dd>
+          ${r.size ? `<dt>規模</dt><dd>${esc(r.size)}</dd>` : ''}
+          ${r.nations ? `<dt>國度</dt><dd>${r.nations.map(n => `<span class="tag">${esc(n)}</span>`).join('')}</dd>` : ''}
+        </dl>
+        <p class="small" style="margin-top:10px">${esc(r.summary)}</p>
+        <h4>地點（${r.locations.length}）</h4>
+        <ul class="loc-list">${r.locations.map(l => `<li><span class="t">${esc(l.type)}</span><span><b>${esc(l.name)}</b>${l.nation ? ` <span class="muted small">· ${esc(l.nation)}</span>` : ''}${vtag(l.verified)}<br><span class="small muted">${esc(l.note || '')}</span></span></li>`).join('')}</ul>
+      </div>`;
+  }
+  document.querySelectorAll('.region').forEach(g => {
+    g.addEventListener('click', () => renderRegion(g.dataset.region));
+    g.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); renderRegion(g.dataset.region); } });
+  });
+  renderRegion('tiannan');
+  $('#lingjie-regions').innerHTML = regionsAll.filter(r => r.world === '靈界').map(r => `
+    <div class="card"><h4>${esc(r.name)} <span class="tag mo">DLC</span></h4>
+      <dl class="kv"><dt>Worldspace</dt><dd><code>${esc(r.worldspace)}</code></dd><dt>插件</dt><dd><code>${esc(r.dlc)}</code></dd></dl>
+      <p class="small" style="margin-top:8px">${esc(r.summary)}</p>
+      <div>${r.locations.map(l => `<span class="tag">${esc(l.name)}</span>`).join('')}</div>
+    </div>`).join('');
+
+  /* ---- realms ---- */
+  const worldClass = {'人界':'w1','靈界':'w2','仙界':'w3'};
+  $('#ladder').innerHTML = `<div class="ladder">
+    <div class="ladder-head"><span>#</span><span>境界</span><span>子階</span><span>突破條件 / 解鎖</span><span>Skyrim 對應</span></div>
+    ${D.realms.realms.map(r => {
+      const sub = r.sub.length > 5 ? `${r.sub.length} 層` : r.sub.join(' · ');
+      const sk = r.skyrim || {};
+      const skTxt = sk.dlc ? `DLC：<code>${esc(sk.dlc)}</code>` :
+        `等級 <span class="lv">${r.levelRange[0]}–${r.levelRange[1]}</span>　HP ${sk.healthBase ?? '—'} / MP ${sk.magickaBase ?? '—'} / SP ${sk.staminaBase ?? '—'}${sk.canFly ? `<br>飛行：${sk.canFly === 'glide' ? '滑翔' : '完整'}` : ''}${sk.specialForm ? `<br>${esc(sk.specialForm)}` : ''}`;
+      const b = r.breakthrough || {};
+      return `<div class="rung ${worldClass[r.world] || ''}">
+        <div class="o">${String(r.order).padStart(2,'0')}</div>
+        <div class="n">${esc(r.name)}<small>${esc(r.world)} · ${esc(r.id)}${r.lifespan ? ` · 壽元 ${r.lifespan}` : ''}</small></div>
+        <div class="s">${esc(sub)}</div>
+        <div class="b">${b.items && b.items.length ? `<b>${b.items.map(esc).join('、')}</b>；` : ''}${esc(b.note || '')}${b.unlocks ? `<br>${b.unlocks.map(u => `<span class="tag qing">${esc(u)}</span>`).join('')}` : ''}</div>
+        <div class="b small">${skTxt}</div>
+      </div>`;
+    }).join('')}
+  </div>`;
+  $('#roots').innerHTML = D.realms.spiritRoots.types.map(t => `
+    <div class="card"><h4>${esc(t.name)} <span class="tag jin">×${t.speed.toFixed(1)}</span></h4>
+      <dl class="kv"><dt>屬性數</dt><dd>${t.count}${t.elements ? `（${t.elements.join('/')}）` : ''}</dd><dt>修煉速度</dt><dd>${t.speed.toFixed(1)} 倍</dd></dl>
+      ${t.note ? `<p class="small muted" style="margin-top:8px">${esc(t.note)}</p>` : ''}
+    </div>`).join('');
+
+  /* ---- sects ---- */
+  const alignClass = a => /魔道|敵對/.test(a) ? 'mo' : /正道|人族/.test(a) ? '' : /妖|異族/.test(a) ? 'zhu' : /凡俗|中立/.test(a) ? 'grey' : 'jin';
+  const regionName = id => (byId[id] && byId[id].name) || id;
+  const sectRegions = [...new Set(D.sects.sects.map(s => s.region))];
+  let sectFilter = 'all';
+  function renderSects(){
+    $('#sect-filters').innerHTML = ['all', ...sectRegions].map(r => `<button class="fbtn" data-f="${r}" aria-pressed="${sectFilter === r}">${r === 'all' ? '全部' : esc(regionName(r))}</button>`).join('');
+    $('#sect-filters').querySelectorAll('.fbtn').forEach(b => b.addEventListener('click', () => { sectFilter = b.dataset.f; renderSects(); }));
+    const list = D.sects.sects.filter(s => sectFilter === 'all' || s.region === sectFilter);
+    $('#sect-list').innerHTML = list.map(s => `
+      <div class="card sect ${alignClass(s.alignment)}">
+        <h4><span>${esc(s.name)}</span><span class="ed">${esc(s.editorId)}</span></h4>
+        <div><span class="tag ${alignClass(s.alignment) || 'qing'}">${esc(s.alignment)}</span><span class="tag">${esc(s.tier)}</span><span class="tag">${esc(regionName(s.region))}</span>${vtag(s.verified)}</div>
+        <dl class="kv" style="margin-top:8px">
+          ${s.hq ? `<dt>駐地</dt><dd>${esc(s.hq)}</dd>` : ''}
+          ${s.leader ? `<dt>首領</dt><dd>${esc(s.leader)}</dd>` : ''}
+          ${s.focus && s.focus.length ? `<dt>專長</dt><dd>${s.focus.map(esc).join('、')}</dd>` : ''}
+          ${s.notable && s.notable.length ? `<dt>人物</dt><dd>${s.notable.map(esc).join('、')}</dd>` : ''}
+        </dl>
+        ${s.note ? `<p class="small muted" style="margin:8px 0 0">${esc(s.note)}</p>` : ''}
+      </div>`).join('');
+  }
+  renderSects();
+
+  /* ---- characters ---- */
+  const roleLabel = r => ({protagonist:'主角', companion:'同伴', mentor:'導師', love_interest:'情緣', antagonist:'反派', npc:'人物', spirit_beast:'靈獸'})[r.split(/[→(]/)[0]] || r;
+  const roleClass = r => /antagonist/.test(r) ? 'mo' : /love|companion/.test(r) ? 'zhu' : /mentor|spirit/.test(r) ? 'jin' : '';
+  const roleKeys = ['all','protagonist','companion','love_interest','mentor','antagonist','npc','spirit_beast'];
+  let charFilter = 'all';
+  function renderChars(){
+    $('#char-filters').innerHTML = roleKeys.map(k => `<button class="fbtn" data-f="${k}" aria-pressed="${charFilter === k}">${k === 'all' ? '全部' : roleLabel(k)}</button>`).join('');
+    $('#char-filters').querySelectorAll('.fbtn').forEach(b => b.addEventListener('click', () => { charFilter = b.dataset.f; renderChars(); }));
+    const list = D.characters.characters.filter(c => charFilter === 'all' || c.role.includes(charFilter));
+    $('#char-list').innerHTML = list.map(c => {
+      const realms = Object.entries(c.realmByArc || {}).map(([k,v]) => `<span class="tag">${esc(k)}：${esc(v)}</span>`).join('');
+      return `<div class="card char">
+        <div class="avatar ${roleClass(c.role)}">${esc(c.name.slice(0,1))}</div>
+        <div>
+          <div class="role">${esc(roleLabel(c.role))} · <span class="mono">${esc(c.editorId)}</span></div>
+          <h4>${esc(c.name)}${vtag(c.verified)}</h4>
+          <p class="small" style="margin:4px 0 6px">${esc(c.summary)}</p>
+          ${c.sect && c.sect.length ? `<div class="small muted">門派：${c.sect.map(esc).join('、')}${c.spiritRoot ? `　靈根：${esc(c.spiritRoot)}` : ''}</div>` : ''}
+          ${c.signature && c.signature.length ? `<div>${c.signature.map(s => `<span class="tag jin">${esc(s)}</span>`).join('')}</div>` : ''}
+          ${realms ? `<div style="margin-top:4px">${realms}</div>` : ''}
+          ${c.gameNote ? `<p class="small" style="margin:8px 0 0;color:var(--qing-ink)">遊戲：${esc(c.gameNote)}</p>` : ''}
+        </div></div>`;
+    }).join('');
+  }
+  renderChars();
+
+  /* ---- techniques ---- */
+  const realmName = id => (D.realms.realms.find(r => r.id === id) || {}).name || id;
+  $('#gongfa').innerHTML = D.techniques.gongfa.map(g => `
+    <div class="card">
+      <h4>${esc(g.name)} <span class="tag qing">${esc(g.element)}</span>${g.skyrim && g.skyrim.dlc ? '<span class="tag mo">DLC</span>' : ''}${g.skyrim && g.skyrim.npcOnly ? '<span class="tag">NPC 專用</span>' : ''}${vtag(g.verified)}</h4>
+      <dl class="kv"><dt>出處</dt><dd>${esc(g.source)}</dd><dt>品階</dt><dd>${esc(g.grade)}</dd><dt>最低境界</dt><dd>${esc(realmName(g.minRealm))}</dd><dt>Perk 樹</dt><dd><code>${esc(g.skyrim.perkTree)}</code> · 底層技能 ${esc(g.skyrim.baseSkill || '')}</dd></dl>
+      <p class="small" style="margin:8px 0 6px">${esc(g.effect)}</p>
+      <ol class="tight small" style="margin:0">${(g.skyrim.perks || []).map(p => `<li>${esc(p)}</li>`).join('')}</ol>
+    </div>`).join('');
+  $('#spells').innerHTML = `<div class="tbl-wrap"><table><thead><tr><th>法術</th><th>五行</th><th>學派</th><th>最低境界</th><th>階</th><th>說明</th><th>Skyrim 基底</th></tr></thead><tbody>
+    ${D.techniques.spells.map(s => `<tr><td><b>${esc(s.name)}</b>${vtag(s.verified)}</td><td>${esc(s.element)}</td><td class="mono">${esc(s.school)}</td><td>${esc(realmName(s.minRealm))}</td><td class="mono">${s.tier}</td><td>${esc(s.desc)}</td><td class="small">${esc(s.skyrimBase)}</td></tr>`).join('')}
+  </tbody></table></div>`;
+  $('#abilities').innerHTML = D.techniques.abilities.map(a => `<div class="card"><h4>${esc(a.name)} <span class="tag">${esc(realmName(a.minRealm))}</span></h4><p class="small" style="margin:0 0 6px">${esc(a.desc)}</p><div class="small muted">Skyrim：${esc(a.skyrim)}</div></div>`).join('');
+  $('#treasures').innerHTML = D.treasures.treasures.map(t => `
+    <div class="card"><h4>${esc(t.name)} <span class="tag jin">${esc(t.grade)}</span>${t.skyrim && t.skyrim.dlc ? '<span class="tag mo">DLC</span>' : ''}${vtag(t.verified)}</h4>
+      <dl class="kv"><dt>類型</dt><dd>${esc(t.type)}</dd><dt>取得</dt><dd>${esc(t.obtained)}</dd><dt>實作</dt><dd class="small">${esc(t.skyrim.form)}${t.skyrim.script ? `<br><span class="muted">${esc(t.skyrim.script)}</span>` : ''}</dd>${t.skyrim.growth ? `<dt>成長</dt><dd>${t.skyrim.growth.map(g => `<span class="tag">${esc(g)}</span>`).join('')}</dd>` : ''}</dl>
+      <p class="small" style="margin:8px 0 0">${esc(t.effect)}</p>
+    </div>`).join('');
+  $('#pills').innerHTML = `<div class="tbl-wrap"><table><thead><tr><th>丹藥</th><th>階</th><th>效果</th><th>Skyrim</th></tr></thead><tbody>${D.treasures.pills.map(p => `<tr><td><b>${esc(p.name)}</b>${vtag(p.verified)}</td><td>${esc(p.tier)}</td><td>${esc(p.effect)}</td><td class="small">${esc(p.skyrim)}</td></tr>`).join('')}</tbody></table></div>`;
+  $('#materials').innerHTML = `<div class="tbl-wrap"><table><thead><tr><th>材料</th><th>用途</th><th>Skyrim</th></tr></thead><tbody>${D.treasures.materials.map(m => `<tr><td><b>${esc(m.name)}</b></td><td>${esc(m.use)}</td><td class="small">${esc(m.skyrim)}</td></tr>`).join('')}</tbody></table></div>`;
+
+  /* ---- story ---- */
+  $('#arcs').innerHTML = D.story_arcs.arcs.map(a => `
+    <div class="card" style="margin-bottom:14px">
+      <div class="eyebrow">${esc(regionName(a.region.split('/')[0]))} · 等級 ${a.levelRange[0]}–${a.levelRange[1]} · ${esc(a.playerRealm.split(' ').map(x => /^[a-z_]+$/.test(x) ? realmName(x) : x).join(' '))}</div>
+      <h3 style="margin-top:4px">${esc(a.name)}</h3>
+      <p class="small">${esc(a.summary)}</p>
+      <div class="tbl-wrap" style="margin-bottom:0"><table><thead><tr><th>Quest</th><th>名稱</th><th>目標</th></tr></thead><tbody>
+        ${a.quests.map(q => `<tr><td class="mono small">${esc(q.id)}</td><td><b>${esc(q.name)}</b></td><td class="small">${q.objectives.map(esc).join('　→　')}</td></tr>`).join('')}
+      </tbody></table></div>
+    </div>`).join('');
+})();
+</script>

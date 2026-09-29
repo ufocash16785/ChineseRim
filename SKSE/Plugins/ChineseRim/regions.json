@@ -1,0 +1,118 @@
+{
+  "$schema": "./schema/regions.schema.json",
+  "description": "世界地理。每個 region 對應一個 Skyrim Worldspace（或大型內部 Cell 群）。coords 為設計文件示意地圖上的相對座標（0~100），非原作官方座標。verified=false 表示需與原文對照。",
+  "worlds": [
+    {
+      "id": "renjie",
+      "name": "人界",
+      "regions": [
+        {
+          "id": "tiannan",
+          "name": "天南",
+          "worldspace": "CR_TianNan",
+          "esp": "ChineseRim_TianNan.esp",
+          "size": "主世界，約與原版天際省同等大小（~40km²）",
+          "coords": [30, 62],
+          "summary": "凡人修仙傳開篇之地。以越國為核心的數十個凡人國家，修仙勢力分為越國七大派（正道）、魔道六宗、九國盟三大陣營。北接慕蘭草原，東臨無邊海通往亂星海，西為極西之地。",
+          "nations": ["越國", "風都國", "元武國", "車機國", "紫金國", "越國周邊九國（九國盟）"],
+          "locations": [
+            { "id": "qingniu", "name": "青牛鎮（青牛村）", "type": "村鎮", "nation": "越國·鏡州", "note": "韓立故鄉，遊戲起點", "verified": true },
+            { "id": "caixia", "name": "彩霞山·七玄門", "type": "門派/山", "nation": "越國", "note": "凡人武林門派，外門/內門；神手谷；墨大夫居所", "verified": true },
+            { "id": "yuejing", "name": "越京", "type": "都城", "nation": "越國", "note": "越國皇城，凡人政治中心", "verified": true },
+            { "id": "jiazhou", "name": "嘉元城", "type": "城市", "nation": "越國", "note": "韓立初入修仙界的坊市所在地區（待核實城名）", "verified": false },
+            { "id": "taiyue", "name": "太岳山脈", "type": "山脈", "nation": "越國", "note": "黃楓谷所在山脈；靈氣濃郁，越國七派多依山而建", "verified": false },
+            { "id": "huangfeng", "name": "黃楓谷", "type": "門派", "nation": "越國", "note": "韓立入門處，百藥園、黃楓谷洞府", "verified": true },
+            { "id": "xuese", "name": "血色禁地", "type": "秘境", "nation": "越國", "note": "七派聯合開啟的上古禁地，血色試煉；韓立獲青元劍訣、築基丹材料處", "verified": true },
+            { "id": "yanyue", "name": "掩月宗", "type": "門派", "nation": "越國", "note": "南宮婉、董萱兒所屬，多女修", "verified": true },
+            { "id": "lingshou", "name": "靈獸山", "type": "門派", "nation": "越國", "note": "馴獸門派，噬金蟲來源相關", "verified": true },
+            { "id": "tianque", "name": "天闕堡", "type": "門派", "nation": "越國", "note": "越國七派之一，堡壘型宗門", "verified": true },
+            { "id": "jujian", "name": "巨劍門", "type": "門派", "nation": "越國", "note": "越國七派之一，劍修", "verified": true },
+            { "id": "huadao", "name": "化刀塢", "type": "門派", "nation": "越國", "note": "越國七派之一，刀修", "verified": true },
+            { "id": "qingxu", "name": "清虛門", "type": "門派", "nation": "越國", "note": "越國七派之一", "verified": true },
+            { "id": "yuanwu", "name": "元武國戰場", "type": "戰場", "nation": "元武國", "note": "天南修士對抗慕蘭人入侵的前線；韓立結丹後參戰", "verified": true },
+            { "id": "jihe", "name": "界河", "type": "地標", "nation": "天南/慕蘭邊境", "note": "天南與慕蘭草原分界（待核實名稱）", "verified": false },
+            { "id": "jixi", "name": "極西之地", "type": "荒野", "nation": "—", "note": "天南極西，妖獸眾多、人跡罕至", "verified": true },
+            { "id": "wubian", "name": "無邊海岸", "type": "海岸", "nation": "—", "note": "通往亂星海的海路起點", "verified": true },
+            { "id": "tiannan_fangshi", "name": "各國坊市（多處）", "type": "坊市", "nation": "多國", "note": "修士交易所：拍賣會、租攤位、黑市；Skyrim 商人系統", "verified": true }
+          ]
+        },
+        {
+          "id": "mulan",
+          "name": "慕蘭草原",
+          "worldspace": "CR_MuLan",
+          "esp": "ChineseRim_TianNan.esp",
+          "size": "中型 Worldspace（草原、無盡草海）",
+          "coords": [34, 38],
+          "summary": "天南以北的廣袤草原，慕蘭人（慕蘭法師，其功法體系近似巫術）聚居之地，信奉天瀾聖獸。因草原靈氣衰竭而南侵天南，引發慕蘭大戰。",
+          "nations": ["慕蘭諸部"],
+          "locations": [
+            { "id": "tianlan", "name": "天瀾聖地", "type": "聖地", "note": "天瀾聖獸所在，慕蘭人精神信仰中心", "verified": true },
+            { "id": "mulan_camp", "name": "慕蘭主營", "type": "營地", "note": "慕蘭南侵大軍集結處", "verified": false },
+            { "id": "grass_sea", "name": "無盡草海", "type": "荒野", "note": "開放地圖探索區，妖獸、慕蘭巡騎", "verified": false }
+          ]
+        },
+        {
+          "id": "luanxinghai",
+          "name": "亂星海",
+          "worldspace": "CR_LuanXingHai",
+          "esp": "ChineseRim_LuanXingHai.esp",
+          "size": "海島群 Worldspace（水面為主，島嶼為 Location）",
+          "coords": [66, 60],
+          "summary": "天南以東無邊海中的群島修仙界。分內星海與外星海；星宮（天星雙聖）與逆星盟對立千年。虛天殿每三百年開啟一次。",
+          "nations": ["星宮轄下諸島", "逆星盟轄下諸島", "外星海散修島"],
+          "locations": [
+            { "id": "tianxing_cheng", "name": "天星城", "type": "城市", "note": "亂星海第一城，星宮總部所在", "verified": true },
+            { "id": "kuixing", "name": "魁星島", "type": "島", "note": "外星海大島，韓立初到亂星海落腳處（待核實）", "verified": false },
+            { "id": "xutian", "name": "虛天殿", "type": "秘境", "note": "上古修士遺留的空間秘境，內有虛天鼎；各方勢力爭奪", "verified": true },
+            { "id": "jiyin", "name": "極陰島", "type": "島", "note": "極陰之地，紫羅極火所在（韓立獲取紫羅極火）", "verified": true },
+            { "id": "nanming", "name": "南明島", "type": "島", "note": "亂星海島嶼（待核實）", "verified": false },
+            { "id": "neixinghai", "name": "內星海", "type": "海域", "note": "星宮與逆星盟核心區", "verified": true },
+            { "id": "waixinghai", "name": "外星海", "type": "海域", "note": "散修與小勢力，妖獸海獸出沒", "verified": true }
+          ]
+        },
+        {
+          "id": "dajin",
+          "name": "大晉",
+          "worldspace": "CR_DaJin",
+          "esp": "ChineseRim_DaJin.esp",
+          "size": "超大 Worldspace（初版僅建州府級節點＋秘境）",
+          "coords": [28, 18],
+          "summary": "慕蘭草原以北、人界最大的修仙國度，修士數量與實力遠超天南。正道以落雲宗等大宗為首，魔道十宗（鬼靈門本宗、陰羅宗、天魔宗等）盤踞；昆吾山秘境為關鍵劇情地。",
+          "nations": ["大晉皇朝諸州府"],
+          "locations": [
+            { "id": "kunwu", "name": "昆吾山", "type": "秘境", "note": "上古昆吾遺跡，落雲宗守護；虛天殿以外另一大寶藏地", "verified": true },
+            { "id": "luoyun", "name": "落雲宗", "type": "門派", "note": "大晉正道大宗，韓立以化名加入為客卿", "verified": true },
+            { "id": "haiyun", "name": "海雲府", "type": "府城", "note": "大晉沿海府城，通無邊海", "verified": true },
+            { "id": "guiling_hq", "name": "鬼靈門本宗", "type": "門派", "note": "天南魔道六宗中鬼靈門的母宗；玄骨老祖", "verified": true },
+            { "id": "yinluo", "name": "陰羅宗", "type": "門派", "note": "大晉魔道十宗之一", "verified": true },
+            { "id": "tianmo", "name": "天魔宗", "type": "門派", "note": "大晉魔道十宗之一（部分資料歸於亂星海，需核實）", "verified": false },
+            { "id": "wanyao", "name": "萬妖谷", "type": "妖修聚地", "note": "大晉妖修勢力", "verified": false },
+            { "id": "qianzhu", "name": "千竹教", "type": "門派", "note": "大晉宗門，與韓立昆吾山劇情相關", "verified": true }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lingjie",
+      "name": "靈界",
+      "dlc": "ChineseRim_LingJie.esp",
+      "regions": [
+        {
+          "id": "tianyuan",
+          "name": "天淵大陸",
+          "worldspace": "CR_TianYuan",
+          "coords": [50, 50],
+          "summary": "靈界人族最大聚居地。韓立飛升後落腳邊緣地帶，天淵城為人族對抗妖獸潮（獸潮）與魔族的前線巨城。",
+          "locations": [
+            { "id": "tianyuan_cheng", "name": "天淵城", "type": "巨城", "note": "人族抵禦獸潮前線，韓立以化名加入天淵城守軍", "verified": true },
+            { "id": "xuantian", "name": "玄天城", "type": "城市", "note": "（待核實）", "verified": false },
+            { "id": "tianyun13", "name": "天雲十三族領地", "type": "異族領地", "note": "飛靈族等十三異族，韓立曾以飛靈族身分潛入", "verified": true },
+            { "id": "muzu", "name": "木族領地", "type": "異族領地", "note": "木族，靈界強族", "verified": true },
+            { "id": "yaozu", "name": "妖族領地", "type": "異族領地", "note": "保留原始面貌的森林、草原、峽谷，以族群為單位散布", "verified": true },
+            { "id": "mozu_rift", "name": "魔族空間裂縫帶", "type": "戰區", "note": "魔族入侵處，人妖交界", "verified": true }
+          ]
+        }
+      ]
+    }
+  ]
+}

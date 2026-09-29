@@ -1,0 +1,46 @@
+{
+  "modName": "ChineseRim",
+  "displayName": "凡人修仙傳 ChineseRim",
+  "minMcmVersion": 11,
+  "pluginRequirements": ["ChineseRim.esm"],
+  "cursorFillMode": "topToBottom",
+  "pages": [
+    {
+      "pageDisplayName": "修煉",
+      "content": [
+        { "type": "header", "text": "境界與突破" },
+        { "id": "fBreakthroughBaseChance:Breakthrough", "text": "突破基礎機率", "type": "slider", "valueOptions": { "min": 0.05, "max": 1.0, "step": 0.05, "sourceType": "ModSettingFloat" } },
+        { "id": "iSeclusionHours:Breakthrough", "text": "閉關時數", "type": "slider", "valueOptions": { "min": 1, "max": 72, "step": 1, "sourceType": "ModSettingInt" } },
+        { "id": "bFailBackfire:Breakthrough", "text": "突破失敗反噬", "type": "toggle", "valueOptions": { "sourceType": "ModSettingBool" } },
+        { "type": "header", "text": "靈根" },
+        { "id": "fCultivationXPMult:Cultivation", "text": "修煉經驗倍率", "type": "slider", "valueOptions": { "min": 0.25, "max": 4.0, "step": 0.25, "sourceType": "ModSettingFloat" } },
+        { "id": "bCanonMode:Cultivation", "text": "原作模式（鎖定四靈根＋掌天瓶）", "type": "toggle", "valueOptions": { "sourceType": "ModSettingBool" } }
+      ]
+    },
+    {
+      "pageDisplayName": "戰鬥",
+      "content": [
+        { "type": "header", "text": "五行" },
+        { "id": "fElemAdvMult:Element", "text": "剋制倍率", "type": "slider", "valueOptions": { "min": 1.0, "max": 3.0, "step": 0.1, "sourceType": "ModSettingFloat" } },
+        { "id": "fElemDisMult:Element", "text": "被剋倍率", "type": "slider", "valueOptions": { "min": 0.1, "max": 1.0, "step": 0.05, "sourceType": "ModSettingFloat" } },
+        { "id": "bElementHook:Element", "text": "啟用 DLL 五行 Hook（關閉則退回 Papyrus）", "type": "toggle", "valueOptions": { "sourceType": "ModSettingBool" } },
+        { "type": "header", "text": "飛行" },
+        { "id": "bFlightEnabled:Flight", "text": "啟用御器飛行", "type": "toggle", "valueOptions": { "sourceType": "ModSettingBool" } },
+        { "id": "fFlightSpeed:Flight", "text": "飛行速度", "type": "slider", "valueOptions": { "min": 0.5, "max": 3.0, "step": 0.1, "sourceType": "ModSettingFloat" } },
+        { "type": "header", "text": "威壓" },
+        { "id": "bRealmPressure:Combat", "text": "高境界威壓（低階敵人恐懼）", "type": "toggle", "valueOptions": { "sourceType": "ModSettingBool" } }
+      ]
+    },
+    {
+      "pageDisplayName": "相容性",
+      "content": [
+        { "type": "text", "text": "本模組保留原版 Actor Value、技能、Keyword 與行為圖。以下開關用於與特定模組協調。" },
+        { "id": "bUseVanillaLevelCap:Compat", "text": "沿用原版升級公式（停用境界瓶頸）", "type": "toggle", "valueOptions": { "sourceType": "ModSettingBool" } },
+        { "id": "bSurvivalBigu:Compat", "text": "築基後辟穀（生存模式免疫飢餓）", "type": "toggle", "valueOptions": { "sourceType": "ModSettingBool" } },
+        { "type": "header", "text": "開發" },
+        { "id": "bDebugLog:Debug", "text": "詳細日誌", "type": "toggle", "valueOptions": { "sourceType": "ModSettingBool" } },
+        { "text": "重新載入 JSON 資料", "type": "text", "action": { "type": "CallGlobalFunction", "script": "CR_Native", "function": "ReloadData" } }
+      ]
+    }
+  ]
+}

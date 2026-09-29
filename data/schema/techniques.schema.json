@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "techniques",
+  "description": "功法（gongfa=被動成長樹/Perk Tree）、法術（spell=Skyrim SPEL）、神通（ability=境界解鎖能力）。skyrim 欄位描述對應原版系統與擴充方式。element 用五行＋變異屬性。任何 mod 可在 Data/SKSE/Plugins/ChineseRim/techniques/*.json 新增條目，遊戲啟動時由 CR_Registry 載入。",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "gongfa": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "element": {
+            "type": "string"
+          },
+          "grade": {
+            "type": "string"
+          },
+          "minRealm": {
+            "type": "string"
+          },
+          "effect": {
+            "type": "string"
+          },
+          "skyrim": {
+            "type": "object",
+            "properties": {
+              "perkTree": {
+                "type": "string"
+              },
+              "perks": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "baseSkill": {
+                "type": "string"
+              }
+            }
+          },
+          "verified": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "spells": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "element": {
+            "type": "string"
+          },
+          "school": {
+            "type": "string"
+          },
+          "minRealm": {
+            "type": "string"
+          },
+          "tier": {
+            "type": "number"
+          },
+          "desc": {
+            "type": "string"
+          },
+          "skyrimBase": {
+            "type": "string"
+          },
+          "verified": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "abilities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "minRealm": {
+            "type": "string"
+          },
+          "desc": {
+            "type": "string"
+          },
+          "skyrim": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "gongfa",
+    "spells",
+    "abilities"
+  ]
+}
