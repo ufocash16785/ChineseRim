@@ -283,3 +283,42 @@ class GongfaTest(unittest.TestCase):
             self.assertIn(g, s.hero.gongfa)
         self.assertEqual(s.combat_bonus()["elemDmg"]["木"], 0.3)
         self.assertGreater(s.hero.max_hp, 1000)           # 化神 1000 × (1+0.1+0.3)
+
+
+class CreationTest(unittest.TestCase):
+    def setUp(self):
+        import tempfile, pathlib
+        from chineserim.session import Session
+        self.s = Session(pathlib.Path(tempfile.mkdtemp()) / "s.json", seed=1)
+
+    def test_custom_root(self):
+        self.s.act("new", name="小明", root="heavenly", elems="火")
+        h = self.s.hero
+        self.assertEqual((h.name, h.root_type, h.elements, h.speed), ("小明", "heavenly", ["火"], 2.0))
+
+    def test_variant_and_invalid(self):
+        self.s.act("new", root="variant", elems="雷")
+        self.assertEqual(self.s.hero.elements, ["雷"])
+        self.s.act("new", root="dual", elems="金金")            # 重複 → 回原作
+        self.assertEqual(self.s.hero.name, "韓立")
+        self.s.act("new", root="heavenly", elems="雷")          # 天靈根不能選變異屬性
+        self.assertEqual(self.s.hero.root_type, "quad")
+
+    def test_speed_scales_level_gain(self):
+        from chineserim.character import Character
+        rs = RealmSystem(GameData(), random.Random(1))
+        fast, slow = Character("a", speed=2.0), Character("b", speed=0.8)
+        for c in (fast, slow):
+            rs.set_realm(c, "qi_refining")
+            rs.gain_level(c, 5)
+        self.assertGreater(fast.level, slow.level)
+
+    def test_creation_fields_in_snapshot(self):
+        d = self.s.snapshot()
+        self.assertEqual(len(d["roots"]), 6)
+
+    def test_custom_hero_can_finish_game(self):
+        from tests.bot import play_through
+        self.s.act("new", root="penta", elems="金木水火土")       # 最慢的靈根也要能打通
+        play_through(self.s)
+        self.assertTrue(self.s.hero.quest["done"])

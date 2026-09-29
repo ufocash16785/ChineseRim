@@ -23,7 +23,7 @@ button{padding:6px 12px;font-size:14px}a{color:#9bd}
 <div id=help>A/D 移動　W/空白 跳　M 快速移動　J 劍氣　K 法術　Q 換五行　E 互動　F 御器飛行(築基後)</div>
 <div id=dlg></div><div id=trv></div></div>
 <div id=bar2><button onclick="act('break')">突破</button><button onclick="act('refine')">祭煉青竹蜂雲劍</button><button onclick="act('rest')">閉關7日</button>
-<button onclick="if(confirm('重開新局？（覆蓋存檔）'))act('new')">新遊戲</button><a href="/map">舊版地圖頁</a><small>自動存檔</small></div>
+<button onclick="openNew()">新遊戲</button><a href="/map">舊版地圖頁</a><small>自動存檔</small></div>
 <div id=logp></div>
 <script>
 const $=id=>document.getElementById(id), cv=$('c'), g=cv.getContext('2d'), W=960, H=540, GY=430, SP=700, X0=900;
@@ -91,6 +91,16 @@ function tgtRegionName(){if(!S||!S.target||!S.target.region||S.target.region===S
 function openLocMenu(){const t=$('trv');t.style.display='block';
   t.innerHTML='<b>快速移動・本區域地點</b>'+locs.map(l=>`<button onclick="tp('${l.id}')">${S.target&&S.target.loc===l.id?'★ ':''}${l.name.replace(/（.*/,'')}　<small>${l.type}</small></button>`).join('')+'<button onclick="$(\'trv\').style.display=\'none\'">取消</button>'}
 function tp(id){const l=locs.find(x=>x.id===id);$('trv').style.display='none';if(l){hero.x=l.wx-90;hero.y=GY;hero.vy=0;hero.face=1}}
+function openNew(){const t=$('trv');t.style.display='block';
+  t.innerHTML=`<b>新遊戲・創建角色（會覆蓋存檔）</b><div style="margin:6px 0">名字：<input id=nn value="韓立" maxlength=8 style="font-size:15px"></div>
+  <div style="margin:6px 0">靈根：<select id=nr onchange="rootUI()" style="font-size:15px">${S.roots.map(r=>`<option value="${r.id}" ${r.id=='quad'?'selected':''}>${r.name}（${r.count}屬性・修煉速度 ×${r.speed}）</option>`).join('')}</select></div>
+  <div id=ne style="margin:6px 0"></div><button onclick="startNew()">開始</button><button onclick="startNew(true)">原作模式（韓立・四靈根）</button><button onclick="$('trv').style.display='none'">取消</button>`;rootUI()}
+function rootUI(){const r=S.roots.find(x=>x.id==$('nr').value),list=r.elements||S.root_elements;
+  $('ne').innerHTML=`屬性（選 ${r.count} 個）：`+list.map((e,i)=>`<label style="margin-right:10px"><input type=checkbox class=ck value="${e}" ${i<r.count?'checked':''}> ${e}</label>`).join('')}
+function startNew(orig){const t=$('trv');if(orig){t.style.display='none';return post('act',{c:'new'})}
+  const r=S.roots.find(x=>x.id==$('nr').value),el=[...document.querySelectorAll('.ck:checked')].map(x=>x.value);
+  if(el.length!=r.count){alert('請選擇剛好 '+r.count+' 個屬性');return}
+  t.style.display='none';post('act',{c:'new',name:$('nn').value,root:r.id,elems:el.join('')})}
 function openTravel(){const t=$('trv');t.style.display='block';
   t.innerHTML='<b>傳送陣・選擇目的地</b>'+S.world.filter(w=>w.id!=S.region).map(w=>`<button ${w.locked?'disabled':''} onclick="go('${w.id}')">${S.target&&S.target.region===w.id?'★ ':''}${w.name}（${w.days} 日）${w.locked?' 🔒 需化神飛升':''}</button>`).join('')+'<button onclick="$(\'trv\').style.display=\'none\'">取消</button>'}
 async function go(id){$('trv').style.display='none';await post('travel',{to:id})}

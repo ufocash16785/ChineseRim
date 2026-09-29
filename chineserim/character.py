@@ -13,6 +13,7 @@ class Character:
     name: str
     elements: list = field(default_factory=lambda: ["木"])
     root_type: str = "quad"
+    speed: float = 1.0       # 靈根修煉速度（realms.json spiritRoots.types[].speed）
     realm: int = 0          # realms.json 的 order
     sub: int = 0
     level: int = 1

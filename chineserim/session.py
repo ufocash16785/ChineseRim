@@ -25,9 +25,22 @@ class Session:
         self.rs.on("CR_OnRealmChanged", lambda actor, order, sub, old: self.log.append(f"★ 境界變更 → {self.data.realms[order]['name']}"))
         self.new_game()
 
-    def new_game(self):
+    def create_hero(self, name=None, root=None, elems=None):
+        """依靈根規則建立角色；資料不合法時回到原作設定（韓立·四靈根）。"""
+        default = ("韓立", "quad", ["金", "木", "水", "火"])
+        try:
+            t = self.data.root_type(root or "quad")
+            elems = list(elems or default[2]) if root else default[2]
+            allowed = t.get("elements") or self.data.spirit_roots["elements"]
+            if len(elems) != t["count"] or len(set(elems)) != len(elems) or any(e not in allowed for e in elems):
+                raise ValueError("靈根屬性不符")
+            return Character((name or default[0])[:12], elements=elems, root_type=t["id"], speed=t["speed"])
+        except (KeyError, ValueError):
+            return Character(*default[:1], elements=default[2], root_type=default[1])
+
+    def new_game(self, name=None, root=None, elems=None):
         self.log = []
-        self.hero = Character("韓立", elements=["金", "木", "水", "火"], root_type="quad")
+        self.hero = self.create_hero(name, root, elems)
         self.rs.set_realm(self.hero, "mortal")
         self.hero.add("lingshi", 500)
         self.day, self.region = 0, "tiannan"
@@ -133,7 +146,7 @@ class Session:
             self.advance(7)
             self.log.append("閉關 7 日，傷勢痊癒")
         elif kind == "new":
-            self.new_game()
+            self.new_game(q.get("name"), q.get("root"), list(q["elems"]) if q.get("elems") else None)
             self.save()
             return
         self._after(q.get("loc") if kind == "visit" else None, arrived if kind == "travel" and ok else None)
@@ -165,6 +178,7 @@ class Session:
             "dialogue": dialogue.view(self.data, h),
             "region": self.region, "region_name": reg["name"], "gongfa": [{"id": g, "name": self.data.gongfa[g]["name"]} for g in h.gongfa if g in self.data.gongfa],
             "combat": self.combat_bonus(),
+            "roots": self.data.spirit_roots["types"], "root_type": h.root_type, "root_elements": self.data.spirit_roots["elements"],
             "quest": quests.view(self.data, h), "target": quests.target(self.data, h),
             "world": [{"id": g["id"], "name": g["name"], "x": g["coords"][0], "y": g["coords"][1], "world": g["world_name"],
                        "locked": not w.can_enter(h, g["id"]), "days": w.travel_days(h, self.region, g["id"])}

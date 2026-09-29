@@ -45,7 +45,7 @@ class RealmSystem:
     def gain_level(self, ch, n=1):
         """升級受境界上限鎖住：達上限後必須突破（原 Lock/Unlock）。"""
         cap = self.realm(ch)["levelRange"][1]
-        ch.level = min(cap, ch.level + n)
+        ch.level = min(cap, ch.level + max(1, round(n * ch.speed)))
         return ch.level
 
     def _required_pill(self, ch):
