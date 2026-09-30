@@ -173,7 +173,9 @@ def main():
               ("dummy", tiles.dummy(b)), ("bush", tiles.bush(b)), ("flowers", tiles.flowers(b)), ("boulder", tiles.boulder(b)),
               ("icon_town", tiles.icon_town(b)), ("icon_sect", tiles.icon_sect(b)), ("icon_cave", tiles.icon_cave(b)),
               ("icon_battle", tiles.icon_battle(b)), ("icon_camp", tiles.icon_camp(b)), ("icon_port", tiles.icon_port(b)),
-              ("icon_ruin", tiles.icon_ruin(b)), ("icon_portal", tiles.icon_portal(b))]
+              ("icon_ruin", tiles.icon_ruin(b)), ("icon_portal", tiles.icon_portal(b)),
+              ("furnace", tiles.furnace(b)), ("plot0", tiles.plot(b, 0)), ("plot1", tiles.plot(b, 1)), ("plot2", tiles.plot(b, 2)), ("plot3", tiles.plot(b, 3)),
+              ("scarecrow", tiles.scarecrow(b)), ("bed", tiles.bed(b)), ("icon_garden", tiles.icon_garden(b)), ("icon_hut", tiles.icon_hut(b))]
         atlas, rects = pack_atlas([(n, cv.image()) for n, cv in ob], 512)
         atlas.save(OUT / f"objects_{b}.png")
         manifest["objects"][b] = rects

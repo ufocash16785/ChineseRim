@@ -218,7 +218,9 @@ class Session(TopDownMixin):
             "dialogue": dialogue.view(self.data, h),
             "difficulty": self.difficulty, "difficultyName": self.dcfg["name"], "configured": self.configured, "difficulties": {k: {"name": v["name"], "desc": v["desc"]} for k, v in difficulty.DIFFICULTY.items()},
             "mode": self.mode, "map_id": self.map_id, "pos": self.pos, "tp": getattr(self, "tp", 0), "cur_loc": self.cur_loc, "defeated": self.defeated,
-            "battle": battle.view(self.battle, h), "shop": self.shop_open and self.mode == "loc", "mp": round(h.mp), "max_mp": round(h.max_mp), "heal": h.count("heal"), "mpills": h.count("mpill"), "prices": {k: round(v * self.dcfg["price"]) for k, v in self.data.ambient["shop"].items()},
+            "battle": battle.view(self.battle, h), "shop": self.shop_open and self.mode == "loc", "mp": round(h.mp), "max_mp": round(h.max_mp), "heal": h.count("heal"), "mpills": h.count("mpill"), "herbs": h.count("herb"), "plots": self.plots_view(),
+            "seeds": {k: dict(v, cost=round(v["cost"] * self.dcfg["price"])) for k, v in self.data.farming["seeds"].items()},
+            "recipes": {k: dict(v, needs={n: (round(c * self.dcfg["price"]) if n == "lingshi" else c) for n, c in v["needs"].items()}) for k, v in self.data.farming["recipes"].items()}, "prices": {k: round(v * self.dcfg["price"]) for k, v in self.data.ambient["shop"].items()},
             "questNpc": dialogue.pending_npc(self.data, h, self.cur_loc) if self.mode == "loc" else None,
             "opened": [k.split(":", 3)[3] for k in h.flags if k.startswith(f"chest:{self.map_id}:")],
             "region": self.region, "region_name": reg["name"], "gongfa": [{"id": g, "name": self.data.gongfa[g]["name"]} for g in h.gongfa if g in self.data.gongfa],
@@ -228,6 +230,6 @@ class Session(TopDownMixin):
             "world": [{"id": g["id"], "name": g["name"], "x": g["coords"][0], "y": g["coords"][1], "world": g["world_name"],
                        "locked": not w.can_enter(h, g["id"]), "days": w.travel_days(h, self.region, g["id"])}
                       for g in w.regions.values()],
-            "locations": [{"id": l["id"], "name": l["name"], "type": l["type"], "wild": is_wild(l["type"]), "deep": l["type"] in DEEP, "min_realm": min_realm(l["id"]), "note": l.get("note", ""), "x": x, "y": y}
+            "locations": [{"id": l["id"], "name": l["name"], "type": l["type"], "wild": is_wild(l["type"]), "deep": l["type"] in DEEP, "min_realm": min_realm(l["id"], l), "note": l.get("note", ""), "x": x, "y": y}
                           for l, x, y in w.location_layout(self.region)],
         }

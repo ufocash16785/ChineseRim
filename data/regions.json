@@ -12,28 +12,354 @@
           "worldspace": "CR_TianNan",
           "esp": "ChineseRim_TianNan.esp",
           "size": "主世界，約與原版天際省同等大小（~40km²）",
-          "coords": [30, 62],
+          "coords": [
+            30,
+            62
+          ],
           "summary": "凡人修仙傳開篇之地。以越國為核心的數十個凡人國家，修仙勢力分為越國七大派（正道）、魔道六宗、九國盟三大陣營。北接慕蘭草原，東臨無邊海通往亂星海，西為極西之地。",
-          "nations": ["越國", "風都國", "元武國", "車機國", "紫金國", "越國周邊九國（九國盟）"],
+          "nations": [
+            "越國",
+            "風都國",
+            "元武國",
+            "車機國",
+            "紫金國",
+            "越國周邊九國（九國盟）"
+          ],
           "locations": [
-            { "id": "qingniu", "name": "青牛鎮（青牛村）", "type": "村鎮", "nation": "越國·鏡州", "note": "韓立故鄉，遊戲起點", "verified": true },
-            { "id": "caixia", "name": "彩霞山·七玄門", "type": "門派/山", "nation": "越國", "note": "凡人武林門派，外門/內門；神手谷；墨大夫居所", "verified": true },
-            { "id": "yuejing", "name": "越京", "type": "都城", "nation": "越國", "note": "越國皇城，凡人政治中心", "verified": true },
-            { "id": "jiazhou", "name": "嘉元城", "type": "城市", "nation": "越國", "note": "韓立初入修仙界的坊市所在地區（待核實城名）", "verified": false },
-            { "id": "taiyue", "name": "太岳山脈", "type": "山脈", "nation": "越國", "note": "黃楓谷所在山脈；靈氣濃郁，越國七派多依山而建", "verified": false },
-            { "id": "huangfeng", "name": "黃楓谷", "type": "門派", "nation": "越國", "note": "韓立入門處，百藥園、黃楓谷洞府", "verified": true },
-            { "id": "xuese", "name": "血色禁地", "type": "秘境", "nation": "越國", "note": "七派聯合開啟的上古禁地，血色試煉；韓立獲青元劍訣、築基丹材料處", "verified": true },
-            { "id": "yanyue", "name": "掩月宗", "type": "門派", "nation": "越國", "note": "南宮婉、董萱兒所屬，多女修", "verified": true },
-            { "id": "lingshou", "name": "靈獸山", "type": "門派", "nation": "越國", "note": "馴獸門派，噬金蟲來源相關", "verified": true },
-            { "id": "tianque", "name": "天闕堡", "type": "門派", "nation": "越國", "note": "越國七派之一，堡壘型宗門", "verified": true },
-            { "id": "jujian", "name": "巨劍門", "type": "門派", "nation": "越國", "note": "越國七派之一，劍修", "verified": true },
-            { "id": "huadao", "name": "化刀塢", "type": "門派", "nation": "越國", "note": "越國七派之一，刀修", "verified": true },
-            { "id": "qingxu", "name": "清虛門", "type": "門派", "nation": "越國", "note": "越國七派之一", "verified": true },
-            { "id": "yuanwu", "name": "元武國戰場", "type": "戰場", "nation": "元武國", "note": "天南修士對抗慕蘭人入侵的前線；韓立結丹後參戰", "verified": true },
-            { "id": "jihe", "name": "界河", "type": "地標", "nation": "天南/慕蘭邊境", "note": "天南與慕蘭草原分界（待核實名稱）", "verified": false },
-            { "id": "jixi", "name": "極西之地", "type": "荒野", "nation": "—", "note": "天南極西，妖獸眾多、人跡罕至", "verified": true },
-            { "id": "wubian", "name": "無邊海岸", "type": "海岸", "nation": "—", "note": "通往亂星海的海路起點", "verified": true },
-            { "id": "tiannan_fangshi", "name": "各國坊市（多處）", "type": "坊市", "nation": "多國", "note": "修士交易所：拍賣會、租攤位、黑市；Skyrim 商人系統", "verified": true }
+            {
+              "id": "qingniu",
+              "name": "青牛鎮（青牛村）",
+              "type": "村鎮",
+              "nation": "越國·鏡州",
+              "note": "韓立故鄉，遊戲起點",
+              "verified": true
+            },
+            {
+              "id": "caixia",
+              "name": "彩霞山·七玄門",
+              "type": "門派/山",
+              "nation": "越國",
+              "note": "凡人武林門派，外門/內門；神手谷；墨大夫居所",
+              "verified": true
+            },
+            {
+              "id": "yuejing",
+              "name": "越京",
+              "type": "都城",
+              "nation": "越國",
+              "note": "越國皇城，凡人政治中心",
+              "verified": true
+            },
+            {
+              "id": "jiazhou",
+              "name": "嘉元城",
+              "type": "城市",
+              "nation": "越國",
+              "note": "韓立初入修仙界的坊市所在地區（待核實城名）",
+              "verified": false
+            },
+            {
+              "id": "taiyue",
+              "name": "太岳山脈",
+              "type": "山脈",
+              "nation": "越國",
+              "note": "黃楓谷所在山脈；靈氣濃郁，越國七派多依山而建",
+              "verified": false
+            },
+            {
+              "id": "huangfeng",
+              "name": "黃楓谷",
+              "type": "門派",
+              "nation": "越國",
+              "note": "韓立入門處，百藥園、黃楓谷洞府",
+              "verified": true
+            },
+            {
+              "id": "xuese",
+              "name": "血色禁地",
+              "type": "秘境",
+              "nation": "越國",
+              "note": "七派聯合開啟的上古禁地，血色試煉；韓立獲青元劍訣、築基丹材料處",
+              "verified": true
+            },
+            {
+              "id": "yanyue",
+              "name": "掩月宗",
+              "type": "門派",
+              "nation": "越國",
+              "note": "南宮婉、董萱兒所屬，多女修",
+              "verified": true
+            },
+            {
+              "id": "lingshou",
+              "name": "靈獸山",
+              "type": "門派",
+              "nation": "越國",
+              "note": "馴獸門派，噬金蟲來源相關",
+              "verified": true
+            },
+            {
+              "id": "tianque",
+              "name": "天闕堡",
+              "type": "門派",
+              "nation": "越國",
+              "note": "越國七派之一，堡壘型宗門",
+              "verified": true
+            },
+            {
+              "id": "jujian",
+              "name": "巨劍門",
+              "type": "門派",
+              "nation": "越國",
+              "note": "越國七派之一，劍修",
+              "verified": true
+            },
+            {
+              "id": "huadao",
+              "name": "化刀塢",
+              "type": "門派",
+              "nation": "越國",
+              "note": "越國七派之一，刀修",
+              "verified": true
+            },
+            {
+              "id": "qingxu",
+              "name": "清虛門",
+              "type": "門派",
+              "nation": "越國",
+              "note": "越國七派之一",
+              "verified": true
+            },
+            {
+              "id": "yuanwu",
+              "name": "元武國戰場",
+              "type": "戰場",
+              "nation": "元武國",
+              "note": "天南修士對抗慕蘭人入侵的前線；韓立結丹後參戰",
+              "verified": true
+            },
+            {
+              "id": "jihe",
+              "name": "界河",
+              "type": "地標",
+              "nation": "天南/慕蘭邊境",
+              "note": "天南與慕蘭草原分界（待核實名稱）",
+              "verified": false
+            },
+            {
+              "id": "jixi",
+              "name": "極西之地",
+              "type": "荒野",
+              "nation": "—",
+              "note": "天南極西，妖獸眾多、人跡罕至",
+              "verified": true
+            },
+            {
+              "id": "wubian",
+              "name": "無邊海岸",
+              "type": "海岸",
+              "nation": "—",
+              "note": "通往亂星海的海路起點",
+              "verified": true
+            },
+            {
+              "id": "tiannan_fangshi",
+              "name": "各國坊市（多處）",
+              "type": "坊市",
+              "nation": "多國",
+              "note": "修士交易所：拍賣會、租攤位、黑市；Skyrim 商人系統",
+              "verified": true
+            },
+            {
+              "id": "shenshougu",
+              "name": "神手谷",
+              "type": "藥園",
+              "nation": "越國",
+              "note": "墨大夫居所，谷中有藥田與小屋，可種藥、歇息、煉丹。",
+              "verified": false
+            },
+            {
+              "id": "baiyaoyuan",
+              "name": "百藥園",
+              "type": "藥園",
+              "nation": "越國",
+              "note": "黃楓谷的藥園：可種植靈草、住小屋、用丹爐煉丹。",
+              "verified": false
+            },
+            {
+              "id": "lingyao_valley",
+              "name": "靈藥谷",
+              "type": "藥園",
+              "nation": "越國",
+              "note": "荒僻山谷裡的天然藥田，靈氣充足，草藥長得特別快。",
+              "verified": false
+            },
+            {
+              "id": "yelang_camp",
+              "name": "野狼幫據點",
+              "type": "營地",
+              "nation": "越國",
+              "note": "野狼幫的山寨，七玄門的死對頭。",
+              "verified": false
+            },
+            {
+              "id": "yuejing_palace",
+              "name": "越國皇宮",
+              "type": "國都",
+              "nation": "越國",
+              "note": "越國皇室所在，守衛森嚴。",
+              "verified": false
+            },
+            {
+              "id": "jingzhou",
+              "name": "鏡州城",
+              "type": "城市",
+              "nation": "越國·鏡州",
+              "note": "青牛鎮所屬的州城。",
+              "verified": false
+            },
+            {
+              "id": "fengdu",
+              "name": "風都國",
+              "type": "國都",
+              "nation": "風都國",
+              "note": "天南諸國之一。",
+              "verified": false
+            },
+            {
+              "id": "yuanwu_capital",
+              "name": "元武國都城",
+              "type": "國都",
+              "nation": "元武國",
+              "note": "元武國的都城，慕蘭戰事的前線。",
+              "verified": false
+            },
+            {
+              "id": "chejiguo",
+              "name": "車機國",
+              "type": "國都",
+              "nation": "車機國",
+              "note": "天南諸國之一。",
+              "verified": false
+            },
+            {
+              "id": "zijinguo",
+              "name": "紫金國",
+              "type": "國都",
+              "nation": "紫金國",
+              "note": "天南諸國之一。",
+              "verified": false
+            },
+            {
+              "id": "jiuguomeng_hall",
+              "name": "九國盟盟主府",
+              "type": "門派",
+              "nation": "九國盟",
+              "note": "九國盟議事之處。",
+              "verified": false
+            },
+            {
+              "id": "hehuanzong",
+              "name": "合歡宗",
+              "type": "魔宗",
+              "note": "魔道六宗之一，王蟬出身之處。",
+              "verified": false
+            },
+            {
+              "id": "guiling_south",
+              "name": "鬼靈門越國分舵",
+              "type": "魔宗",
+              "note": "鬼靈門在天南的據點。",
+              "verified": false
+            },
+            {
+              "id": "tiangangjianzong",
+              "name": "天罡劍宗",
+              "type": "魔宗",
+              "note": "魔道六宗之一，劍修聚集。",
+              "verified": false
+            },
+            {
+              "id": "wangumen",
+              "name": "萬蠱門",
+              "type": "魔宗",
+              "note": "魔道六宗之一，蠱蟲遍地。",
+              "verified": false
+            },
+            {
+              "id": "yaoshengmen",
+              "name": "妖聖門",
+              "type": "魔宗",
+              "note": "魔道六宗之一，與妖獸為伍。",
+              "verified": false
+            },
+            {
+              "id": "modao_hq",
+              "name": "魔道六宗聯盟總壇",
+              "type": "魔宗",
+              "note": "魔道六宗會盟之地。",
+              "verified": false
+            },
+            {
+              "id": "hf_dongfu",
+              "name": "黃楓谷弟子洞府",
+              "type": "洞府",
+              "nation": "越國",
+              "note": "弟子們的修行洞府：可以住、可以煉丹、可以打坐。",
+              "verified": false
+            },
+            {
+              "id": "biguan_dong",
+              "name": "閉關洞府",
+              "type": "洞府",
+              "note": "僻靜的閉關之處，靈氣不錯。",
+              "verified": false
+            },
+            {
+              "id": "youming_cave",
+              "name": "幽冥洞",
+              "type": "洞窟",
+              "note": "傳聞洞中藏有前人寶藏……但洞裡的東西似乎不太友善。",
+              "verified": false,
+              "profile": "trap",
+              "minRealm": 1
+            },
+            {
+              "id": "chiyan_cave",
+              "name": "赤炎洞",
+              "type": "洞窟",
+              "note": "洞內熱浪滾滾，妖獸身上常帶著火靈石。",
+              "verified": false,
+              "profile": "rich",
+              "minRealm": 2
+            },
+            {
+              "id": "baigu_cave",
+              "name": "白骨洞",
+              "type": "洞窟",
+              "note": "滿地白骨，據說早已被人搜刮一空。",
+              "verified": false,
+              "profile": "poor",
+              "minRealm": 1
+            },
+            {
+              "id": "old_mine",
+              "name": "廢棄礦坑",
+              "type": "礦坑",
+              "note": "荒廢多年的靈石礦，或許還有遺漏的礦脈。",
+              "verified": false,
+              "profile": "mixed",
+              "minRealm": 1
+            },
+            {
+              "id": "luoxing_tan",
+              "name": "落星潭",
+              "type": "洞窟",
+              "note": "星光墜落的深潭，水下有個入口。",
+              "verified": false,
+              "profile": "mixed",
+              "minRealm": 2
+            }
           ]
         },
         {
@@ -42,13 +368,96 @@
           "worldspace": "CR_MuLan",
           "esp": "ChineseRim_TianNan.esp",
           "size": "中型 Worldspace（草原、無盡草海）",
-          "coords": [34, 38],
+          "coords": [
+            34,
+            38
+          ],
           "summary": "天南以北的廣袤草原，慕蘭人（慕蘭法師，其功法體系近似巫術）聚居之地，信奉天瀾聖獸。因草原靈氣衰竭而南侵天南，引發慕蘭大戰。",
-          "nations": ["慕蘭諸部"],
+          "nations": [
+            "慕蘭諸部"
+          ],
           "locations": [
-            { "id": "tianlan", "name": "天瀾聖地", "type": "聖地", "note": "天瀾聖獸所在，慕蘭人精神信仰中心", "verified": true },
-            { "id": "mulan_camp", "name": "慕蘭主營", "type": "營地", "note": "慕蘭南侵大軍集結處", "verified": false },
-            { "id": "grass_sea", "name": "無盡草海", "type": "荒野", "note": "開放地圖探索區，妖獸、慕蘭巡騎", "verified": false }
+            {
+              "id": "tianlan",
+              "name": "天瀾聖地",
+              "type": "聖地",
+              "note": "天瀾聖獸所在，慕蘭人精神信仰中心",
+              "verified": true
+            },
+            {
+              "id": "mulan_camp",
+              "name": "慕蘭主營",
+              "type": "營地",
+              "note": "慕蘭南侵大軍集結處",
+              "verified": false
+            },
+            {
+              "id": "grass_sea",
+              "name": "無盡草海",
+              "type": "荒野",
+              "note": "開放地圖探索區，妖獸、慕蘭巡騎",
+              "verified": false
+            },
+            {
+              "id": "mulan_court",
+              "name": "慕蘭王庭",
+              "type": "國都",
+              "note": "慕蘭諸部王庭所在。",
+              "verified": false
+            },
+            {
+              "id": "baixue_camp",
+              "name": "白狼部落",
+              "type": "營地",
+              "note": "草原上的大型部落。",
+              "verified": false
+            },
+            {
+              "id": "gobi",
+              "name": "白骨戈壁",
+              "type": "荒野",
+              "note": "荒涼戈壁，白骨累累。",
+              "verified": false
+            },
+            {
+              "id": "changfeng_gorge",
+              "name": "長風峽",
+              "type": "山",
+              "note": "終年狂風的峽谷。",
+              "verified": false
+            },
+            {
+              "id": "tianlan_altar",
+              "name": "聖獸祭壇",
+              "type": "遺跡",
+              "note": "祭祀天瀾聖獸的古老祭壇。",
+              "verified": false,
+              "profile": "mixed",
+              "minRealm": 2
+            },
+            {
+              "id": "digan_cave",
+              "name": "地火窟",
+              "type": "洞窟",
+              "note": "地底岩漿翻湧，火屬性靈獸出沒。",
+              "verified": false,
+              "profile": "rich",
+              "minRealm": 2
+            },
+            {
+              "id": "muma_river",
+              "name": "牧馬川",
+              "type": "荒野",
+              "note": "水草豐美的牧場。",
+              "verified": false
+            },
+            {
+              "id": "witch_hut",
+              "name": "慕蘭巫屋",
+              "type": "洞府",
+              "note": "慕蘭巫師的居所，可歇息煉丹。",
+              "verified": false
+            }
           ]
         },
         {
@@ -57,17 +466,172 @@
           "worldspace": "CR_LuanXingHai",
           "esp": "ChineseRim_LuanXingHai.esp",
           "size": "海島群 Worldspace（水面為主，島嶼為 Location）",
-          "coords": [66, 60],
+          "coords": [
+            66,
+            60
+          ],
           "summary": "天南以東無邊海中的群島修仙界。分內星海與外星海；星宮（天星雙聖）與逆星盟對立千年。虛天殿每三百年開啟一次。",
-          "nations": ["星宮轄下諸島", "逆星盟轄下諸島", "外星海散修島"],
+          "nations": [
+            "星宮轄下諸島",
+            "逆星盟轄下諸島",
+            "外星海散修島"
+          ],
           "locations": [
-            { "id": "tianxing_cheng", "name": "天星城", "type": "城市", "note": "亂星海第一城，星宮總部所在", "verified": true },
-            { "id": "kuixing", "name": "魁星島", "type": "島", "note": "外星海大島，韓立初到亂星海落腳處（待核實）", "verified": false },
-            { "id": "xutian", "name": "虛天殿", "type": "秘境", "note": "上古修士遺留的空間秘境，內有虛天鼎；各方勢力爭奪", "verified": true },
-            { "id": "jiyin", "name": "極陰島", "type": "島", "note": "極陰之地，紫羅極火所在（韓立獲取紫羅極火）", "verified": true },
-            { "id": "nanming", "name": "南明島", "type": "島", "note": "亂星海島嶼（待核實）", "verified": false },
-            { "id": "neixinghai", "name": "內星海", "type": "海域", "note": "星宮與逆星盟核心區", "verified": true },
-            { "id": "waixinghai", "name": "外星海", "type": "海域", "note": "散修與小勢力，妖獸海獸出沒", "verified": true }
+            {
+              "id": "tianxing_cheng",
+              "name": "天星城",
+              "type": "城市",
+              "note": "亂星海第一城，星宮總部所在",
+              "verified": true
+            },
+            {
+              "id": "kuixing",
+              "name": "魁星島",
+              "type": "島",
+              "note": "外星海大島，韓立初到亂星海落腳處（待核實）",
+              "verified": false
+            },
+            {
+              "id": "xutian",
+              "name": "虛天殿",
+              "type": "秘境",
+              "note": "上古修士遺留的空間秘境，內有虛天鼎；各方勢力爭奪",
+              "verified": true
+            },
+            {
+              "id": "jiyin",
+              "name": "極陰島",
+              "type": "島",
+              "note": "極陰之地，紫羅極火所在（韓立獲取紫羅極火）",
+              "verified": true
+            },
+            {
+              "id": "nanming",
+              "name": "南明島",
+              "type": "島",
+              "note": "亂星海島嶼（待核實）",
+              "verified": false
+            },
+            {
+              "id": "neixinghai",
+              "name": "內星海",
+              "type": "海域",
+              "note": "星宮與逆星盟核心區",
+              "verified": true
+            },
+            {
+              "id": "waixinghai",
+              "name": "外星海",
+              "type": "海域",
+              "note": "散修與小勢力，妖獸海獸出沒",
+              "verified": true
+            },
+            {
+              "id": "xinggong_hall",
+              "name": "星宮總殿",
+              "type": "門派",
+              "note": "星宮的總部大殿。",
+              "verified": false
+            },
+            {
+              "id": "nixing_hq",
+              "name": "逆星盟總壇",
+              "type": "魔宗",
+              "note": "逆星盟盤踞之處。",
+              "verified": false
+            },
+            {
+              "id": "waixing_fangshi",
+              "name": "外星海坊市",
+              "type": "坊市",
+              "note": "散修們交易的坊市。",
+              "verified": false
+            },
+            {
+              "id": "tianxing_port",
+              "name": "天星港",
+              "type": "港口",
+              "note": "往來各島的船隻停靠處。",
+              "verified": false
+            },
+            {
+              "id": "bibo_isle",
+              "name": "碧波島",
+              "type": "島",
+              "note": "清淨的海島，海鳥成群。",
+              "verified": false
+            },
+            {
+              "id": "huoyan_isle",
+              "name": "火焰島",
+              "type": "島",
+              "note": "島上有座終年噴發的火山。",
+              "verified": false
+            },
+            {
+              "id": "sanxiu_isle",
+              "name": "散修島",
+              "type": "集市",
+              "note": "散修聚居的集市島。",
+              "verified": false
+            },
+            {
+              "id": "lingyao_isle",
+              "name": "靈藥島",
+              "type": "藥園",
+              "note": "島上盛產靈草，有現成的藥田。",
+              "verified": false
+            },
+            {
+              "id": "leiming_isle",
+              "name": "雷鳴島",
+              "type": "島",
+              "note": "雷雲終年不散。",
+              "verified": false
+            },
+            {
+              "id": "yaoshou_isle",
+              "name": "妖獸島",
+              "type": "島",
+              "note": "妖獸橫行的荒島。",
+              "verified": false
+            },
+            {
+              "id": "longgong",
+              "name": "海底龍宮",
+              "type": "洞窟",
+              "note": "傳說中的海底宮殿入口。",
+              "verified": false,
+              "profile": "trap",
+              "minRealm": 2
+            },
+            {
+              "id": "shanhu_cave",
+              "name": "珊瑚洞",
+              "type": "洞窟",
+              "note": "色彩斑斕的珊瑚洞，看起來寶氣逼人。",
+              "verified": false,
+              "profile": "poor",
+              "minRealm": 1
+            },
+            {
+              "id": "haishen_temple",
+              "name": "海神廟",
+              "type": "遺跡",
+              "note": "古老的海神廟，供奉著不知名的神祇。",
+              "verified": false,
+              "profile": "rich",
+              "minRealm": 3
+            },
+            {
+              "id": "zhenfa_cave",
+              "name": "陣法洞",
+              "type": "洞窟",
+              "note": "洞內佈滿古陣，闖進去才知道福禍。",
+              "verified": false,
+              "profile": "mixed",
+              "minRealm": 2
+            }
           ]
         },
         {
@@ -76,18 +640,158 @@
           "worldspace": "CR_DaJin",
           "esp": "ChineseRim_DaJin.esp",
           "size": "超大 Worldspace（初版僅建州府級節點＋秘境）",
-          "coords": [28, 18],
+          "coords": [
+            28,
+            18
+          ],
           "summary": "慕蘭草原以北、人界最大的修仙國度，修士數量與實力遠超天南。正道以落雲宗等大宗為首，魔道十宗（鬼靈門本宗、陰羅宗、天魔宗等）盤踞；昆吾山秘境為關鍵劇情地。",
-          "nations": ["大晉皇朝諸州府"],
+          "nations": [
+            "大晉皇朝諸州府"
+          ],
           "locations": [
-            { "id": "kunwu", "name": "昆吾山", "type": "秘境", "note": "上古昆吾遺跡，落雲宗守護；虛天殿以外另一大寶藏地", "verified": true },
-            { "id": "luoyun", "name": "落雲宗", "type": "門派", "note": "大晉正道大宗，韓立以化名加入為客卿", "verified": true },
-            { "id": "haiyun", "name": "海雲府", "type": "府城", "note": "大晉沿海府城，通無邊海", "verified": true },
-            { "id": "guiling_hq", "name": "鬼靈門本宗", "type": "門派", "note": "天南魔道六宗中鬼靈門的母宗；玄骨老祖", "verified": true },
-            { "id": "yinluo", "name": "陰羅宗", "type": "門派", "note": "大晉魔道十宗之一", "verified": true },
-            { "id": "tianmo", "name": "天魔宗", "type": "門派", "note": "大晉魔道十宗之一（部分資料歸於亂星海，需核實）", "verified": false },
-            { "id": "wanyao", "name": "萬妖谷", "type": "妖修聚地", "note": "大晉妖修勢力", "verified": false },
-            { "id": "qianzhu", "name": "千竹教", "type": "門派", "note": "大晉宗門，與韓立昆吾山劇情相關", "verified": true }
+            {
+              "id": "kunwu",
+              "name": "昆吾山",
+              "type": "秘境",
+              "note": "上古昆吾遺跡，落雲宗守護；虛天殿以外另一大寶藏地",
+              "verified": true
+            },
+            {
+              "id": "luoyun",
+              "name": "落雲宗",
+              "type": "門派",
+              "note": "大晉正道大宗，韓立以化名加入為客卿",
+              "verified": true
+            },
+            {
+              "id": "haiyun",
+              "name": "海雲府",
+              "type": "府城",
+              "note": "大晉沿海府城，通無邊海",
+              "verified": true
+            },
+            {
+              "id": "guiling_hq",
+              "name": "鬼靈門本宗",
+              "type": "門派",
+              "note": "天南魔道六宗中鬼靈門的母宗；玄骨老祖",
+              "verified": true
+            },
+            {
+              "id": "yinluo",
+              "name": "陰羅宗",
+              "type": "門派",
+              "note": "大晉魔道十宗之一",
+              "verified": true
+            },
+            {
+              "id": "tianmo",
+              "name": "天魔宗",
+              "type": "門派",
+              "note": "大晉魔道十宗之一（部分資料歸於亂星海，需核實）",
+              "verified": false
+            },
+            {
+              "id": "wanyao",
+              "name": "萬妖谷",
+              "type": "妖修聚地",
+              "note": "大晉妖修勢力",
+              "verified": false
+            },
+            {
+              "id": "qianzhu",
+              "name": "千竹教",
+              "type": "門派",
+              "note": "大晉宗門，與韓立昆吾山劇情相關",
+              "verified": true
+            },
+            {
+              "id": "dajin_palace",
+              "name": "大晉皇宮",
+              "type": "國都",
+              "note": "大晉皇朝的都城。",
+              "verified": false
+            },
+            {
+              "id": "luoyun_garden",
+              "name": "落雲宗藥園",
+              "type": "藥園",
+              "note": "落雲宗的藥園，客卿可以借用。",
+              "verified": false
+            },
+            {
+              "id": "dajin_fangshi",
+              "name": "大晉坊市",
+              "type": "坊市",
+              "note": "大晉最熱鬧的坊市。",
+              "verified": false
+            },
+            {
+              "id": "kunwu_outer",
+              "name": "昆吾外圍",
+              "type": "荒野",
+              "note": "昆吾山外圍的荒地。",
+              "verified": false
+            },
+            {
+              "id": "xuemo_cave",
+              "name": "血魔洞",
+              "type": "洞窟",
+              "note": "魔氣逼人的洞窟，傳說有魔道秘籍。",
+              "verified": false,
+              "profile": "trap",
+              "minRealm": 3
+            },
+            {
+              "id": "tianmo_cave",
+              "name": "天魔洞",
+              "type": "洞窟",
+              "note": "早已被魔道翻遍的舊洞。",
+              "verified": false,
+              "profile": "poor",
+              "minRealm": 2
+            },
+            {
+              "id": "luoxia_city",
+              "name": "落霞城",
+              "type": "城市",
+              "note": "大晉西境的城市。",
+              "verified": false
+            },
+            {
+              "id": "yinlong_valley",
+              "name": "隱龍谷",
+              "type": "遺跡",
+              "note": "雲霧繚繞的古遺跡，靈氣異常濃郁。",
+              "verified": false,
+              "profile": "rich",
+              "minRealm": 3
+            },
+            {
+              "id": "qianzhu_forest",
+              "name": "千竹林",
+              "type": "荒野",
+              "note": "千竿翠竹的竹海。",
+              "verified": false
+            },
+            {
+              "id": "yinyue_cave",
+              "name": "銀月洞",
+              "type": "洞窟",
+              "note": "銀月曾經棲身之處。",
+              "verified": false,
+              "profile": "mixed",
+              "minRealm": 2
+            },
+            {
+              "id": "hanbing_cave",
+              "name": "寒冰洞",
+              "type": "洞窟",
+              "note": "冰封的洞窟，看起來什麼也沒有。",
+              "verified": false,
+              "profile": "poor",
+              "minRealm": 2
+            }
           ]
         }
       ]
@@ -101,15 +805,118 @@
           "id": "tianyuan",
           "name": "天淵大陸",
           "worldspace": "CR_TianYuan",
-          "coords": [50, 50],
+          "coords": [
+            50,
+            50
+          ],
           "summary": "靈界人族最大聚居地。韓立飛升後落腳邊緣地帶，天淵城為人族對抗妖獸潮（獸潮）與魔族的前線巨城。",
           "locations": [
-            { "id": "tianyuan_cheng", "name": "天淵城", "type": "巨城", "note": "人族抵禦獸潮前線，韓立以化名加入天淵城守軍", "verified": true },
-            { "id": "xuantian", "name": "玄天城", "type": "城市", "note": "（待核實）", "verified": false },
-            { "id": "tianyun13", "name": "天雲十三族領地", "type": "異族領地", "note": "飛靈族等十三異族，韓立曾以飛靈族身分潛入", "verified": true },
-            { "id": "muzu", "name": "木族領地", "type": "異族領地", "note": "木族，靈界強族", "verified": true },
-            { "id": "yaozu", "name": "妖族領地", "type": "異族領地", "note": "保留原始面貌的森林、草原、峽谷，以族群為單位散布", "verified": true },
-            { "id": "mozu_rift", "name": "魔族空間裂縫帶", "type": "戰區", "note": "魔族入侵處，人妖交界", "verified": true }
+            {
+              "id": "tianyuan_cheng",
+              "name": "天淵城",
+              "type": "巨城",
+              "note": "人族抵禦獸潮前線，韓立以化名加入天淵城守軍",
+              "verified": true
+            },
+            {
+              "id": "xuantian",
+              "name": "玄天城",
+              "type": "城市",
+              "note": "（待核實）",
+              "verified": false
+            },
+            {
+              "id": "tianyun13",
+              "name": "天雲十三族領地",
+              "type": "異族領地",
+              "note": "飛靈族等十三異族，韓立曾以飛靈族身分潛入",
+              "verified": true
+            },
+            {
+              "id": "muzu",
+              "name": "木族領地",
+              "type": "異族領地",
+              "note": "木族，靈界強族",
+              "verified": true
+            },
+            {
+              "id": "yaozu",
+              "name": "妖族領地",
+              "type": "異族領地",
+              "note": "保留原始面貌的森林、草原、峽谷，以族群為單位散布",
+              "verified": true
+            },
+            {
+              "id": "mozu_rift",
+              "name": "魔族空間裂縫帶",
+              "type": "戰區",
+              "note": "魔族入侵處，人妖交界",
+              "verified": true
+            },
+            {
+              "id": "guard_camp",
+              "name": "天淵守軍營",
+              "type": "營地",
+              "note": "守軍的駐紮地。",
+              "verified": false
+            },
+            {
+              "id": "feiling_sanctum",
+              "name": "飛靈族聖地",
+              "type": "聖地",
+              "note": "飛靈族的聖地，靈氣濃郁。",
+              "verified": false,
+              "profile": "rich",
+              "minRealm": 5
+            },
+            {
+              "id": "muzu_field",
+              "name": "木族靈田",
+              "type": "藥園",
+              "note": "木族培育靈草的田地。",
+              "verified": false
+            },
+            {
+              "id": "yuanci_mountain",
+              "name": "元磁山",
+              "type": "遺跡",
+              "note": "磁力異常的山脈。",
+              "verified": false,
+              "profile": "mixed",
+              "minRealm": 5
+            },
+            {
+              "id": "ly_fangshi",
+              "name": "靈界坊市",
+              "type": "坊市",
+              "note": "靈界的交易市集。",
+              "verified": false
+            },
+            {
+              "id": "ly_dongfu",
+              "name": "靈界洞府",
+              "type": "洞府",
+              "note": "靈界修士的洞府，靈氣是人界的數倍。",
+              "verified": false
+            },
+            {
+              "id": "canggong_cave",
+              "name": "蒼穹洞",
+              "type": "洞窟",
+              "note": "洞頂彷彿一片星空。",
+              "verified": false,
+              "profile": "rich",
+              "minRealm": 5
+            },
+            {
+              "id": "abyss_cave",
+              "name": "深淵窟",
+              "type": "洞窟",
+              "note": "深不見底的窟窿，似乎有東西在下面。",
+              "verified": false,
+              "profile": "trap",
+              "minRealm": 5
+            }
           ]
         }
       ]

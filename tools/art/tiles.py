@@ -456,3 +456,97 @@ def icon_portal(b):
     for r, col in ((16, "#3a5aa0"), (13, "#5a8ad8"), (9, "#8ac8ff"), (5, "#ffffff")):
         c.ellipse(20, 22, r, r * .8, hexc(col), "r")
     return c
+
+
+# ---------------- 藥園／洞府 ----------------
+def furnace(b):
+    """煉丹爐：銅色三足鼎，底下有爐火。"""
+    c = Canvas(40, 48)
+    bronze, dark = hexc("#b9834a"), hexc("#7a4a24")
+    c.ellipse(20, 44, 15, 3, (60, 40, 30), "s")
+    for x in (8, 19, 30):
+        c.rect(x, 34, x + 3, 44, dark, "leg")
+    c.ellipse(20, 26, 15, 13, bronze, "body")
+    c.ellipse(20, 14, 12, 4, dark, "rim")
+    c.ellipse(20, 14, 9, 2, hexc("#2a1a10"), "in")
+    c.rect(5, 24, 34, 26, hexc("#d9a860"), "band")
+    c.rect(2, 16, 6, 22, dark, "ear")
+    c.rect(33, 16, 37, 22, dark, "ear")
+    c.poly([(20, 42), (26, 46), (14, 46)], hexc("#ff8a2a"), "fire")
+    c.put(20, 8, hexc("#ffffff"), "smoke")
+    c.put(22, 5, hexc("#dddddd"), "smoke")
+    c.put(19, 2, hexc("#cccccc"), "smoke")
+    return c
+
+
+def plot(b, stage):
+    """藥田：0 空地 1 幼苗 2 生長 3 成熟。"""
+    P = BIOMES[b]
+    c = Canvas(32, 26)
+    soil, dk = hexc("#6a4a2a"), hexc("#4a3018")
+    c.rect(1, 6, 30, 24, soil, "soil")
+    for y in (9, 14, 19):
+        c.rect(2, y, 29, y + 1, dk, "row")
+    c.rect(1, 5, 30, 5, lighten(soil, .2), "soil")
+    leaf = hexc(P["leaf"])
+    if stage >= 1:
+        for x in (7, 16, 25):
+            c.rect(x, 11, x + 1, 14, leaf, "l")
+    if stage >= 2:
+        for x in (7, 16, 25):
+            c.ellipse(x, 9, 4, 3, leaf, "l")
+            c.rect(x, 12, x + 1, 17, darken(leaf, .3), "stem")
+    if stage >= 3:
+        for x, col in ((7, "#ff6a8a"), (16, "#ffd35a"), (25, "#8ad8ff")):
+            c.rect(x - 1, 4, x + 1, 6, hexc(col), "fruit")
+            c.put(x, 3, (255, 255, 255), "fruit")
+    return c
+
+
+def scarecrow(b):
+    c = Canvas(30, 50)
+    c.rect(14, 12, 16, 48, hexc("#7a4a2a"), "w")
+    c.rect(3, 18, 26, 21, hexc("#8a5a2b"), "w")
+    c.rect(8, 21, 21, 32, hexc("#b98a58"), "cloth")
+    c.ellipse(15, 9, 6, 6, hexc("#e8d090"), "head")
+    c.ellipse(15, 3, 9, 3, hexc("#8a5a2b"), "hat")
+    c.rect(12, 8, 13, 9, (40, 30, 20), "e")
+    c.rect(17, 8, 18, 9, (40, 30, 20), "e")
+    return c
+
+
+def icon_garden(b):
+    P = BIOMES[b]
+    c = Canvas(44, 38)
+    c.rect(2, 20, 41, 34, hexc("#6a4a2a"), "soil")
+    for x in range(3, 41, 6):
+        c.rect(x, 12, x + 3, 22, hexc(P["leaf"]), "l")
+        c.ellipse(x + 1.5, 12, 3, 3, lighten(hexc(P["leaf"]), .3), "l")
+    for x in range(2, 42, 5):
+        c.rect(x, 24, x, 34, hexc("#a87a48"), "fence")
+    c.rect(2, 26, 41, 27, hexc("#a87a48"), "fence")
+    c.rect(2, 31, 41, 32, hexc("#a87a48"), "fence")
+    return c
+
+
+def icon_hut(b):
+    P = BIOMES[b]
+    c = Canvas(40, 38)
+    c.rect(6, 18, 33, 34, hexc("#d8c8a0"), "w")
+    c.poly([(2, 20), (20, 4), (37, 20)], hexc(P["roof"]), "r")
+    c.rect(16, 24, 23, 34, hexc("#5a3a22"), "d")
+    c.rect(26, 22, 31, 27, hexc("#8fc9e8"), "win")
+    c.rect(28, 2, 31, 8, (140, 140, 140), "ch")
+    return c
+
+
+def bed(b):
+    c = Canvas(48, 34)
+    c.rect(2, 12, 45, 30, hexc("#7a4a2a"), "frame")
+    c.rect(2, 8, 45, 13, hexc("#5a3018"), "head")
+    c.rect(5, 15, 42, 28, hexc("#e8dcc0"), "sheet")
+    c.rect(5, 15, 42, 19, hexc("#5a8ac0"), "blanket")
+    c.rect(6, 13, 16, 17, hexc("#f4f0e6"), "pillow")
+    c.rect(2, 29, 5, 33, hexc("#5a3018"), "leg")
+    c.rect(42, 29, 45, 33, hexc("#5a3018"), "leg")
+    return c

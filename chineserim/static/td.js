@@ -216,6 +216,9 @@ const TD = (() => {
       else if (e.k === 'altar') out.push({id: e.id, x: (e.x + .5) * TS, y: (e.y + 1.2) * TS, text: '在祭壇前調息'});
       else if (e.k === 'portal') out.push({id: e.id, x: (e.x + .5) * TS, y: (e.y + 1.2) * TS, text: '觸碰空間節點'});
       else if (e.k === 'sign') out.push({id: e.id, x: (e.x + .5) * TS, y: (e.y + 1.2) * TS, text: '查看告示牌'});
+      else if (e.k === 'plot') { const st = S.plots[e.id] || {stage: 0}; out.push({id: e.id, kind: 'plot', x: (e.x + .5) * TS, y: (e.y + 1) * TS, text: ['空地：播種', '幼苗：查看', '生長中：查看', '已成熟：收成'][st.stage]}); }
+      else if (e.k === 'bed') out.push({id: e.id, x: (e.x + .5) * TS, y: (e.y + .9) * TS, text: '在此歇息（恢復氣血靈力）'});
+      else if (e.k === 'furnace') out.push({id: e.id, kind: 'furnace', x: (e.x + .5) * TS, y: (e.y + 1.4) * TS, text: '使用煉丹爐'});
     }
     if (S.questNpc) { const q = questPos(); out.push({id: 'quest', x: q[0], y: q[1], text: `與${S.questNpc}交談`}); }
     return out;
@@ -227,7 +230,8 @@ const TD = (() => {
   }
   function interact() {
     if (busy || S.dialogue || S.battle || askOpen || S.shop) return;
-    const n = nearest(); if (n) post('talk', {ent: n.id});
+    const n = nearest(); if (!n) return;
+    if (n.kind === 'plot') plotMenu(n.id); else if (n.kind === 'furnace') furnaceMenu(); else post('talk', {ent: n.id});
   }
   function askBox(title, opts) {
     askOpen = true; const a = $('ask'); a.style.display = 'block';
@@ -236,6 +240,23 @@ const TD = (() => {
     a.querySelectorAll('button').forEach(b => b.onclick = () => closeAsk(+b.dataset.i));
   }
   function closeAsk(i) { const a = $('ask'); const o = a._opts[i]; a.style.display = 'none'; askOpen = false; if (o && o.fn) o.fn(); }
+  function plotMenu(id) {
+    const st = S.plots[id] || {stage: 0};
+    if (st.stage === 3) { post('harvest', {ent: id}); return; }
+    if (st.stage === 0) {
+      askBox(`播種（靈石 ${S.lingshi}）`, Object.entries(S.seeds).map(([k, v]) => ({label: `${v.name}　${v.cost} 靈石・${v.days} 日・收 ${v.yield[0]}~${v.yield[1]} 株${v.lingye ? '（可能掉靈液）' : ''}`, fn: () => post('plant', {ent: id, seed: k})})).concat([{label: '不種了', fn: () => {}}]));
+      return;
+    }
+    const sd = S.seeds[st.seed] || {name: '藥草'};
+    const opts = [];
+    if (S.lingye > 0 && !st.boost) opts.push({label: `滴一滴靈液催熟（剩 ${S.lingye} 滴）`, fn: () => post('boost', {ent: id})});
+    opts.push({label: '先離開', fn: () => {}});
+    askBox(`${sd.name}：${st.stage === 1 ? '剛冒芽' : '長勢良好'}，還要約 ${st.left} 日成熟${st.boost ? '（已催熟）' : ''}`, opts);
+  }
+  function furnaceMenu() {
+    const need = (r) => Object.entries(r.needs).map(([k, v]) => ({herb: '靈草', lingye: '靈液', lingshi: '靈石'}[k] + '×' + v)).join(' ');
+    askBox(`煉丹爐（靈草 ${S.herbs}・靈液 ${S.lingye}・靈石 ${S.lingshi}）`, Object.entries(S.recipes).map(([k, v]) => ({label: `${v.name}　需 ${need(v)}${v.chance < 1 ? '　成功率約 ' + Math.round(v.chance * 100) + '%' : ''}`, fn: () => post('craft', {recipe: k})})).concat([{label: '不煉了', fn: () => {}}]));
+  }
   function askLeave() {
     askBox(`離開「${MAP.name}」？`, [{label: '離開，回到大地圖', fn: () => post('leave')}, {label: '留下', fn: () => { hero.y -= 46; exitCool = 1.5; }}]);
   }
@@ -341,7 +362,7 @@ const TD = (() => {
   function btUI() {
     const b = S.battle, p = $('bt');
     if (!b) { p.style.display = 'none'; return; }
-    const k = JSON.stringify([b.over, b.turn, S.hp, S.mp, S.heal, b.log.length, bt.spellOpen]);
+    const k = JSON.stringify([b.over, b.turn, S.hp, S.mp, S.heal, S.mpills, b.log.length, bt.spellOpen]);
     if (p._k === k) return; p._k = k;
     p.style.display = 'block';
     let h = `<div id=btlog>${b.log.map(x => '<div>' + x + '</div>').join('')}</div>`;
@@ -351,7 +372,7 @@ const TD = (() => {
     } else if (bt.spellOpen) {
       h += '<div class=row><b>選擇五行法術：</b>' + S.elements.map((e, i) => `<button ${S.mp < b.spellCost ? 'disabled' : ''} style="color:${ECOL[e]}" onclick="TD.cmd('spell',${i})">${e}（-${b.spellCost}靈力）</button>`).join('') + '<button onclick="TD.spellMenu(false)">返回</button></div>';
     } else {
-      h += `<div class=row><button onclick="TD.cmd('attack')">⚔ 劍擊</button><button onclick="TD.spellMenu(true)">✦ 法術</button><button ${S.heal ? '' : 'disabled'} onclick="TD.cmd('item')">💊 回春丹 ×${S.heal}</button><button onclick="TD.cmd('guard')">🛡 防禦</button><button onclick="TD.cmd('flee')">💨 逃跑</button><small style="margin-left:10px">點擊敵人可選目標</small></div>`;
+      h += `<div class=row><button onclick="TD.cmd('attack')">⚔ 劍擊</button><button onclick="TD.spellMenu(true)">✦ 法術</button><button ${S.heal ? '' : 'disabled'} onclick="TD.cmd('item')">💊 回春丹 ×${S.heal}</button><button ${S.mpills ? '' : 'disabled'} onclick="TD.cmd('mpill')">🔮 聚氣丹 ×${S.mpills}</button><button onclick="TD.cmd('guard')">🛡 防禦</button><button onclick="TD.cmd('flee')">💨 逃跑</button><small style="margin-left:10px">點擊敵人可選目標</small></div>`;
     }
     p.innerHTML = h;
     const l = $('btlog'); l.scrollTop = 1e6;
@@ -364,7 +385,7 @@ const TD = (() => {
     $('top').innerHTML = `<b>${S.name}</b><span>${S.realm}·${S.sub}</span><span>Lv ${S.level}/${S.cap}${S.bottleneck ? ' <b style=color:#e6a>【瓶頸→按突破】</b>' : ''}</span>
       <span>氣血 <span class=bar><i style="width:${100 * S.hp / S.max_hp}%;background:#c44"></i></span> ${S.hp}/${S.max_hp}</span>
       <span>靈力 <span class=bar><i style="width:${100 * S.mp / S.max_mp}%;background:#48c"></i></span> ${S.mp}/${S.max_mp}</span>
-      <span>靈石 ${S.lingshi}　突破丹 ${S.pills}　回春丹 ${S.heal}　靈液 ${S.lingye}</span><span>功法：${S.gongfa.length ? S.gongfa.map(x => x.name).join('、') : '無'}</span><span>第 ${S.day} 日・${S.region_name}</span>`;
+      <span>靈石 ${S.lingshi}　突破丹 ${S.pills}　回春丹 ${S.heal}　聚氣丹 ${S.mpills}　靈草 ${S.herbs}　靈液 ${S.lingye}</span><span>功法：${S.gongfa.length ? S.gongfa.map(x => x.name).join('、') : '無'}</span><span>第 ${S.day} 日・${S.region_name}</span><span style="color:#aaa">難度：${S.difficultyName}</span>`;
     const d = S.dialogue, dl = $('dlg');
     const dk = JSON.stringify(d);
     if (dk !== dl._k) {
@@ -372,7 +393,7 @@ const TD = (() => {
       if (d) { dl.innerHTML = `<canvas id=pt class=pt width=40 height=52></canvas><div class=sp>${d.speaker}</div><div class=tx>${d.text}</div>` + (d.cont ? `<button onclick="TD.post('choose')">▶ 繼續</button>` : d.choices.map(c => `<button onclick="TD.post('choose',{i:${c.i}})">${c.text}</button>`).join('')); Art.portrait($('pt'), d.speaker, S); }
     }
     const sh = $('shop');
-    if (S.shop) { sh.style.display = 'block'; sh.innerHTML = `<b>藥販</b><div style="font-size:13px;margin:4px 0">靈石 ${S.lingshi}</div><button onclick="TD.post('buy',{item:'heal'})">回春丹　30 靈石</button><button onclick="TD.post('buy',{item:'pill'})">突破丹　100 靈石</button><button onclick="TD.post('shop_close')">離開</button>`; } else sh.style.display = 'none';
+    if (S.shop) { sh.style.display = 'block'; sh.innerHTML = `<b>藥販</b><div style="font-size:13px;margin:4px 0">靈石 ${S.lingshi}</div><button onclick="TD.post('buy',{item:'heal'})">回春丹　${S.prices.heal} 靈石</button><button onclick="TD.post('buy',{item:'pill'})">突破丹　${S.prices.pill} 靈石</button><button onclick="TD.post('shop_close')">離開</button>`; } else sh.style.display = 'none';
     $('logp').innerHTML = S.log.slice(-4).map(x => '<div>' + x + '</div>').join('');
     btUI();
     $('mini').style.display = MAP.kind === 'world' && !S.battle ? 'block' : 'none';
@@ -388,10 +409,10 @@ const TD = (() => {
     if (MAP.kind === 'loc') { const n = nearest(); if (n) p = 'E：' + n.text; }
     $('prompt').textContent = S.battle || S.dialogue ? '' : p;
     if (MAP.kind === 'world' && minimapBase) {
-      const m = $('mini').getContext('2d'); m.imageSmoothingEnabled = false; m.clearRect(0, 0, 140, 100); m.drawImage(minimapBase, 0, 0, 140, 100);
-      for (const e of ents) if (e.k === 'enter') { m.fillStyle = '#f33'; m.fillRect(e.x - 1, e.y - 1, 3, 3); }
-      const t = tgtEnt(); if (t && Math.floor(now / 300) % 2) { m.fillStyle = '#ff0'; m.fillRect(t.x / TS - 2, t.y / TS - 2, 5, 5); }
-      m.fillStyle = '#fff'; m.fillRect(hero.x / TS - 2, hero.y / TS - 2, 4, 4);
+      const m = $('mini').getContext('2d'), k = 150 / Math.max(MAP.w, MAP.h); m.imageSmoothingEnabled = false; m.clearRect(0, 0, 150, 150); m.drawImage(minimapBase, 0, 0, MAP.w * k, MAP.h * k);
+      for (const e of ents) if (e.k === 'enter') { m.fillStyle = e.icon === 'icon_cave' ? '#c6f' : e.icon === 'icon_garden' ? '#4f4' : '#f33'; m.fillRect(e.x * k - 1, e.y * k - 1, 3, 3); }
+      const t = tgtEnt(); if (t && Math.floor(now / 300) % 2) { m.fillStyle = '#ff0'; m.fillRect(t.x / TS * k - 3, t.y / TS * k - 3, 6, 6); }
+      m.fillStyle = '#fff'; m.fillRect(hero.x / TS * k - 2, hero.y / TS * k - 2, 4, 4);
     }
   }
 
@@ -418,6 +439,7 @@ const TD = (() => {
       if (ax < -100 || ax > VW + 100 || ay < -100 || ay > VH + 100) continue;
       if (e.k === 'enter') list.push({y: (e.y + 1) * TS, f: () => { const zb = e.region || 'tiannan', ix = (e.x + .5) * TS - cam.x, iy = (e.y + 1) * TS - cam.y; drawObj(zb, e.icon, ix, iy, 1); label(e.name, ix, iy + 13, '#fff', 12); }});
       else if (e.k === 'dock') list.push({y: (e.y + 1) * TS, f: () => { drawObj(e.region === 'luanxinghai' ? 'luanxinghai' : 'tiannan', 'dock', (e.x + .5) * TS - cam.x, (e.y + 1) * TS - cam.y, 1); label('渡口', (e.x + .5) * TS - cam.x, (e.y + 1) * TS - cam.y + 12, '#9df', 12); }});
+      else if (e.k === 'plot') list.push({y: e.y * TS + 10, f: () => { const st = S.plots[e.id] || {stage: 0}, ix = (e.x + .5) * TS - cam.x, iy = (e.y + 1) * TS - cam.y - 2; drawObj(bio, 'plot' + st.stage, ix, iy, 1); if (st.stage === 3) label('可收成', ix, iy - 28 + Math.sin(now / 250) * 2, '#ffe36a', 11); else if (st.stage > 0) label(st.left + '日', ix, iy - 26, '#cfe', 10); }});
       else if (e.k === 'npc') list.push({y: e.py, f: () => drawNPC(e.npc, ax, ay, e.face || 'd', e.moving)});
       else if (e.k === 'enemy' && !S.defeated.includes(e.id)) list.push({y: e.py, f: () => { const B = Art.man.beasts; drawBeast(e, ax, ay, 1, (e.dir || 1) < 0); label(e.el, ax, ay - 46 - (e.kind === 'bat' ? 26 : 0), ECOL[e.el], 13); if ((cool['f' + e.id] || 0) > now) { g.globalAlpha = .6; label('…', ax, ay - 60, '#fff', 14); g.globalAlpha = 1; } }});
     }
@@ -438,16 +460,22 @@ const TD = (() => {
   }
   function loop(t) { const dt = Math.min(.05, (t - last) / 1000); last = t; try { update(dt); draw(); } catch (e) { err('執行錯誤：' + e.message + ' ' + (e.stack || '').split('\n')[1]); } requestAnimationFrame(loop); }
 
-  function openNew() {
+  function openNew(first) {
     const a = $('ask'); askOpen = true; a.style.display = 'block'; a._opts = [{}];
-    a.innerHTML = `<b style="font-size:17px">新遊戲・創建角色（會覆蓋存檔）</b><div style="margin:8px 0;text-align:left">名字：<input id=nn value="韓立" maxlength=8 style="font-size:15px"></div>
+    const diffs = Object.entries(S.difficulties);
+    a.innerHTML = `<b style="font-size:18px">${first ? '歡迎來到凡人修仙傳' : '新遊戲（會覆蓋存檔）'}</b>
+    <div style="margin:10px 0 4px;text-align:left"><b>難度</b></div>
+    <div id=nd style="text-align:left">${diffs.map(([k, v]) => `<label style="display:block;margin:3px 0"><input type=radio name=dd value="${k}" ${k === (S.configured ? S.difficulty : 'normal') ? 'checked' : ''}> <b>${v.name}</b>　<small style="color:#bbb">${v.desc}</small></label>`).join('')}</div>
+    <div style="margin:10px 0;text-align:left">名字：<input id=nn value="韓立" maxlength=8 style="font-size:15px"></div>
     <div style="margin:6px 0;text-align:left">靈根：<select id=nr style="font-size:15px">${S.roots.map(r => `<option value="${r.id}" ${r.id === 'quad' ? 'selected' : ''}>${r.name}（${r.count}屬性・速度 ×${r.speed}）</option>`).join('')}</select></div>
-    <div id=ne style="margin:6px 0;text-align:left"></div><button id=nb1>開始</button><button id=nb2>原作模式（韓立・四靈根）</button><button id=nb3>取消</button>`;
+    <div id=ne style="margin:6px 0;text-align:left"></div><button id=nb1>開始遊戲</button><button id=nb2>原作模式（韓立・四靈根）</button>${first ? '' : '<button id=nb3>取消</button>'}`;
     const rootUI = () => { const r = S.roots.find(x => x.id === $('nr').value), list = r.elements || S.root_elements; $('ne').innerHTML = `屬性（選 ${r.count} 個）：` + list.map((e, i) => `<label style="margin-right:10px"><input type=checkbox class=ck value="${e}" ${i < r.count ? 'checked' : ''}> ${e}</label>`).join(''); };
     $('nr').onchange = rootUI; rootUI();
     const close = () => { a.style.display = 'none'; askOpen = false; };
-    $('nb3').onclick = close; $('nb2').onclick = () => { close(); post('act', {c: 'new'}); };
-    $('nb1').onclick = () => { const r = S.roots.find(x => x.id === $('nr').value), el = [...document.querySelectorAll('.ck:checked')].map(x => x.value); if (el.length !== r.count) { alert('請選擇剛好 ' + r.count + ' 個屬性'); return; } const nm = $('nn').value; close(); post('act', {c: 'new', name: nm, root: r.id, elems: el.join('')}); };
+    const diff = () => document.querySelector('input[name=dd]:checked').value;
+    if ($('nb3')) $('nb3').onclick = close;
+    $('nb2').onclick = () => { const d = diff(); close(); post('act', {c: 'new', diff: d}); };
+    $('nb1').onclick = () => { const r = S.roots.find(x => x.id === $('nr').value), el = [...document.querySelectorAll('.ck:checked')].map(x => x.value); if (el.length !== r.count) { alert('請選擇剛好 ' + r.count + ' 個屬性'); return; } const nm = $('nn').value, d = diff(); close(); post('act', {c: 'new', name: nm, root: r.id, elems: el.join(''), diff: d}); };
   }
 
   async function boot() {
@@ -456,6 +484,7 @@ const TD = (() => {
     await Art.loadTD();
     await load();
     requestAnimationFrame(loop);
+    if (S && !S.configured) openNew(true);
   }
   boot();
   window.__td = {get S() { return S; }, get MAP() { return MAP; }, hero, get ents() { return ents; }, post, load, get bt() { return bt; }};

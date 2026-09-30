@@ -78,7 +78,7 @@ class ExploreTest(unittest.TestCase):
 
     def test_layout(self):
         pts = self.w.location_layout("tiannan")
-        self.assertEqual(len(pts), 18)
+        self.assertEqual(len(pts), len(self.w.regions["tiannan"]["locations"]))
 
 
 class SaveQuestTest(unittest.TestCase):
@@ -432,7 +432,8 @@ class MapGenTest(unittest.TestCase):
                         if e["k"] == "enemy":
                             self.assertIn((e["x"], e["y"]), reach)
                     seen += 1
-        self.assertEqual(seen, 42)
+        self.assertEqual(seen, sum(len(g["locations"]) for w in self.d.regions for g in w["regions"]))
+        self.assertGreaterEqual(seen, 100)
 
     def test_jixi_has_portal(self):
         m = self.mg.build_location(self.d, "jixi")
@@ -783,3 +784,174 @@ class DifficultyTest(unittest.TestCase):
         s.act("new", diff="hard")
         play_through_td(s)
         self.assertTrue(s.hero.quest["done"])
+
+
+class FarmingAndCavesTest(unittest.TestCase):
+    def setUp(self):
+        import pathlib, tempfile
+        from chineserim.session import Session
+        self.s = Session(pathlib.Path(tempfile.mkdtemp()) / "s.json", seed=5)
+        self.s.hero.add("lingshi", 2000)
+
+    def garden(self):
+        self.s.act("enter", loc="baiyaoyuan")
+        return self.s.get_map(self.s.map_id)
+
+    def test_garden_layout(self):
+        m = self.garden()
+        kinds = [e["k"] for e in m["entities"]]
+        self.assertEqual(kinds.count("plot"), 12)
+        self.assertIn("bed", kinds)
+        self.assertIn("furnace", kinds)
+        self.assertEqual(len(self.s.snapshot()["plots"]), 12)
+
+    def test_plant_grow_harvest(self):
+        s = self.s
+        self.garden()
+        n = s.hero.count("lingshi")
+        s.act("plant", ent="p0", seed="common")
+        self.assertEqual(s.hero.count("lingshi"), n - 10)
+        self.assertEqual(s.plot_state("p0")["stage"], 1)
+        s.act("harvest", ent="p0")                                  # 還沒熟
+        self.assertEqual(s.hero.count("herb"), 0)
+        s.advance(3)
+        self.assertEqual(s.plot_state("p0")["stage"], 3)
+        s.act("harvest", ent="p0")
+        self.assertIn(s.hero.count("herb"), (1, 2))
+        self.assertEqual(s.plot_state("p0")["stage"], 0)            # 收成後變空地
+        s.act("plant", ent="p1", seed="nonexistent")
+        self.assertEqual(s.plot_state("p1")["stage"], 0)
+
+    def test_boost_halves_growth_and_costs_lingye(self):
+        s = self.s
+        self.garden()
+        s.act("plant", ent="p2", seed="ginseng")
+        s.act("boost", ent="p2")                                    # 沒靈液
+        self.assertFalse(s.hero.plots["baiyaoyuan:p2"]["boost"])
+        s.hero.add("lingye")
+        s.act("boost", ent="p2")
+        self.assertTrue(s.hero.plots["baiyaoyuan:p2"]["boost"])
+        s.advance(3)
+        self.assertEqual(s.plot_state("p2")["stage"], 3)            # 6 日 → 3 日
+
+    def test_plants_persist_across_visits_and_save(self):
+        from chineserim.session import Session
+        s = self.s
+        self.garden()
+        s.act("plant", ent="p3", seed="lotus")
+        s.act("leave")
+        s.advance(4)
+        s.act("enter", loc="baiyaoyuan")
+        self.assertIn(s.plot_state("p3")["stage"], (1, 2))
+        s2 = Session(s.save_path)
+        s2.load()
+        self.assertEqual(s2.hero.plots, s.hero.plots)
+
+    def test_bed_rests_and_advances_day(self):
+        s = self.s
+        self.garden()
+        s.hero.hp, s.hero.mp, d0 = 3, 0, s.day
+        s.act("talk", ent="bed")
+        self.assertEqual((s.hero.hp, s.hero.mp, s.day), (s.hero.max_hp, s.hero.max_mp, d0 + 1))
+
+    def test_crafting_recipes(self):
+        s = self.s
+        self.garden()
+        s.act("craft", recipe="heal")                               # 沒材料
+        self.assertEqual(s.hero.count("herb"), 0)
+        s.hero.add("herb", 30)
+        h0 = s.hero.count("heal")
+        s.act("craft", recipe="heal")
+        self.assertEqual((s.hero.count("heal"), s.hero.count("herb")), (h0 + 2, 27))
+        s.act("craft", recipe="mpill")
+        self.assertEqual(s.hero.count("mpill"), 1 + 2)
+        # 突破丹：機率成功，失敗損失一半材料；多試幾次兩種結果都要出現
+        s.hero.add("lingye", 20)
+        outcomes = set()
+        for _ in range(30):
+            s.hero.add("herb", 10)
+            b = s.hero.count("pill")
+            s.act("craft", recipe="pill")
+            outcomes.add(s.hero.count("pill") > b)
+        self.assertEqual(outcomes, {True, False})
+
+    def test_no_crafting_without_furnace(self):
+        s = self.s
+        s.act("enter", loc="qingniu")
+        s.hero.add("herb", 9)
+        s.act("craft", recipe="heal")
+        self.assertEqual(s.hero.count("herb"), 9)
+
+    def test_dwelling_has_bed_furnace_altar(self):
+        s = self.s
+        s.act("enter", loc="hf_dongfu")
+        k = {e["k"] for e in s.get_map(s.map_id)["entities"]}
+        self.assertTrue({"bed", "furnace", "altar"} <= k)
+
+    def test_cave_profiles(self):
+        from chineserim import mapgen
+        d = self.s.data
+        def loots(loc):
+            return {e["loot"] for e in mapgen.build_location(d, loc)["entities"] if e["k"] == "chest"}
+        def enemy_loot(loc):
+            return {e["loot"] for e in mapgen.build_location(d, loc)["entities"] if e["k"] == "enemy"}
+        self.assertEqual(loots("chiyan_cave"), {"rich"})
+        self.assertEqual(enemy_loot("chiyan_cave"), {2.2})
+        self.assertLessEqual(loots("baigu_cave"), {"empty", "normal"})
+        self.assertEqual(enemy_loot("baigu_cave"), {0.15})
+        self.assertIn("mimic", loots("youming_cave") | loots("longgong") | loots("xuemo_cave") | loots("abyss_cave"))
+
+    def test_poor_cave_kills_pay_nothing_rich_pay_a_lot(self):
+        from chineserim import battle
+        s = self.s
+        s.hero.realm = 3
+        s.rs.apply_stats(s.hero)
+        gains = {}
+        for loc in ("baigu_cave", "chiyan_cave"):
+            s.act("enter", loc=loc)
+            e = next(e for e in s.get_map(s.map_id)["entities"] if e["k"] == "enemy")
+            s.hero.hp, s.hero.mp = s.hero.max_hp, s.hero.max_mp
+            n = s.hero.count("lingshi")
+            s.act("battle_start", ids=e["id"])
+            for _ in range(80):
+                if s.battle["over"]:
+                    break
+                s.act("battle", cmd="spell", arg=0)
+                s.hero.hp = s.hero.max_hp
+            s.act("battle_end")
+            gains[loc] = s.hero.count("lingshi") - n
+            s.act("leave")
+        self.assertGreater(gains["chiyan_cave"], gains["baigu_cave"] * 5)
+
+    def test_empty_and_mimic_chests(self):
+        s = self.s
+        s.hero.realm = 3
+        s.rs.apply_stats(s.hero)
+        s.act("enter", loc="baigu_cave")
+        m = s.get_map(s.map_id)
+        empty = next((e for e in m["entities"] if e["k"] == "chest" and e["loot"] == "empty"), None)
+        if empty:
+            n = s.hero.count("lingshi")
+            s.act("talk", ent=empty["id"])
+            self.assertEqual(s.hero.count("lingshi"), n)
+            self.assertIn("白忙", s.log[-1])
+        s.act("leave")
+        for loc in ("youming_cave", "longgong", "xuemo_cave", "abyss_cave"):
+            s.hero.realm = 5
+            s.act("enter", loc=loc)
+            mimic = next((e for e in s.get_map(s.map_id)["entities"] if e["k"] == "chest" and e["loot"] == "mimic"), None)
+            if mimic:
+                s.act("talk", ent=mimic["id"])
+                self.assertIsNotNone(s.battle)
+                self.assertEqual(s.battle["enemies"][0]["name"], "寶箱怪")
+                return
+            s.act("leave")
+        self.fail("沒有任何陷阱洞窟出現寶箱怪")
+
+    def test_min_realm_from_location_data(self):
+        s = self.s
+        s.act("enter", loc="haishen_temple")                        # minRealm 3
+        self.assertEqual(s.mode, "world")
+        s.hero.realm = 3
+        s.act("enter", loc="haishen_temple")
+        self.assertEqual(s.mode, "loc")

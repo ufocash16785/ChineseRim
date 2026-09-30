@@ -6,7 +6,8 @@ def play_through_td(s, limit=4000, pick=None):
     h, d = s.hero, s.data
     steps = 0
     loc_type = {l["id"]: l["type"] for w in d.regions for g in w["regions"] for l in g["locations"]}
-    wild_of = {g["id"]: [l["id"] for l in g["locations"] if l["type"] not in ("城市", "村鎮", "都城", "府城", "坊市", "巨城", "門派", "門派/山", "秘境", "聖地")]
+    from chineserim.explore import DEEP, is_wild
+    wild_of = {g["id"]: [l["id"] for l in g["locations"] if is_wild(l["type"]) and "profile" not in l]
                for w in d.regions for g in w["regions"]}
 
     def settle():

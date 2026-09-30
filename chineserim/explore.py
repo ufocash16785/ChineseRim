@@ -4,16 +4,21 @@ import random
 
 from .elements import element_multiplier
 
-SAFE = {"村鎮", "城市", "都城", "府城", "坊市", "巨城"}
-SECT = {"門派", "門派/山"}
-DEEP = {"秘境", "聖地"}
+SAFE = {"村鎮", "城市", "都城", "府城", "坊市", "巨城", "國都", "港口", "集市"}
+SECT = {"門派", "門派/山", "魔宗"}
+DEEP = {"秘境", "聖地", "洞窟", "遺跡", "礦坑"}
+GARDEN = {"藥園"}
+DWELLING = {"洞府"}
 ELEMENTS = ["金", "木", "水", "火", "土", "雷", "冰", "風"]
 BEASTS = ["青狼", "毒蛛", "鐵背熊", "赤焰蛇", "碧水蟒", "山魈", "血翼蝠"]
 LINGJIE_MIN_REALM = 5
 DEEP_GATE = {"xuese": 1}      # 秘境進入所需境界（預設 2＝築基）；血色禁地練氣期即可進入
 
 
-def min_realm(loc_id):
+def min_realm(loc_id, loc=None):
+    """進入所需境界：地點資料的 minRealm 優先，其次 DEEP_GATE，秘境類預設築基。"""
+    if loc is not None and "minRealm" in loc:
+        return loc["minRealm"]
     return DEEP_GATE.get(loc_id, 2)
 
 
@@ -65,7 +70,7 @@ def find_location(world, region_id, loc_id):
 
 
 def is_wild(loc_type):
-    return loc_type not in SAFE and loc_type not in SECT and loc_type not in DEEP
+    return not (loc_type in SAFE or loc_type in SECT or loc_type in DEEP or loc_type in GARDEN or loc_type in DWELLING)
 
 
 def scale_for(ch, deep=False):
@@ -119,10 +124,10 @@ def visit(world, realms, ch, region_id, loc_id, rng=None, day=0, fight_wild=True
     rng = rng or random.Random()
     loc = find_location(world, region_id, loc_id)
     t = loc["type"]
-    if t in DEEP and ch.realm < min_realm(loc_id):
+    if t in DEEP and ch.realm < min_realm(loc_id, loc):
         return [f"{loc['name']}靈壓駭人，境界不足，不得深入"], 0
     ch.counters[f"visit:{loc_id}"] = ch.counters.get(f"visit:{loc_id}", 0) + 1
-    if t in SAFE:
+    if t in SAFE or t in GARDEN or t in DWELLING:
         ch.hp = ch.max_hp
         msg = [f"在{loc['name']}休整，HP 回滿。"]
         if ch.count("lingshi") >= 100 and rng.random() < 0.5:

@@ -7,7 +7,7 @@ import heapq
 import math
 import random
 
-from .explore import DEEP, SAFE, SECT, is_wild
+from .explore import DEEP, DWELLING, GARDEN, SAFE, SECT, is_wild
 
 # ---- 地形代碼 ----
 # 大地圖：~ 深海  , 淺水  g 草  t 森林  m 山  s 沙  r 路  R 河  b/B 橋(橫/直)  d 泥地
@@ -24,13 +24,20 @@ OBJ = {
     "banner": (1, 1, 1), "tent": (2, 3, 2), "campfire0": (1, 1, 1), "dock": (1, 0, 0),
     "crystal": (1, 1, 1), "altar": (1, 2, 1), "tomb": (1, 1, 1), "dummy": (1, 1, 1),
     "bush": (1, 1, 1), "flowers": (1, 0, 0), "boulder": (1, 1, 1),
+    "furnace": (1, 1, 1), "plot0": (1, 0, 0), "plot1": (1, 0, 0), "plot2": (1, 0, 0), "plot3": (1, 0, 0),
+    "scarecrow": (1, 1, 1), "bed": (1, 2, 1),
 }
 OBJ_SCALE = {k: v[0] for k, v in OBJ.items()}
 
-LOC_SIZE = {"town": (30, 24), "sect": (34, 28), "wild": (36, 28), "deep": (36, 30)}
+PROFILE_LOOT = {"rich": 2.2, "mixed": 1.0, "normal": 1.0, "trap": 0.6, "poor": 0.15}   # 妖獸戰利品倍率
+LOC_SIZE = {"town": (30, 24), "sect": (34, 28), "wild": (36, 28), "deep": (36, 30), "garden": (32, 26), "dwelling": (22, 18)}
 
 
 def loc_category(loc_type):
+    if loc_type in GARDEN:
+        return "garden"
+    if loc_type in DWELLING:
+        return "dwelling"
     if loc_type in DEEP:
         return "deep"
     if loc_type in SECT:
@@ -124,9 +131,9 @@ def _solid_grid(ground, w, h, block, objects):
 
 
 # ============================ 大地圖 ============================
-WORLD_SIZES = {"renjie": (140, 100), "lingjie": (84, 60)}
-REGION_RADIUS = {"tiannan": 21, "mulan": 16, "dajin": 16, "luanxinghai": 19, "tianyuan": 24}
-ICON = {"town": "icon_town", "sect": "icon_sect", "deep": "icon_cave"}
+WORLD_SIZES = {"renjie": (176, 176), "lingjie": (110, 90)}
+REGION_RADIUS = {"tiannan": 34, "mulan": 19, "dajin": 22, "luanxinghai": 27, "tianyuan": 34}
+ICON = {"town": "icon_town", "sect": "icon_sect", "deep": "icon_cave", "garden": "icon_garden", "dwelling": "icon_hut"}
 BIOME_OF = {"tiannan": "tiannan", "mulan": "mulan", "luanxinghai": "luanxinghai", "dajin": "dajin", "tianyuan": "tianyuan"}
 
 
@@ -180,7 +187,7 @@ def build_world(data, world_id="renjie"):
     for g in regions:
         cx, cy = g["coords"]
         if world_id == "renjie":
-            centers[g["id"]] = (10 + cx * 1.25, 8 + (100 - cy) * .85)
+            centers[g["id"]] = (12 + cx * 1.7, 10 + (100 - cy) * 1.6)
         else:
             centers[g["id"]] = (W / 2, H / 2)
 
@@ -264,13 +271,16 @@ def build_world(data, world_id="renjie"):
                 mid = [p for p in cand if abs(p[1] - river_y) < 8 and abs(p[0] - cx) < 12]
                 if mid:
                     pos["jihe"] = min(mid, key=lambda p: abs(p[1] - river_y))
+        gap = max(6, min(10, int(.9 * math.sqrt(math.pi * (REGION_RADIUS[rid] * .85) ** 2 / max(1, len(locs))))))
         for loc in locs:
             if loc["id"] in pos:
                 p = pos[loc["id"]]
             else:
-                spots = [(x, y) for (x, y) in cand if all(math.hypot(x - tx, y - ty) >= 9 for tx, ty in taken) and math.hypot(x - cx, y - cy) < REGION_RADIUS[rid] * .85]
+                spots = [(x, y) for (x, y) in cand if all(math.hypot(x - tx, y - ty) >= gap for tx, ty in taken) and math.hypot(x - cx, y - cy) < REGION_RADIUS[rid] * .9]
                 if not spots:
-                    spots = [(x, y) for (x, y) in cand if all(math.hypot(x - tx, y - ty) >= 6 for tx, ty in taken)] or cand
+                    spots = [(x, y) for (x, y) in cand if all(math.hypot(x - tx, y - ty) >= gap - 2 for tx, ty in taken)]
+                if not spots:
+                    spots = [(x, y) for (x, y) in cand if all(math.hypot(x - tx, y - ty) >= 4 for tx, ty in taken)] or cand
                 p = rng.choice(spots)
             taken.append(p)
             entrance[loc["id"]] = p
@@ -422,6 +432,7 @@ class LocBuilder:
         self.objects, self.entities = [], []
         self.occ = set()             # 已被物件或設計占用的格（含緩衝）
         self.n = 0
+        self.profile = loc.get("profile", "normal")
 
     # ---- 工具 ----
     def eid(self, prefix):
@@ -515,7 +526,8 @@ class LocBuilder:
             if len(chosen) >= n:
                 break
         for i, (x, y) in enumerate(chosen):
-            self.entities.append({"id": f"m{i}", "k": "enemy", "kind": self.rng.choice(kinds), "el": self.rng.choice(els), "x": x, "y": y, "r": 3, "deep": deep})
+            self.entities.append({"id": f"m{i}", "k": "enemy", "kind": self.rng.choice(kinds), "el": self.rng.choice(els), "x": x, "y": y, "r": 3, "deep": deep,
+                                  "loot": PROFILE_LOOT.get(self.profile, 1.0)})
 
     def add_chests(self, n, min_dist=8):
         cells = self.free_cells(min_dist)
@@ -526,7 +538,19 @@ class LocBuilder:
                 break
             if all(math.hypot(x - a, y - b) >= 6 for a, b in placed) and self.place("chest_c", x, y, 1):
                 placed.append((x, y))
-                self.entities.append({"id": f"c{len(placed)}", "k": "chest", "x": x, "y": y})
+                self.entities.append({"id": f"c{len(placed)}", "k": "chest", "x": x, "y": y, "loot": self.chest_loot()})
+
+    def chest_loot(self):
+        p, r = self.profile, self.rng
+        if p == "rich":
+            return "rich"
+        if p == "poor":
+            return "empty" if r.random() < .75 else "normal"
+        if p == "trap":
+            return "mimic" if r.random() < .6 else "normal"
+        if p == "mixed":
+            return r.choice(["normal", "rich", "empty", "mimic"])
+        return "normal"
 
     def add_npc(self, role, name, x, y, wander=True):
         self.entities.append({"id": self.eid("n"), "k": "npc", "role": role, "name": name, "npc": role_sprite(role, self.rng), "x": x, "y": y, "wander": wander})
@@ -544,14 +568,11 @@ class LocBuilder:
         solid = _solid_grid(ground, self.W, self.H, BLOCK_LOC, self.objects)
         # 保證：出口、出生點、任務 NPC 位置、實體皆連通
         reach = bfs(solid, self.W, self.H, self.spawn)
-        for e in self.entities:
-            if e["k"] in ("enemy", "chest", "npc", "dummy", "portal", "altar"):
-                pass
-        self.entities = [e for e in self.entities if e["k"] not in ("enemy", "npc") or (e["x"], e["y"]) in reach]
+        self.entities = [e for e in self.entities if e["k"] not in ("enemy", "npc", "plot") or (e["x"], e["y"]) in reach]
         # 寶箱／告示／假人本身是實心，需其相鄰格可達
         def touch(e):
             return any((e["x"] + dx, e["y"] + dy) in reach for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
-        self.entities = [e for e in self.entities if e["k"] not in ("chest", "sign", "dummy", "portal", "altar") or touch(e)]
+        self.entities = [e for e in self.entities if e["k"] not in ("chest", "sign", "dummy", "portal", "altar", "furnace", "bed") or touch(e)]
         self.objects = [o for o in self.objects if o["t"] != "chest_c" or any(e["k"] == "chest" and (e["x"], e["y"]) == (o["x"], o["y"]) for e in self.entities)]
         solid = _solid_grid(ground, self.W, self.H, BLOCK_LOC, self.objects)
         npc_spot = getattr(self, "npc_spot", None)
@@ -664,7 +685,7 @@ class LocBuilder:
         self.scatter(["flowers"], 6, 0)
         self.npc_spot = (cx, H - 8)
         self.add_enemies(5, min_dist=9)
-        self.add_chests(2)
+        self.add_chests(2 + (self.profile == "rich"))
         if self.loc["id"] == "jixi":         # 極西之地：空間節點
             self.place("crystal", 6, 5, 1)
             self.entities.append({"id": "portal", "k": "portal", "x": 6, "y": 5, "name": "空間節點", "to": "tianyuan"})
@@ -706,7 +727,7 @@ class LocBuilder:
         self.scatter(["crystal", "boulder", "tomb"], 16, 1)
         self.npc_spot = (sx, sy)
         self.add_enemies(6, deep=True, min_dist=7)
-        self.add_chests(3, min_dist=6)
+        self.add_chests(3 + (self.profile == "rich"), min_dist=6)
 
 
 ROLE_SPRITES = {
@@ -726,3 +747,67 @@ def build_location(data, loc_id):
                 if loc["id"] == loc_id:
                     return LocBuilder(data, g["id"], loc).build()
     raise KeyError(loc_id)
+
+
+# ---- 藥園 / 洞府 ----
+def _garden(self):
+    W, H, R = self.W, self.H, self.rng
+    self.border("h")
+    self.exit_gap(width=3, floor="d")
+    cx = W // 2
+    self.path_line(cx, H - 2, cx, 9, "d", 2)
+    self.path_line(4, 9, W - 5, 9, "d", 2)
+    self.reserve(cx - 1, 8, cx + 1, H - 1)
+    self.reserve(2, 8, W - 3, 10)
+    # 房子（可歇息）
+    self.place("house0", 6, 6, 0, force=True)
+    self.entities.append({"id": "bed", "k": "bed", "x": 6, "y": 7, "name": "小屋"})
+    self.reserve(3, 3, 9, 8)
+    # 煉丹爐
+    self.place("furnace", W - 7, 6, 0, force=True)
+    self.entities.append({"id": "furnace", "k": "furnace", "x": W - 7, "y": 6, "name": "煉丹爐"})
+    self.reserve(W - 9, 4, W - 5, 8)
+    self.place("well", cx + 4, 6, 1)
+    self.place("scarecrow", cx - 5, 15, 1)
+    # 藥田：3 排 × 4 欄
+    n = 0
+    for row, y in enumerate((13, 16, 19)):
+        for col, x in enumerate((8, 12, 16, 20)):
+            if x >= W - 3:
+                continue
+            self.entities.append({"id": f"p{n}", "k": "plot", "x": x, "y": y})
+            self.grid.fill_rect(x - 1, y - 1, x + 1, y + 1, "d") if False else None
+            self.reserve(x, y, x, y)
+            n += 1
+    self.scatter(["flowers", "bush", "tree"], 8, 1)
+    self.npc_spot = (cx + 2, 11)
+    self.add_npc("farmer", "藥農", cx + 3, 11)
+    self.add_npc("villager", "採藥人", R.randrange(6, W - 6), 22)
+
+
+def _dwelling(self):
+    W, H = self.W, self.H
+    self.grid = Grid(W, H, "o")
+    for x in range(W):
+        self.grid.set(x, 0, "W")
+    for y in range(H):
+        self.grid.set(0, y, "W")
+        self.grid.set(W - 1, y, "W")
+    for x in range(W):
+        self.grid.set(x, H - 1, "W")
+    self.exit_gap(width=2, floor="o")
+    cx = W // 2
+    self.place("bed", 5, 4, 0, force=True)
+    self.entities.append({"id": "bed", "k": "bed", "x": 5, "y": 5, "name": "石床"})
+    self.place("altar", cx, 3, 0, force=True)
+    self.entities.append({"id": "altar", "k": "altar", "x": cx, "y": 3, "name": "蒲團"})
+    self.place("furnace", W - 5, 4, 0, force=True)
+    self.entities.append({"id": "furnace", "k": "furnace", "x": W - 5, "y": 4, "name": "煉丹爐"})
+    self.place("lantern", 3, 8, 0)
+    self.place("lantern", W - 4, 8, 0)
+    self.npc_spot = (cx, 8)
+
+
+LocBuilder._garden = _garden
+LocBuilder._dwelling = _dwelling
+ROLE_SPRITES["farmer"] = ["villager_m", "merchant"]

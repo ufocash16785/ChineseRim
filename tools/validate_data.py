@@ -163,6 +163,19 @@ def main() -> int:
             n_obj = next((len(q["objectives"]) for a in arcs["arcs"] for q in a["quests"] if q["id"] == t["quest"]), 0)
             if not 0 <= t["obj"] < n_obj:
                 errors.append(f"dialogues/{did}: obj {t['obj']} 超出範圍")
+    fm = load("farming")
+    known_items = {"herb", "lingshi", "lingye", "heal", "mpill", "pill"}
+    for rid, rc in fm["recipes"].items():
+        for k in list(rc["needs"]) + list(rc["gives"]):
+            if k not in known_items:
+                errors.append(f"farming/{rid}: 未知物品 {k}")
+    for w in load("regions")["worlds"]:
+        for g in w["regions"]:
+            for l in g["locations"]:
+                if l.get("profile", "normal") not in ("normal", "rich", "poor", "mixed", "trap"):
+                    errors.append(f"regions/{l['id']}: 未知 profile {l['profile']}")
+                if "minRealm" in l and not isinstance(l["minRealm"], int):
+                    errors.append(f"regions/{l['id']}: minRealm 需為整數")
     for a in arcs["arcs"]:
         for reg in a["region"].split("/"):
             if reg not in region_ids:
