@@ -83,7 +83,71 @@ class AlliesMixin:
     # ---- 傀儡 ----
     def puppet_maxhp(self, p):
         c = self.data.pets
-        return round(self.hero.max_hp * c["puppet_hp_frac"] * (1 + c["puppet_hp_per_level"] * (p["level"] - 1)))
+        base = self.hero.max_hp * c["puppet_hp_frac"] * (1 + c["puppet_hp_per_level"] * (p["level"] - 1))
+        return round(base * (1.3 if "armor" in p.get("mods", []) else 1.0))
+
+    def puppet_stats(self, p):
+        c = self.data.pets
+        sp = c["puppets"][p["kind"]]
+        mods = p.get("mods", [])
+        return {"atk": sp["atk"] * (1 + 0.12 * (p["level"] - 1)) * (1.4 if "cannon" in mods else 1.0), "absorb": sp["absorb"],
+                "absorb_frac": c["absorb_damage_frac"] * (0.75 if "armor" in mods else 1.0), "maxhp": self.puppet_maxhp(p)}
+
+    def puppet_skill(self, p):
+        c = self.data.pets
+        if p["level"] < c["puppet_skill_unlock"]:
+            return None
+        base = c["puppet_skills"].get(p["kind"])
+        if not base:
+            return None
+        tier = 1 if p["level"] >= c["puppet_max_level"] else 0
+        sk = {k: (v[tier] if isinstance(v, list) else v) for k, v in base.items()}
+        sk["tier"] = tier
+        return sk
+
+    def puppet_slots(self, p):
+        return self.data.pets["puppet_slots"][p["level"] - 1]
+
+    def _td_puppet_mod(self, mod="", slot=None, **_):
+        h, c = self.hero, self.data.pets
+        p = h.puppet
+        m = c["puppet_mods"].get(mod)
+        if not p or not m:
+            return
+        mods = p.setdefault("mods", [])
+        if mod in mods:
+            self.log.append("這個改造已經裝上了。")
+            return
+        if p["level"] < m["level"]:
+            self.log.append(f"傀儡需要升到 {m['level']} 階才能裝「{m['name']}」。")
+            return
+        slots = self.puppet_slots(p)
+        idx = int(slot) if slot not in (None, "") else (len(mods) if len(mods) < slots else None)
+        if idx is None or not 0 <= idx < slots:
+            self.log.append("改造槽已滿，請指定要替換的槽位。")
+            return
+        cost = round(m["cost"] * self.dcfg["price"])
+        if not h.remove("lingshi", cost):
+            self.log.append(f"改造需要靈石 {cost}。")
+            return
+        old_max = self.puppet_maxhp(p)
+        if idx < len(mods):
+            mods[idx] = mod
+        else:
+            mods.append(mod)
+        p["hp"] = min(self.puppet_maxhp(p), p["hp"] + max(0, self.puppet_maxhp(p) - old_max))
+        self.log.append(f"你替傀儡裝上了「{m['name']}」。")
+
+    def _td_puppet_unmod(self, slot=0, **_):
+        p = self.hero.puppet
+        if not p:
+            return
+        mods = p.setdefault("mods", [])
+        i = int(slot)
+        if 0 <= i < len(mods):
+            self.log.append(f"你拆下了「{self.data.pets['puppet_mods'][mods[i]]['name']}」。")
+            mods.pop(i)
+            p["hp"] = min(p["hp"], self.puppet_maxhp(p))
 
     def _td_puppet_build(self, ptype="wood", **_):
         h, c = self.hero, self.data.pets
@@ -139,8 +203,11 @@ class AlliesMixin:
                         "skill": sk, "cd": 0, "cd_max": c["skill_cd"][min(1, max(0, stage - 1))] if sk else 0})
         if h.puppet:
             sp = c["puppets"][h.puppet["kind"]]
-            out.append({"type": "puppet", "name": sp["name"], "sprite": sp["sprite"], "level": h.puppet["level"], "atk": sp["atk"] * (1 + 0.12 * (h.puppet["level"] - 1)),
-                        "absorb": sp["absorb"], "hp": h.puppet["hp"], "maxhp": self.puppet_maxhp(h.puppet), "absorb_frac": c["absorb_damage_frac"]})
+            stt = self.puppet_stats(h.puppet)
+            sk = self.puppet_skill(h.puppet)
+            out.append({"type": "puppet", "name": sp["name"], "sprite": sp["sprite"], "level": h.puppet["level"], "atk": stt["atk"],
+                        "absorb": stt["absorb"], "hp": h.puppet["hp"], "maxhp": stt["maxhp"], "absorb_frac": stt["absorb_frac"],
+                        "mods": list(h.puppet.get("mods", [])), "skill": sk, "cd": 0, "cd_max": c["puppet_skill_cd"][sk["tier"]] if sk else 0, "boom_used": False})
         return out
 
     def sync_allies(self, st, won):
@@ -150,6 +217,10 @@ class AlliesMixin:
                 h.puppet["hp"] = max(0, round(a["hp"]))
         if won and h.pet:
             self.pet_gain_exp(1)
+
+    def _puppet_skill_desc(self, base, sk):
+        v = sk or {k: (x[0] if isinstance(x, list) else x) for k, x in base.items()}
+        return base["desc"].format(hits=v.get("hits", ""), turns=v.get("turns", ""))
 
     def has_pet_book(self):
         return self.hero.count(self.data.codex["pet_book"]) > 0
@@ -175,7 +246,15 @@ class AlliesMixin:
         if h.puppet:
             sp = c["puppets"][h.puppet["kind"]]
             mh = self.puppet_maxhp(h.puppet)
-            pup = {"name": sp["name"], "level": h.puppet["level"], "hp": h.puppet["hp"], "maxhp": mh, "sprite": sp["sprite"], "atk": sp["atk"], "absorb": sp["absorb"],
+            stt = self.puppet_stats(h.puppet)
+            sk = self.puppet_skill(h.puppet)
+            base_sk = c["puppet_skills"].get(h.puppet["kind"])
+            mods = h.puppet.get("mods", [])
+            pup = {"name": sp["name"], "level": h.puppet["level"], "hp": h.puppet["hp"], "maxhp": mh, "sprite": sp["sprite"], "atk": round(stt["atk"], 2), "absorb": sp["absorb"],
+                   "skill": {"name": base_sk["name"], "desc": self._puppet_skill_desc(base_sk, sk), "unlocked": bool(sk), "unlock_level": c["puppet_skill_unlock"],
+                             "cd": c["puppet_skill_cd"][sk["tier"]] if sk else c["puppet_skill_cd"][0]} if base_sk else None,
+                   "slots": self.puppet_slots(h.puppet), "mods": [{"id": m, "name": c["puppet_mods"][m]["name"], "desc": c["puppet_mods"][m]["desc"]} for m in mods],
+                   "mod_shop": {k: {"name": v["name"], "desc": v["desc"], "cost": round(v["cost"] * self.dcfg["price"]), "level": v["level"], "ok": h.puppet["level"] >= v["level"], "installed": k in mods} for k, v in c["puppet_mods"].items()},
                    "broken": h.puppet["hp"] <= 0, "upgrade": None if h.puppet["level"] >= c["puppet_max_level"] else round(c["upgrade_cost"][h.puppet["level"] - 1] * self.dcfg["price"]),
                    "repair": round(c["repair_per_level"] * h.puppet["level"] * self.dcfg["price"]) if h.puppet["hp"] < mh else 0}
         return {"pet": pet, "puppet": pup, "eggs": h.count(c["egg"]), "herbs": h.count("herb"),

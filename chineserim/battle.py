@@ -217,6 +217,8 @@ def command(st, ch, realms, rng, cmd, arg=None, target=None, bonus=None):
         return _win(st, ch, realms, rng)
     if _enemy_phase(st, ch, rng):
         return True
+    if not alive(st):
+        return _win(st, ch, realms, rng)
     _end_round(st, ch)
     return False
 
@@ -358,12 +360,19 @@ def _enemy_phase(st, ch, rng):
             st["log"].append(f"{name}襲來，卻被法寶擋了下來！")
         else:
             pup = next((a for a in st.get("allies", []) if a["type"] == "puppet" and a["hp"] > 0), None)
-            if pup and d > 0 and rng.random() < pup["absorb"]:
-                pup["hp"] -= d * pup["absorb_frac"]
+            taunting = st.get("taunt", 0) > 0
+            if pup and d > 0 and (taunting or rng.random() < pup["absorb"]):
+                pup["hp"] -= d * (pup["absorb_frac"] * (st.get("taunt_frac", 1.0) if taunting else 1.0))
                 st["log"].append(f"{pup['name']}擋在你身前，替你承受了攻擊！")
                 if pup["hp"] <= 0:
                     pup["hp"] = 0
                     st["log"].append(f"{pup['name']}破損了……（戰後需要修理）")
+                    if "boom" in pup.get("mods", []) and not pup.get("boom_used"):
+                        pup["boom_used"] = True
+                        base = hero_atk(ch, {}) * pup["atk"] * 4
+                        st["log"].append(f"{pup['name']}啟動自爆機關——轟！")
+                        for j in alive(st):
+                            _hit(st, j, base, "爆炸")
                 d = 0
             if st["shield"] > 0:
                 ab = min(st["shield"], d)
@@ -396,7 +405,7 @@ def _end_round(st, ch):
         st["cd"][k] = max(0, st["cd"][k] - 1)
     if st.get("mirror", 0) > 0:
         st["mirror"] -= 1
-    for k in ("howl", "web"):
+    for k in ("howl", "web", "taunt"):
         if st.get(k, 0) > 0:
             st[k] -= 1
     for e in st["enemies"]:
@@ -475,6 +484,44 @@ def _dot_tick(st):
                 e.pop("dot")
 
 
+def _puppet_turn(st, ch, a, rng):
+    """傀儡的每回合改造效果與專屬技能。回傳 True 表示這回合用了技能。"""
+    mods = a.get("mods", [])
+    if "heal" in mods:
+        heal = ch.max_hp * 0.04
+        ch.hp = min(ch.max_hp, ch.hp + heal)
+        st["log"].append(f"{a['name']}的回春陣盤運轉，你回復了 {round(heal)} 點氣血")
+    if "core" in mods:
+        ch.mp = min(ch.max_mp, ch.mp + ch.max_mp * 0.03)
+    sk = a.get("skill")
+    if not sk:
+        return False
+    if a["cd"] > 0:
+        a["cd"] -= 1
+        return False
+    al = alive(st)
+    base = hero_atk(ch, {}) * a["atk"] * rng.uniform(.9, 1.1)
+    ty, pre = sk["type"], f"{a['name']}啟動「{sk['name']}」"
+    if ty == "volley":
+        for _ in range(sk["hits"]):
+            al = alive(st)
+            if not al:
+                break
+            t = rng.choice(al)
+            _hit(st, t, base * sk["mult"], pre if _ == 0 else "機關箭")
+    elif ty == "taunt":
+        st["taunt"], st["taunt_frac"] = sk["turns"], sk["frac"]
+        st["log"].append(f"{pre}！敵人的注意力全被吸引過來了（{sk['turns']} 回合）")
+    elif ty == "resonate":
+        ch.mp = min(ch.max_mp, ch.mp + ch.max_mp * sk["mp"])
+        st["shield"] += ch.max_hp * sk["shield"]
+        a["hp"] = min(a["maxhp"], a["hp"] + a["maxhp"] * sk["heal"])
+        st["log"].append(f"{pre}，與你的靈力共鳴——回復靈力、獲得護盾，自身也修復了")
+    a["cd"] = a["cd_max"]
+    st["aact"].append({"type": "puppet", "target": al[0] if al else 0, "skill": ty})
+    return True
+
+
 def _allies_act(st, ch, rng):
     """靈寵與傀儡自動出手。"""
     st["aact"] = []
@@ -484,11 +531,19 @@ def _allies_act(st, ch, rng):
             continue
         if a["type"] == "pet" and _pet_skill(st, ch, a, rng):
             continue
+        if a["type"] == "puppet" and _puppet_turn(st, ch, a, rng):
+            continue
+        al = alive(st)
+        if not al:
+            break
         t = min(al, key=lambda i: st["enemies"][i]["hp"])
         e = st["enemies"][t]
         m = element_multiplier(a["el"], e["el"]) if a.get("el") else 1.0
         d = hero_atk(ch, {}) * a["atk"] * m * rng.uniform(.9, 1.1)
         _hit(st, t, d, f"{a['name']}撲上去攻擊" + ("（剋制！）" if m > 1 else ""))
+        if a["type"] == "puppet" and "poison" in a.get("mods", []) and not e["dead"]:
+            e["dot"] = {"turns": 2, "dmg": d * 0.4}
+            st["log"].append(f"淬毒機關讓{e['name']}中毒了")
         st["aact"].append({"type": a["type"], "target": t})
 
 
@@ -545,5 +600,5 @@ def view(st, ch):
             "enemies": [dict({k: e.get(k) for k in ("id", "kind", "name", "el", "hp", "maxhp", "dead", "sprite", "boss", "charging", "stun")},
                              **({"weak": [x for x in "金木水火土" if element_multiplier(x, e["el"]) > 1],
                                  "skills": [f"{s['name']}（每{s['every']}回合）" for s in e.get("skills", [])]} if ch.count("codex_beast") > 0 else {})) for e in st["enemies"]],
-            "partner": st.get("partner"), "pact": st.get("pact"), "allies": [dict({k: a.get(k) for k in ("type", "name", "kind", "el", "sprite", "hp", "maxhp", "level", "cd")}, skill=((a.get("skill") or {}).get("name") if ch.count("codex_pet") > 0 else ("？？？" if a.get("skill") else None))) for a in st.get("allies", [])], "aact": st.get("aact", []), "spellCost": spell_cost(ch), "diff": st.get("diff", {}).get("name", ""),
+            "partner": st.get("partner"), "pact": st.get("pact"), "allies": [dict({k: a.get(k) for k in ("type", "name", "kind", "el", "sprite", "hp", "maxhp", "level", "cd")}, skill=((a.get("skill") or {}).get("name") if (ch.count("codex_pet") > 0 or a["type"] == "puppet") else ("？？？" if a.get("skill") else None))) for a in st.get("allies", [])], "aact": st.get("aact", []), "spellCost": spell_cost(ch), "diff": st.get("diff", {}).get("name", ""),
             "killed": st["killed"], "rewards": st["rewards"]}

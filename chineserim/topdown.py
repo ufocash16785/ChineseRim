@@ -8,7 +8,7 @@ from .character import item_name
 from .explore import DEEP, min_realm
 
 _MAP_CACHE = {}          # 地圖只由資料決定，行程內共用（唯讀）
-TD_KINDS = {"sell", "appraise", "barter", "join", "board_close", "gift", "chat", "cand_close", "plant", "harvest", "boost", "craft", "shop_close", "enter", "leave", "talk", "region", "ferry", "pos", "battle_start", "battle", "battle_end", "buy", "chest", "portal", "use", "fb_refine", "fb_bond", "alch_start", "alch_act", "alch_close", "pet_feed", "pet_release", "puppet_build", "puppet_upgrade", "puppet_repair", "war_side"}
+TD_KINDS = {"sell", "appraise", "barter", "join", "board_close", "gift", "chat", "cand_close", "plant", "harvest", "boost", "craft", "shop_close", "enter", "leave", "talk", "region", "ferry", "pos", "battle_start", "battle", "battle_end", "buy", "chest", "portal", "use", "fb_refine", "fb_bond", "alch_start", "alch_act", "alch_close", "pet_feed", "pet_release", "puppet_build", "puppet_upgrade", "puppet_repair", "puppet_mod", "puppet_unmod", "war_side"}
 STEPS_PER_DAY = 160
 FERRY_DAYS = 8
 

@@ -189,6 +189,11 @@ def main() -> int:
     for kind, sk in pets["skills"].items():
         if kind not in pets["pets"] or len(sk["val"]) != 2:
             errors.append(f"pets/skills/{kind}: 設定不合法")
+    for k in pets["puppets"]:
+        if k not in pets["puppet_skills"]:
+            errors.append(f"pets/puppet_skills: 缺少 {k}")
+    if len(pets["puppet_slots"]) != pets["puppet_max_level"]:
+        errors.append("pets/puppet_slots: 長度需等於 puppet_max_level")
     ev = load("events")
     for t, tc in ev["types"].items():
         for k in ("drops", "table"):

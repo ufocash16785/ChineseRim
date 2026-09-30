@@ -2066,3 +2066,123 @@ class CodexTest(unittest.TestCase):
         self.h.add("codex_beast")                             # 已有就不會再掉
         for i in range(200):
             self.assertNotIn("codex_beast", [it for it, n in loot.roll_table(self.s.data, "guardian_rich", self.h, random.Random(i))])
+
+
+class PuppetSkillAndModTest(unittest.TestCase):
+    def setUp(self):
+        import pathlib, tempfile
+        from chineserim.session import Session
+        self.s = Session(pathlib.Path(tempfile.mkdtemp()) / "s.json", seed=16)
+        self.s.act("new", diff="normal")
+        self.h = self.s.hero
+        self.h.realm = 4
+        self.s.rs.apply_stats(self.h)
+        self.h.hp, self.h.mp = self.h.max_hp, self.h.max_mp
+        self.h.add("lingshi", 50000)
+
+    def _build(self, kind, level=3):
+        self.s.act("puppet_build", ptype=kind)
+        self.h.puppet["level"] = level
+        self.h.puppet["hp"] = self.s.puppet_maxhp(self.h.puppet)
+
+    def _fight(self):
+        self.h.hp, self.h.mp = self.h.max_hp, self.h.max_mp
+        self.s.start_boss_fight("yuzitong")
+        st = self.s.battle
+        st["enemies"][0]["hp"] *= 50
+        return st
+
+    def test_skill_locked_until_level3(self):
+        self._build("wood", level=2)
+        self.assertIsNone(self._fight()["allies"][0]["skill"])
+        self.s.battle = None
+        self.h.puppet["level"] = 3
+        self.assertEqual(self._fight()["allies"][0]["skill"]["type"], "volley")
+
+    def test_volley_hits_multiple_times_and_tiers(self):
+        self._build("wood", level=3)
+        self.assertEqual(self.s.puppet_skill(self.h.puppet)["hits"], 3)
+        self.h.puppet["level"] = 5
+        self.assertEqual(self.s.puppet_skill(self.h.puppet)["hits"], 4)
+        st = self._fight()
+        st["enemies"][0]["atk"] = 0
+        self.s.act("battle", cmd="guard")
+        self.assertEqual(sum("機關箭" in x or "連環機關箭" in x for x in st["log"]), 4)
+
+    def test_taunt_forces_intercept(self):
+        self._build("iron", level=3)
+        st = self._fight()
+        st["allies"][0]["absorb"] = 0.0                       # 平常不擋
+        hp0 = self.h.hp
+        self.s.act("battle", cmd="guard")
+        self.assertGreater(st.get("taunt", 0) + 1, 0)
+        self.assertEqual(self.h.hp, hp0)                     # 嘲諷：全部由傀儡承受
+        self.assertLess(st["allies"][0]["hp"], st["allies"][0]["maxhp"])
+
+    def test_resonate(self):
+        self._build("spirit", level=3)
+        st = self._fight()
+        self.h.mp = self.h.max_mp * 0.5
+        st["enemies"][0]["atk"] = 0
+        st["allies"][0]["hp"] = 1
+        self.s.act("battle", cmd="guard")
+        self.assertGreater(st["shield"], 0)
+        self.assertGreater(st["allies"][0]["hp"], 1)
+
+    def test_mods_slots_cost_and_stats(self):
+        self._build("wood", level=1)
+        self.assertEqual(self.s.puppet_slots(self.h.puppet), 1)
+        base_atk = self.s.puppet_stats(self.h.puppet)["atk"]
+        self.s.act("puppet_mod", mod="cannon")                # 傀儡階數不足
+        self.assertEqual(self.h.puppet.get("mods", []), [])
+        self.h.puppet["level"] = 2
+        n = self.h.count("lingshi")
+        self.s.act("puppet_mod", mod="cannon")
+        self.assertEqual(self.h.puppet["mods"], ["cannon"])
+        self.assertLess(self.h.count("lingshi"), n)
+        self.assertAlmostEqual(self.s.puppet_stats(self.h.puppet)["atk"], base_atk * 1.12 * 1.4, places=5)
+        self.s.act("puppet_mod", mod="armor")                 # 槽已滿：不指定槽位不會替換
+        self.assertEqual(self.h.puppet["mods"], ["cannon"])
+        self.s.act("puppet_mod", mod="armor", slot="0")       # 指定槽位替換
+        self.assertEqual(self.h.puppet["mods"], ["armor"])
+        mh = self.s.puppet_maxhp(self.h.puppet)
+        self.s.act("puppet_unmod", slot="0")
+        self.assertEqual(self.h.puppet["mods"], [])
+        self.assertLess(self.s.puppet_maxhp(self.h.puppet), mh)
+        v = self.s.snapshot()["comp"]["puppet"]
+        self.assertIn("boom", v["mod_shop"])
+
+    def test_heal_core_poison_boom(self):
+        self._build("wood", level=5)
+        for m in ("heal", "core", "poison"):
+            self.s.act("puppet_mod", mod=m)
+        st = self._fight()
+        st["enemies"][0]["atk"] = 0
+        self.h.hp, self.h.mp = self.h.max_hp * 0.5, self.h.max_mp * 0.5
+        hp0, mp0 = self.h.hp, self.h.mp
+        self.s.act("battle", cmd="guard")
+        self.assertGreater(self.h.hp, hp0)
+        self.assertGreater(self.h.mp, mp0)
+        self.s.act("battle", cmd="guard")                     # 第二回合技能冷卻中：普通攻擊附帶毒
+        self.assertTrue(any("中毒" in x for x in st["log"]) or st["enemies"][0].get("dot"))
+        # 自爆
+        self.s.battle = None
+        self.h.puppet["mods"] = ["boom"]
+        self.h.puppet["level"] = 4
+        st = self._fight()
+        st["allies"][0]["hp"] = 1
+        st["allies"][0]["absorb"] = 1.0
+        st["enemies"][0]["atk"] = 1e6
+        hp = st["enemies"][0]["hp"]
+        self.s.act("battle", cmd="guard")
+        self.assertTrue(any("自爆" in x for x in st["log"]))
+        self.assertLess(st["enemies"][0]["hp"], hp)
+
+    def test_saved(self):
+        from chineserim.session import Session
+        self._build("iron", level=4)
+        self.s.act("puppet_mod", mod="armor")
+        self.s.act("pos", x=1, y=1)
+        s2 = Session(self.s.save_path)
+        s2.load()
+        self.assertEqual(s2.hero.puppet["mods"], ["armor"])

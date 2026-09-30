@@ -112,44 +112,47 @@
   "puppet": {
    "row": 102
   },
-  "puppet_iron": {
+  "puppet_spirit": {
    "row": 108
   },
-  "yuzitong": {
+  "puppet_iron": {
    "row": 114
   },
-  "merchant": {
+  "yuzitong": {
    "row": 120
   },
-  "boatman": {
+  "merchant": {
    "row": 126
   },
-  "soldier": {
+  "boatman": {
    "row": 132
   },
-  "pharmacist": {
+  "soldier": {
    "row": 138
   },
-  "shady": {
+  "pharmacist": {
    "row": 144
   },
-  "dongxuaner": {
+  "shady": {
    "row": 150
   },
-  "mocaihuan": {
+  "dongxuaner": {
    "row": 156
   },
-  "chenqiaoqian": {
+  "mocaihuan": {
    "row": 162
   },
-  "yuanyao": {
+  "chenqiaoqian": {
    "row": 168
   },
-  "wenshier": {
+  "yuanyao": {
    "row": 174
   },
-  "ziling": {
+  "wenshier": {
    "row": 180
+  },
+  "ziling": {
+   "row": 186
   }
  },
  "npcAnims": {

@@ -67,6 +67,15 @@
       "realm": 2,
       "sprite": "puppet_iron",
       "desc": "皮糙肉厚，會替你擋下大部分攻擊。"
+    },
+    "spirit": {
+      "name": "靈傀儡",
+      "atk": 0.45,
+      "absorb": 0.3,
+      "cost": 2200,
+      "realm": 4,
+      "sprite": "puppet_spirit",
+      "desc": "以靈石為核的高階傀儡，能與主人靈力共鳴。（需元嬰期）"
     }
   },
   "puppet_max_level": 5,
@@ -152,6 +161,98 @@
         2.4
       ],
       "desc": "噴出烈焰，對全體敵人造成火焰傷害。"
+    }
+  },
+  "puppet_skill_unlock": 3,
+  "puppet_skill_cd": [
+    3,
+    2
+  ],
+  "puppet_skills": {
+    "wood": {
+      "name": "連環機關箭",
+      "type": "volley",
+      "hits": [
+        3,
+        4
+      ],
+      "mult": 0.55,
+      "desc": "機關齊發，連射 {hits} 箭，每箭 0.55 倍傷害。"
+    },
+    "iron": {
+      "name": "鐵壁嘲諷",
+      "type": "taunt",
+      "turns": [
+        1,
+        2
+      ],
+      "frac": [
+        0.6,
+        0.45
+      ],
+      "desc": "發出震耳嘲諷，{turns} 回合內敵人的攻擊全部衝著它來（受到傷害更少）。"
+    },
+    "spirit": {
+      "name": "靈能共鳴",
+      "type": "resonate",
+      "mp": [
+        0.1,
+        0.16
+      ],
+      "shield": [
+        0.1,
+        0.18
+      ],
+      "heal": [
+        0.15,
+        0.25
+      ],
+      "desc": "與你共鳴：回復靈力、給你護盾，並修復自身。"
+    }
+  },
+  "puppet_slots": [
+    1,
+    1,
+    2,
+    2,
+    3
+  ],
+  "puppet_mods": {
+    "armor": {
+      "name": "符文護甲",
+      "cost": 300,
+      "level": 1,
+      "desc": "傀儡耐久 +30%，承受的傷害 -25%。"
+    },
+    "cannon": {
+      "name": "雷紋炮",
+      "cost": 400,
+      "level": 2,
+      "desc": "傀儡攻擊傷害 ×1.4。"
+    },
+    "poison": {
+      "name": "淬毒機關",
+      "cost": 450,
+      "level": 2,
+      "desc": "傀儡的攻擊使目標中毒（2 回合）。"
+    },
+    "heal": {
+      "name": "回春陣盤",
+      "cost": 600,
+      "level": 3,
+      "desc": "傀儡每回合替你回復 4% 氣血。"
+    },
+    "core": {
+      "name": "靈石核心",
+      "cost": 700,
+      "level": 3,
+      "desc": "傀儡每回合替你回復 3% 靈力。"
+    },
+    "boom": {
+      "name": "自爆機關",
+      "cost": 800,
+      "level": 4,
+      "desc": "傀儡破損時自爆，對全體敵人造成 4 倍傷害（每場一次）。"
     }
   }
 }

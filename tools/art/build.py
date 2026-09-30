@@ -40,6 +40,7 @@ NPCS = {
     "mozu": dict(robe="#2a1a2a", trim="#d03a1a", sash="#8a1a10", hair="#c02a1a", hairstyle="ponytail", hat="#3a2a3a"),
     "xinmo": dict(robe="#1a1a24", trim="#8a8ab0", sash="#4a4a6a", hair="#0e0e16", hairstyle="topknot"),
     "puppet": dict(robe="#9a6a3a", trim="#d8b070", sash="#5a3a1a", hair="#6a4a2a", hairstyle="short", hat="#7a5a2a"),
+    "puppet_spirit": dict(robe="#6a5ad8", trim="#e0d8ff", sash="#3a2a9a", hair="#9a8af0", hairstyle="short", hat="#5a4ac8"),
     "puppet_iron": dict(robe="#8a929c", trim="#d0d8e0", sash="#4a525c", hair="#5a626c", hairstyle="short", hat="#6a727c"),
     "yuzitong": dict(robe="#5a3a3a", trim="#a08a7a", sash="#2a1a1a", hair="#1a1414", hairstyle="topknot"),
     "merchant": dict(robe="#5a7a3a", trim="#e8d8a0", sash="#8a6a2a", hair="#3a2a2a", hairstyle="short", hat="#6a4a2a"),
