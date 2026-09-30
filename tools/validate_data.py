@@ -151,6 +151,24 @@ def main() -> int:
     dlg = load_merged("dialogues*.json", "dialogues")
     set_flags = {e["flag"] for d in dlg.values() for n in d["nodes"].values()
                  for e in list(n.get("effects", [])) + [x for c in n.get("choices", []) for x in c.get("effects", [])] if "flag" in e}
+    bosses = load("bosses")
+    boss_ids = set(bosses["bosses"])
+    for did, d in dlg.items():
+        for nid, n in d["nodes"].items():
+            for e in list(n.get("effects", [])) + [x for c in n.get("choices", []) for x in c.get("effects", [])]:
+                if "boss" in e:
+                    if e["boss"] not in boss_ids:
+                        errors.append(f"dialogues/{did}/{nid}: 未知主要對手 {e['boss']}")
+                    else:
+                        set_flags |= {x["flag"] for x in bosses["bosses"][e["boss"]].get("on_win", []) if "flag" in x}
+    drops, item_ids = load("drops"), set(load("items")["items"])
+    for bid, b in bosses["bosses"].items():
+        if b.get("drops") not in drops["tables"]:
+            errors.append(f"bosses/{bid}: 掉落表 {b.get('drops')} 不存在")
+    for tname, rows in drops["tables"].items():
+        for r in rows:
+            if r["item"] not in item_ids:
+                errors.append(f"drops/{tname}: 未知物品 {r['item']}")
     for arc_id, rules in qr.items():
         arc = next((a for a in arcs["arcs"] if a["id"] == arc_id), None)
         for qid, rule in rules.items():
@@ -189,7 +207,7 @@ def main() -> int:
                 errors.append(f"companions/{cid}: 缺少對話 cmp_{cid}_{st}")
     for kind, sh in mk["shops"].items():
         for it in list(sh["items"]) + list(sh["sell"]):
-            if it not in known_items:
+            if it not in known_items and it not in set(load("items")["items"]):
                 errors.append(f"market/{kind}: 未知物品 {it}")
     for a in arcs["arcs"]:
         for reg in a["region"].split("/"):

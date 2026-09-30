@@ -94,8 +94,8 @@
             "n": 3
           },
           {
-            "type": "level",
-            "n": 7
+            "type": "flag",
+            "flag": "beat:yuzitong"
           },
           {
             "type": "visit",

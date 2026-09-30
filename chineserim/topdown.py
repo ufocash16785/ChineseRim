@@ -1,16 +1,86 @@
 """俯視地圖模式：大地圖行走、進出地點、NPC 互動、遭遇戰。以 Mixin 形式併入 Session。"""
-from . import battle, dialogue, mapgen, quests
+import json
+from dataclasses import asdict
+
+from . import battle, dialogue, items, loot, mapgen, quests
+from .character import Character
 from .character import item_name
 from .explore import DEEP, min_realm
 
 _MAP_CACHE = {}          # 地圖只由資料決定，行程內共用（唯讀）
-TD_KINDS = {"sell", "appraise", "barter", "join", "board_close", "gift", "chat", "cand_close", "plant", "harvest", "boost", "craft", "shop_close", "enter", "leave", "talk", "region", "ferry", "pos", "battle_start", "battle", "battle_end", "buy", "chest", "portal"}
+TD_KINDS = {"sell", "appraise", "barter", "join", "board_close", "gift", "chat", "cand_close", "plant", "harvest", "boost", "craft", "shop_close", "enter", "leave", "talk", "region", "ferry", "pos", "battle_start", "battle", "battle_end", "buy", "chest", "portal", "use"}
 STEPS_PER_DAY = 160
 FERRY_DAYS = 8
 
 
+SAFE_CATS = ("town", "sect", "garden", "dwelling")
+
+
 class TopDownMixin:
     ui = {}
+    pending_boss = None
+    checkpoint = None
+
+    # ---- 儲存點（死亡時回到這裡）----
+    def make_checkpoint(self, label):
+        self.checkpoint = {"label": label, "hero": json.loads(json.dumps(asdict(self.hero))), "day": self.day, "region": self.region, "mode": self.mode,
+                           "map_id": self.map_id, "cur_loc": self.cur_loc, "pos": [round(self.pos[0], 2), round(self.pos[1], 2)]}
+
+    def _restore_checkpoint(self):
+        cp = self.checkpoint
+        self.hero = Character(**dict(cp["hero"]))
+        self.day, self.region, self.mode, self.map_id, self.cur_loc = cp["day"], cp["region"], cp["mode"], cp["map_id"], cp["cur_loc"]
+        self.hero.hp, self.hero.mp = self.hero.max_hp, self.hero.max_mp
+        self.defeated, self.battle, self.ui, self.pending_boss = [], None, {}, None
+        self._teleport(*cp["pos"])
+        self.log.append(f"你重傷不治……再睜開眼，已回到上一個儲存點「{cp['label']}」。")
+
+    # ---- 主要對手 ----
+    def start_boss_fight(self, bid, did=None, spec=None):
+        h = self.hero
+        b = dict(spec or self.data.bosses["bosses"][bid])
+        deep = self.mode == "loc" and self.get_map(self.map_id)["cat"] == "deep"
+        self.battle = battle.start_boss(h, b, self.cur_loc or "total", deep, self.dcfg, self.partner_spec(), boss_id=bid, retry=did)
+
+    def _maybe_boss(self):
+        pb = self.pending_boss
+        if pb and not self.hero.dialogue and not self.battle:
+            self.pending_boss = None
+            self.start_boss_fight(pb["id"], pb["did"])
+
+    def _start_guardian(self, e):
+        g = self.data.bosses["guardian"]
+        spec = {"name": e["name"], "kind": e["kind"], "el": e["el"], "hp_mult": g["hp_mult"], "atk_mult": g["atk_mult"], "skills": g["skills"],
+                "drops": loot.guardian_table(e.get("profile", "normal"), self.rng), "on_win": [{"flag": "guardian:" + self.cur_loc}], "loot": 3.0}
+        self.start_boss_fight("guardian", None, spec)
+
+    def bag_view(self):
+        h, reg = self.hero, items.registry()
+        out = []
+        for iid, n in h.inventory.items():
+            if n > 0:
+                out.append({"id": iid, "name": items.name(iid), "cat": items.cat(iid), "n": n, "desc": (reg["items"].get(iid) or {}).get("desc", ""), "use": (reg["items"].get(iid) or {}).get("use")})
+        if loot.owned(h, "fb_qingzhu"):
+            out.append({"id": "fb_qingzhu", "name": items.name("fb_qingzhu"), "cat": "法寶", "n": 1, "desc": reg["items"]["fb_qingzhu"]["desc"], "use": None})
+        order = {c: i for i, c in enumerate(reg["cats"])}
+        out.sort(key=lambda x: (order.get(x["cat"], 99), x["id"]))
+        return out
+
+    def _td_use(self, item="", **_):
+        h = self.hero
+        if h.count(item) <= 0:
+            return
+        u = (items.info(item) or {}).get("use")
+        if u == "heal":
+            h.remove(item)
+            h.hp = min(h.max_hp, h.hp + h.max_hp * battle.HEAL_FRAC)
+            self.log.append("服下回春丹，氣血回復了。")
+        elif u == "mpill":
+            h.remove(item)
+            h.mp = min(h.max_mp, h.mp + h.max_mp * 0.5)
+            self.log.append("服下聚氣丹，靈力恢復了一半。")
+        else:
+            self.log.append(f"{items.name(item)}要在對應的時機使用（符錄、陣法與法寶只能在主要對手戰中使用）。")
 
     # ---- 地圖 ----
     def get_map(self, map_id):
@@ -99,6 +169,8 @@ class TopDownMixin:
         self.defeated, self.train_n = [], 0
         h.counters[f"visit:{loc}"] = h.counters.get(f"visit:{loc}", 0) + 1
         self.log.append(f"進入「{m['name']}」")
+        if m["cat"] in SAFE_CATS:
+            self.make_checkpoint(m["name"])
         self._after_td(loc=loc, only="narration")
 
     def _td_leave(self, **_):
@@ -216,12 +288,21 @@ class TopDownMixin:
             self.log.append("祭壇散發溫潤靈光，你的靈力完全恢復了。")
         elif k == "portal":
             self._td_portal()
+        elif k == "well":
+            self.make_checkpoint(f"{self.get_map(self.map_id)['name']}的井")
+            self.log.append("你在井邊靜心，把此刻的一切記了下來——已儲存（若不幸倒下，會回到這裡）。")
+        elif k == "guardian":
+            if self.hero.flags.get("guardian:" + self.cur_loc):
+                self.log.append("守護者已被你擊敗，這裡再沒有什麼攔著你了。")
+            else:
+                self._start_guardian(e)
         elif k == "sign":
             self.log.append(e.get("text", ""))
         elif k == "bed":
             h.hp, h.mp = h.max_hp, h.max_mp
             self.advance(1)
             self.log.append("你在床上睡了一覺，氣血與靈力都恢復了（過了一天）。")
+            self.make_checkpoint(self.get_map(self.map_id)["name"])
             self._after_td()
         elif k == "furnace":
             self.log.append("這是一座煉丹爐。（可用靈草煉製丹藥）")
@@ -417,17 +498,41 @@ class TopDownMixin:
         t = int(target) if target not in (None, "") else None
         done = battle.command(self.battle, h, self.rs, self.rng, cmd, a, t, self.combat_bonus())
         if done:
-            over = self.battle["over"]
-            self.defeated.extend(self.battle["killed"])
+            st = self.battle
+            over = st["over"]
+            self.defeated.extend(st["killed"])
+            if st.get("boss") and over != "win" and st.get("retry"):
+                h.flags.pop("seen:" + st["retry"], None)          # 強敵還在，重新進入此地可再戰
+                self.log.append("強敵仍在原地等著你，準備好了再來。")
             if over == "lose":
+                if self.checkpoint:
+                    self._restore_checkpoint()
+                else:
+                    lost = min(self.dcfg["death_loss"], h.count("lingshi"))
+                    h.remove("lingshi", lost)
+                    h.hp = h.max_hp / 2
+                    self.log.append(f"你被人救回，損失靈石 {lost}。")
+                    m = self.get_map(self.map_id)
+                    self._teleport(m["spawn"][0] + .5, m["spawn"][1] + .5)
+            elif over == "soul":
                 lost = min(self.dcfg["death_loss"], h.count("lingshi"))
                 h.remove("lingshi", lost)
-                h.hp = h.max_hp / 2
-                self.log.append(f"你被人救回，損失靈石 {lost}。")
-                m = self.get_map(self.map_id)
-                self._teleport(m["spawn"][0] + .5, m["spawn"][1] + .5)
+                self.log.append(f"元嬰帶著殘存的元神遁走，肉身重塑耗去靈石 {lost}。")
+                if self.mode == "loc":
+                    m = self.get_map(self.map_id)
+                    self._teleport(m["spawn"][0] + .5, m["spawn"][1] + .5)
             elif over == "win":
-                if self.battle.get("chest_bonus"):
+                drops = []
+                if st.get("boss"):
+                    for e in st["enemies"]:
+                        if e.get("drops"):
+                            drops += loot.roll_table(self.data, e["drops"], h, self.rng, self.dcfg["chest"])
+                else:
+                    drops += loot.roll_minion(self.data, h, self.rng)
+                msgs = loot.grant(h, drops)
+                st["rewards"].extend(msgs)
+                self.log.extend(msgs)
+                if st.get("chest_bonus"):
                     gold = int(self.rng.uniform(60, 150) * (1 + h.realm) * self.dcfg["chest"])
                     h.add("lingshi", gold)
                     h.add("heal", 1)

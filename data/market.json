@@ -31,6 +31,42 @@
         "herb": {
           "price": 16,
           "daily": 12
+        },
+        "fu_lei": {
+          "price": 120,
+          "daily": 3
+        },
+        "fu_huo": {
+          "price": 90,
+          "daily": 3
+        },
+        "fu_ding": {
+          "price": 100,
+          "daily": 3
+        },
+        "fu_hu": {
+          "price": 80,
+          "daily": 3
+        },
+        "fu_qing": {
+          "price": 70,
+          "daily": 3
+        },
+        "zhen_ju": {
+          "price": 150,
+          "daily": 2
+        },
+        "zhen_kun": {
+          "price": 170,
+          "daily": 2
+        },
+        "zhen_sha": {
+          "price": 200,
+          "daily": 2
+        },
+        "zhen_hu": {
+          "price": 160,
+          "daily": 2
         }
       },
       "sell": {
@@ -38,7 +74,16 @@
         "heal": 12,
         "mpill": 18,
         "pill": 55,
-        "lingye": 90
+        "lingye": 90,
+        "fu_lei": 50,
+        "fu_huo": 40,
+        "fu_ding": 45,
+        "fu_hu": 35,
+        "fu_qing": 30,
+        "zhen_ju": 70,
+        "zhen_kun": 80,
+        "zhen_sha": 90,
+        "zhen_hu": 75
       }
     }
   },

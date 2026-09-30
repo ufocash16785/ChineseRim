@@ -14,6 +14,20 @@ def _quest_ids(data, h):
     return arc["quests"][h.quest["q"]]["id"]
 
 
+def fight_boss(s):
+    """機器人：打贏進行中的主要對手戰（每回合補滿血與靈力，只測劇情走得通）。"""
+    h = s.hero
+    for _ in range(300):
+        if not s.battle:
+            return
+        if s.battle["over"]:
+            s.act("battle_end")
+            return
+        h.hp, h.mp = h.max_hp, h.max_mp
+        s.act("battle", cmd="spell", arg=0)
+    raise AssertionError("boss battle did not finish")
+
+
 def play_through(s, limit=3000, pick=None):
     """pick(choices)->選項 index；預設永遠選第一個。"""
     h, d = s.hero, s.data
@@ -33,6 +47,9 @@ def play_through(s, limit=3000, pick=None):
 
     while not (h.quest["done"] and not h.dialogue) and steps < limit:
         steps += 1
+        if s.battle:
+            fight_boss(s)
+            continue
         if h.dialogue:
             v = s.snapshot()["dialogue"]
             s.act("choose", i=(pick(v["choices"]) if pick else v["choices"][0]["i"]) if v["choices"] else "")

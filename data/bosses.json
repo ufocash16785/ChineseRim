@@ -1,0 +1,18 @@
+{
+  "description": "主要對手（獨立引擎用）。只有主要對手戰鬥才能使用陣法／符錄／法寶。hp_mult／atk_mult 為相對於同境界一般妖獸的倍率；skills：每 every 回合施展一次強力招式（前一回合會提示蓄力）；on_win：勝利後套用的效果；drops：掉落表名稱（見 drops.json）。sprite＝NPC 立繪 id（人形）；kind＝妖獸種類（獸形）。",
+  "bosses": {
+    "yuzitong": { "name": "余子童", "sprite": "yuzitong", "el": "金", "hp_mult": 3.0, "atk_mult": 1.1, "skills": [{ "name": "鐵沙掌", "mult": 1.7, "every": 3 }], "on_win": [{ "flag": "beat:yuzitong" }], "drops": "boss_early" },
+    "wangchan": { "name": "王蟬", "sprite": "wangchan", "el": "火", "hp_mult": 3.4, "atk_mult": 1.15, "skills": [{ "name": "赤焰蠱", "mult": 1.8, "every": 3 }], "on_win": [{ "flag": "beat:wangchan" }], "drops": "boss_wangchan" },
+    "quhun": { "name": "曲魂", "sprite": "villain", "el": "木", "hp_mult": 3.6, "atk_mult": 1.2, "skills": [{ "name": "五行輪", "mult": 1.9, "every": 3 }], "on_win": [{ "flag": "beat:quhun" }], "drops": "boss_quhun" },
+    "tianxing": { "name": "天星雙聖", "sprite": "tianxing", "el": "雷", "hp_mult": 4.0, "atk_mult": 1.25, "skills": [{ "name": "星辰墜", "mult": 2.0, "every": 3 }], "on_win": [{ "flag": "beat:tianxing" }], "drops": "boss_tianxing" },
+    "xuangu": { "name": "玄骨老祖", "sprite": "xuangu", "el": "水", "hp_mult": 4.2, "atk_mult": 1.3, "skills": [{ "name": "白骨爪", "mult": 2.0, "every": 3 }, { "name": "鬼哭", "mult": 1.5, "every": 5 }], "on_win": [{ "flag": "beat:xuangu" }], "drops": "boss_xuangu" },
+    "xinmo": { "name": "心魔", "sprite": "xinmo", "el": "@hero", "hp_mult": 4.0, "atk_mult": 1.2, "skills": [{ "name": "蝕心", "mult": 1.8, "every": 3 }], "on_win": [{ "flag": "law_insight" }], "drops": "boss_xinmo" },
+    "mozu": { "name": "魔族將領", "sprite": "mozu", "el": "火", "hp_mult": 4.5, "atk_mult": 1.3, "skills": [{ "name": "魔焰斬", "mult": 2.1, "every": 3 }], "on_win": [{ "flag": "beat:mozu" }], "drops": "boss_mozu" }
+  },
+  "guardian": {
+    "names": ["守護獸", "鎮洞妖王", "看守者", "洞主"],
+    "kinds": ["bear", "python", "ape", "wolf", "spider"],
+    "hp_mult": 3.0, "atk_mult": 1.2,
+    "skills": [{ "name": "怒吼衝撞", "mult": 1.8, "every": 3 }]
+  }
+}

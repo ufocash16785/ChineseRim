@@ -1,5 +1,5 @@
 """俯視地圖版機器人：只透過 enter/talk/battle/region/ferry/portal/leave 動作玩到最後一個任務。"""
-from tests.bot import region_of
+from tests.bot import fight_boss, region_of
 
 
 def play_through_td(s, limit=4000, pick=None):
@@ -11,7 +11,10 @@ def play_through_td(s, limit=4000, pick=None):
                for w in d.regions for g in w["regions"]}
 
     def settle():
-        while h.dialogue:
+        while h.dialogue or s.battle:
+            if s.battle:
+                fight_boss(s)
+                continue
             v = s.snapshot()["dialogue"]
             s.act("choose", i=(pick(v["choices"]) if pick else v["choices"][0]["i"]) if v["choices"] else "")
 
@@ -85,6 +88,9 @@ def play_through_td(s, limit=4000, pick=None):
 
     while not (h.quest["done"] and not h.dialogue) and steps < limit:
         steps += 1
+        if s.battle:
+            fight_boss(s)
+            continue
         if h.dialogue:
             v = s.snapshot()["dialogue"]
             s.act("choose", i=(pick(v["choices"]) if pick else v["choices"][0]["i"]) if v["choices"] else "")

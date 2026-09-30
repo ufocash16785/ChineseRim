@@ -583,6 +583,17 @@ class LocBuilder:
             if self.place("sign", sx + dx, sy - 1, 0):
                 self.entities.append({"id": "sign", "k": "sign", "x": sx + dx, "y": sy - 1, "text": f"【{self.loc['name'].split('（')[0]}】{self.loc.get('note', '')}"})
                 break
+        # 每個地點都有一口「井」：可在此手動存檔
+        wells = [o for o in self.objects if o["t"] == "well"]
+        if not wells:
+            for dx, dy in ((4, -3), (-4, -3), (5, -4), (-5, -4), (3, -5), (-3, -5), (6, -2), (-6, -2), (2, -7), (-2, -7)):
+                if self.place("well", sx + dx, sy + dy, 1):
+                    wells = [self.objects[-1]]
+                    break
+            else:
+                self.place("well", sx + 2, sy - 2, 0, force=True)
+                wells = [self.objects[-1]]
+        self.entities.append({"id": "well", "k": "well", "x": wells[0]["x"], "y": wells[0]["y"], "name": "井"})
         ground = self.grid.rows()
         solid = _solid_grid(ground, self.W, self.H, BLOCK_LOC, self.objects)
         # 保證：出口、出生點、任務 NPC 位置、實體皆連通
@@ -591,7 +602,7 @@ class LocBuilder:
         # 寶箱／告示／假人本身是實心，需其相鄰格可達
         def touch(e):
             return any((e["x"] + dx, e["y"] + dy) in reach for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
-        self.entities = [e for e in self.entities if e["k"] not in ("chest", "sign", "dummy", "portal", "altar", "furnace", "bed", "board") or touch(e)]
+        self.entities = [e for e in self.entities if e["k"] not in ("chest", "sign", "dummy", "portal", "altar", "furnace", "bed", "board", "well") or touch(e)]
         self.objects = [o for o in self.objects if o["t"] != "chest_c" or any(e["k"] == "chest" and (e["x"], e["y"]) == (o["x"], o["y"]) for e in self.entities)]
         solid = _solid_grid(ground, self.W, self.H, BLOCK_LOC, self.objects)
         npc_spot = getattr(self, "npc_spot", None)
@@ -759,6 +770,9 @@ class LocBuilder:
         bx, by = boss[2] + boss[4] // 2, boss[3] + boss[5] // 2
         self.place("altar", bx, by, 1, force=True)
         self.entities.append({"id": "altar", "k": "altar", "x": bx, "y": by, "name": "祭壇"})
+        gd = self.data.bosses["guardian"]
+        self.entities.append({"id": "guardian", "k": "guardian", "x": bx, "y": by + 2, "name": R.choice(gd["names"]), "kind": R.choice(gd["kinds"]),
+                              "el": R.choice("金木水火土"), "profile": self.profile})
         self.scatter(["crystal", "boulder", "tomb"], 16, 1)
         self.npc_spot = (sx, sy)
         self.add_enemies(6, deep=True, min_dist=7)

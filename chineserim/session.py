@@ -64,13 +64,15 @@ class Session(TopDownMixin, SocialMixin):
         self.log = ["你是青牛鎮少年韓立。走上地圖上的地點圖示就能進入；先去看看家鄉青牛鎮吧。"]
         quests.ensure(self.hero, self.data)
         self.ui = {}
+        self.pending_boss = None
         self.td_reset()
+        self.make_checkpoint("旅程起點")
 
     # ---- 存檔 ----
     def to_dict(self):
         return {"version": SAVE_VERSION, "day": self.day, "region": self.region, "log": self.log[-30:], "hero": asdict(self.hero), "difficulty": self.difficulty, "configured": self.configured,
                 "td": {"mode": self.mode, "map_id": self.map_id, "pos": self.pos, "tp": getattr(self, "tp", 0), "cur_loc": self.cur_loc, "defeated": self.defeated,
-                       "train_n": self.train_n, "step_acc": self.step_acc, "battle": self.battle}}
+                       "train_n": self.train_n, "step_acc": self.step_acc, "battle": self.battle, "checkpoint": self.checkpoint}}
 
     def from_dict(self, d):
         if d.get("version") != SAVE_VERSION:
@@ -90,6 +92,9 @@ class Session(TopDownMixin, SocialMixin):
                 self.get_map(td["map_id"])
                 self.mode, self.map_id, self.pos, self.cur_loc = td["mode"], td["map_id"], td["pos"], td["cur_loc"]
                 self.defeated, self.train_n, self.step_acc, self.battle = td["defeated"], td["train_n"], td["step_acc"], td["battle"]
+                self.checkpoint = td.get("checkpoint")
+                if not self.checkpoint:
+                    self.make_checkpoint("目前位置")
                 return
             except (KeyError, StopIteration):
                 pass
@@ -147,6 +152,7 @@ class Session(TopDownMixin, SocialMixin):
                 idx = int(q["i"]) if q.get("i") not in (None, "") else None
                 dialogue.choose(self.data, h, idx, self.log, self.rs)
                 self._after()
+                self._maybe_boss()
                 self.save()
             return
         if h.dialogue and kind not in ("new", "battle_end"):
@@ -233,7 +239,7 @@ class Session(TopDownMixin, SocialMixin):
             "dialogue": dialogue.view(self.data, h),
             "difficulty": self.difficulty, "difficultyName": self.dcfg["name"], "configured": self.configured, "difficulties": {k: {"name": v["name"], "desc": v["desc"]} for k, v in difficulty.DIFFICULTY.items()},
             "mode": self.mode, "map_id": self.map_id, "pos": self.pos, "tp": getattr(self, "tp", 0), "cur_loc": self.cur_loc, "defeated": self.defeated,
-            "battle": battle.view(self.battle, h), "shop": self.shop_view(), "board": self.board_view(), "cand": self.cand_view(), "shady": self.shady_view(),
+            "battle": battle.view(self.battle, h), "bag": self.bag_view(), "checkpoint": (self.checkpoint or {}).get("label"), "guardians": [k[9:] for k, v in h.flags.items() if k.startswith("guardian:") and v], "shop": self.shop_view(), "board": self.board_view(), "cand": self.cand_view(), "shady": self.shady_view(),
             "members": [{"id": m, "name": self.data.sects[m]["name"], "perk": self.perk_of(m)["name"], "desc": self.perk_of(m)["desc"]} for m in h.members],
             "partner": self.partner_spec(), "affinity": h.affinity, "mp": round(h.mp), "max_mp": round(h.max_mp), "heal": h.count("heal"), "mpills": h.count("mpill"), "herbs": h.count("herb"), "plots": self.plots_view(),
             "seeds": {k: dict(v, cost=round(v["cost"] * self.dcfg["price"])) for k, v in self.data.farming["seeds"].items()},

@@ -1,11 +1,11 @@
 from dataclasses import dataclass, field
 
 
-ITEM_NAMES = {"lingshi": "靈石", "pill": "突破丹", "lingye": "靈液", "heal": "回春丹", "mpill": "聚氣丹", "herb": "靈草"}
+from . import items as _items
 
 
 def item_name(i):
-    return ITEM_NAMES.get(i, i)
+    return _items.name(i)
 
 
 @dataclass

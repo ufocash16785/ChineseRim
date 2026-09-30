@@ -1,0 +1,20 @@
+{
+  "description": "掉落表（獨立引擎用）。每列：item 物品、n 數量範圍 [最小,最大]、chance 機率（預設 1）、scale＝數量隨境界成長（×(1+境界)）、unique＝已擁有就不再掉（永久法寶）。minion：小怪的少量掉落。",
+  "minion": { "chance": 0.16, "table": [
+    { "item": "fu_hu", "w": 3 }, { "item": "fu_lei", "w": 2 }, { "item": "fu_ding", "w": 2 }, { "item": "zhen_hu", "w": 1 }, { "item": "herb", "w": 5, "n": [1, 3] }
+  ] },
+  "tables": {
+    "boss_early": [ { "item": "lingshi", "n": [180, 260], "scale": true }, { "item": "fu_hu", "n": [2, 3] }, { "item": "fu_lei", "n": [1, 2] }, { "item": "heal", "n": [2, 3] } ],
+    "boss_wangchan": [ { "item": "lingshi", "n": [220, 320], "scale": true }, { "item": "fb_mirror", "unique": true }, { "item": "fu_huo", "n": [2, 3] }, { "item": "zhen_kun", "n": [1, 1] } ],
+    "boss_quhun": [ { "item": "lingshi", "n": [260, 380], "scale": true }, { "item": "fb_bell", "unique": true }, { "item": "fu_ding", "n": [2, 3] }, { "item": "zhen_ju", "n": [1, 2] } ],
+    "boss_tianxing": [ { "item": "lingshi", "n": [300, 420], "scale": true }, { "item": "fb_shield", "unique": true }, { "item": "zhen_hu", "n": [1, 2] }, { "item": "lingye", "n": [1, 2] } ],
+    "boss_xuangu": [ { "item": "lingshi", "n": [340, 460], "scale": true }, { "item": "fb_ding", "unique": true }, { "item": "fu_lei", "n": [3, 4] }, { "item": "zhen_sha", "n": [1, 2] } ],
+    "boss_xinmo": [ { "item": "lingye", "n": [2, 3] }, { "item": "fu_qing", "n": [2, 3] }, { "item": "lingshi", "n": [200, 300], "scale": true } ],
+    "boss_mozu": [ { "item": "lingshi", "n": [500, 700], "scale": true }, { "item": "zhen_sha", "n": [2, 3] }, { "item": "fu_lei", "n": [3, 4] }, { "item": "pill", "n": [1, 2] } ],
+    "guardian_normal": [ { "item": "lingshi", "n": [90, 150], "scale": true }, { "item": "fu_hu", "n": [1, 2], "chance": 0.7 }, { "item": "fu_ding", "n": [1, 1], "chance": 0.5 }, { "item": "heal", "n": [1, 2], "chance": 0.6 }, { "item": "zhen_hu", "n": [1, 1], "chance": 0.3 } ],
+    "guardian_rich": [ { "item": "lingshi", "n": [260, 420], "scale": true }, { "item": "fu_lei", "n": [2, 3] }, { "item": "fu_huo", "n": [1, 2] }, { "item": "zhen_sha", "n": [1, 2], "chance": 0.7 }, { "item": "lingye", "n": [1, 2], "chance": 0.7 },
+                       { "item": "fb_shield", "unique": true, "chance": 0.22 }, { "item": "fb_bell", "unique": true, "chance": 0.22 }, { "item": "fb_mirror", "unique": true, "chance": 0.22 }, { "item": "fb_ding", "unique": true, "chance": 0.12 } ],
+    "guardian_poor": [ { "item": "lingshi", "n": [3, 12] }, { "item": "herb", "n": [1, 1], "chance": 0.4 } ],
+    "guardian_trap": [ { "item": "lingshi", "n": [70, 130], "scale": true, "chance": 0.5 }, { "item": "fu_ding", "n": [1, 2], "chance": 0.4 }, { "item": "fb_bell", "unique": true, "chance": 0.1 } ]
+  }
+}

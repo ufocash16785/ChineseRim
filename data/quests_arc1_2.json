@@ -184,9 +184,8 @@
             "loc": "tianlan"
           },
           {
-            "type": "kill",
-            "loc": "grass_sea",
-            "n": 3
+            "type": "flag",
+            "flag": "beat:quhun"
           }
         ],
         "reward": {

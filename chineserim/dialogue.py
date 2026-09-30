@@ -61,6 +61,8 @@ def _apply(ch, effects, data, log, realms=None):
                 log.append(f"  ♥ {realms.session.cand_of(e['companion'])['name']}成為了你的道侶，從此與你並肩作戰！")
         elif "join" in e and realms is not None:
             realms.session.join_sect(e["join"])
+        elif "boss" in e and realms is not None:
+            realms.session.pending_boss = {"id": e["boss"], "did": ch.dialogue.get("id")}
         elif "learn" in e:
             if e["learn"] not in ch.gongfa:
                 ch.gongfa.append(e["learn"])

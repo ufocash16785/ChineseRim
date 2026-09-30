@@ -469,7 +469,7 @@ class BattleTest(unittest.TestCase):
         st = self.b.start(self.c, "x", [{"kind": "wolf", "el": "木"}])
         self.c.mp = 0
         self.b.command(st, self.c, self.rs, self.rng, "spell", 0)
-        self.assertIn("靈力不足", st["log"][0])
+        self.assertIn("靈力耗盡", st["log"][0])
         self.assertEqual(st["turn"], 1)             # 沒有消耗回合
         self.c.mp = self.c.max_mp
         before = self.c.mp
@@ -597,13 +597,15 @@ class TopDownSessionTest(unittest.TestCase):
         s.act("enter", loc="taiyue")
         e = next(e for e in s.get_map(s.map_id)["entities"] if e["k"] == "enemy")
         s.act("battle_start", ids=e["id"])
+        cp_label = s.checkpoint["label"]
         s.hero.hp = 1
         s.act("battle", cmd="guard")
         while s.battle and not s.battle["over"]:
             s.hero.hp = 1
             s.act("battle", cmd="guard")
-        if s.battle["over"] == "lose":
-            self.assertGreaterEqual(s.hero.hp, s.hero.max_hp / 2)
+        if s.battle is None:                                       # 元嬰前戰敗＝回到上一個儲存點
+            self.assertEqual(s.hero.hp, s.hero.max_hp)
+            self.assertIn(cp_label, s.log[-1])
 
     def test_chest_once_and_shop_and_inn(self):
         s = self.s
@@ -758,15 +760,14 @@ class DifficultyTest(unittest.TestCase):
         s.act("enter", loc="taiyue")
         e = next(e for e in s.get_map(s.map_id)["entities"] if e["k"] == "enemy")
         s.act("battle_start", ids=e["id"])
-        n = s.hero.count("lingshi")
         s.hero.hp = 1
         for _ in range(40):
-            if s.battle["over"]:
+            if not s.battle or s.battle["over"]:
                 break
             s.hero.hp = 1
             s.act("battle", cmd="guard")
-        if s.battle["over"] == "lose":
-            self.assertEqual(s.hero.count("lingshi"), n - 150 if n >= 150 else 0)
+        self.assertIsNone(s.battle)                                # 敗北：回到儲存點（含完整補血）
+        self.assertEqual(s.hero.hp, s.hero.max_hp)
 
     def test_persisted_in_save(self):
         from chineserim.session import Session

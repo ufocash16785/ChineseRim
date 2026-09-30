@@ -1,14 +1,20 @@
 """仙劍式回合制戰鬥（純邏輯，狀態存於 Session.battle，可存檔）。
 
-指令：attack 劍擊、spell 五行法術、item 服用回春丹、guard 防禦回氣、flee 逃跑。"""
-import random
+一般戰鬥（小怪）指令：attack 劍擊、spell 五行法術、item 回春丹、mpill 聚氣丹、guard 防禦、flee 逃跑。
+主要對手（boss）戰另可使用：talisman 符錄、formation 陣法、treasure 法寶。
 
+靈力規則：劍擊與各種施法都耗靈力；靈力歸零只能逃跑（或服用丹藥）。
+生命規則：氣血歸零——元嬰期以前就是死亡（由 Session 回到上一個儲存點）；元嬰期以上只剩「元嬰出竅」一條路（soul）。"""
+from . import items, loot
 from .elements import element_multiplier
 from .explore import kill_reward
 
 KINDS = {"wolf": "青狼", "spider": "毒蛛", "bear": "鐵背熊", "snake": "赤焰蛇", "python": "碧水蟒", "ape": "山魈", "bat": "血翼蝠"}
 HEAL_FRAC = 0.4
 SPELL_MP_FRAC = 0.10
+ATTACK_MP_FRAC = 0.02
+NASCENT_REALM = 4                 # 元嬰期
+FORMATION_NAMES = {"ju": "聚靈陣", "kun": "困敵陣", "sha": "殺陣", "hu": "護體陣"}
 
 
 def hero_atk(ch, bonus):
@@ -19,6 +25,18 @@ def spell_cost(ch):
     return max(4, round(ch.max_mp * SPELL_MP_FRAC))
 
 
+def attack_cost(ch):
+    return max(1, round(ch.max_mp * ATTACK_MP_FRAC))
+
+
+def owned_treasures(ch):
+    out = []
+    for iid, info in items.registry()["items"].items():
+        if info["cat"] == "法寶" and loot.owned(ch, iid):
+            out.append(iid)
+    return out
+
+
 def make_enemy(ch, spec, deep, idx, diff=None):
     diff = diff or {}
     scale = 1 + ch.realm * (1.3 if deep else 1.0)
@@ -27,13 +45,33 @@ def make_enemy(ch, spec, deep, idx, diff=None):
             "hp": hp, "maxhp": hp, "atk": 9.0 * scale * (1.15 if deep else 1.0) * diff.get("enemy_atk", 1.0), "dead": False, "loot": spec.get("loot", 1.0)}
 
 
+def _base_state(ch, loc_id, enemies, deep, diff, partner, log):
+    return {"loc": loc_id, "deep": bool(deep), "enemies": enemies, "diff": diff or {}, "log": log, "guard": False, "over": None, "turn": 1,
+            "killed": [], "rewards": [], "partner": partner, "pact": None, "boss": False, "down": False,
+            "shield": 0.0, "invuln": False, "formation": None, "cd": {}, "mirror": 0, "mirror_hit": False, "retry": None}
+
+
 def start(ch, loc_id, specs, deep=False, diff=None, partner=None):
     specs = specs[:2 if deep else 3]
     if not specs:
         raise ValueError("沒有敵人")
-    return {"loc": loc_id, "deep": bool(deep), "enemies": [make_enemy(ch, s, deep, i, diff) for i, s in enumerate(specs)], "diff": diff or {},
-            "log": [f"遭遇 {'、'.join(s.get('name') or KINDS.get(s['kind'], '妖獸') for s in specs)}！"], "guard": False, "over": None, "turn": 1,
-            "killed": [], "rewards": [], "partner": partner, "pact": None}
+    return _base_state(ch, loc_id, [make_enemy(ch, s, deep, i, diff) for i, s in enumerate(specs)], deep, diff, partner,
+                       [f"遭遇 {'、'.join(s.get('name') or KINDS.get(s['kind'], '妖獸') for s in specs)}！"])
+
+
+def start_boss(ch, boss, loc_id, deep=False, diff=None, partner=None, boss_id="boss", retry=None):
+    """主要對手戰。boss：bosses.json 的定義（已補上 name/el/kind 或 sprite）。"""
+    diff = diff or {}
+    scale = 1 + ch.realm
+    hp = 60 * scale * boss["hp_mult"] * diff.get("enemy_hp", 1.0)
+    el = ch.elements[0] if boss["el"] == "@hero" and ch.elements else ("木" if boss["el"] == "@hero" else boss["el"])
+    e = {"id": f"boss:{boss_id}", "kind": boss.get("kind", "bear"), "sprite": boss.get("sprite"), "name": boss["name"], "el": el, "hp": hp, "maxhp": hp,
+         "atk": 9.0 * scale * boss["atk_mult"] * diff.get("enemy_atk", 1.0), "dead": False, "loot": boss.get("loot", 3.0), "boss": True, "boss_id": boss_id,
+         "skills": boss["skills"], "t": 0, "charging": False, "stun": 0, "stun_imm": 0, "rage": False, "drops": boss.get("drops"), "on_win": boss.get("on_win", [])}
+    st = _base_state(ch, loc_id, [e], deep, diff, partner, [f"強敵「{boss['name']}」攔住了去路！（可使用陣法、符錄、法寶）"])
+    st["boss"] = True
+    st["retry"] = retry
+    return st
 
 
 def alive(st):
@@ -49,6 +87,10 @@ def _target(st, arg2):
 
 def _hit(st, i, dmg, log_prefix):
     e = st["enemies"][i]
+    if st.get("mirror_hit") and dmg > 0:
+        dmg *= 2.2
+        st["mirror_hit"] = False
+        log_prefix += "（照妖鏡破其防禦！）"
     e["hp"] -= dmg
     st["log"].append(f"{log_prefix}，對{e['name']}造成 {round(dmg)} 傷害")
     if e["hp"] <= 0:
@@ -58,6 +100,24 @@ def _hit(st, i, dmg, log_prefix):
         st["log"].append(f"{e['name']}倒下了")
 
 
+def _stun(st, i, turns=1):
+    e = st["enemies"][i]
+    if e.get("boss") and e.get("stun_imm", 0) > 0:
+        st["log"].append(f"{e['name']}已有防備，這次定不住它！")
+        return
+    e["stun"] = turns
+    if e.get("boss"):
+        e["stun_imm"] = 3
+    st["log"].append(f"{e['name']}被定住了！")
+
+
+REFUSE_NON_BOSS = "這種對手用不著——只有主要對手戰才能使用陣法、符錄與法寶。"
+
+
+def _exhausted_allowed(cmd):
+    return cmd in ("flee", "mpill", "item", "soul")
+
+
 def command(st, ch, realms, rng, cmd, arg=None, target=None, bonus=None):
     """執行一個玩家指令並跑完敵方回合。回傳 True 表示戰鬥已結束。"""
     bonus = bonus or {}
@@ -65,9 +125,23 @@ def command(st, ch, realms, rng, cmd, arg=None, target=None, bonus=None):
         return True
     st["log"] = []
     st["guard"] = False
+    # ---- 氣血耗盡：只剩元嬰出竅 ----
+    if st.get("down"):
+        if cmd != "soul":
+            st["log"].append("你氣血耗盡，動彈不得——只有元嬰出竅才能保住性命！")
+            return False
+        return _soul(st, ch)
+    if cmd == "soul":
+        st["log"].append("你還撐得住，用不著元嬰出竅。")
+        return False
+    # ---- 靈力耗盡：只能逃跑（或服藥）----
+    if ch.mp <= 0 and not _exhausted_allowed(cmd):
+        st["log"].append("靈力耗盡！你已無力施法出招，只能逃跑，或服用聚氣丹。")
+        return False
     t = _target(st, target)
     used_turn = True
     if cmd == "attack":
+        ch.mp = max(0.0, ch.mp - attack_cost(ch))
         crit = rng.random() < bonus.get("critChance", 0) + 0.08
         d = hero_atk(ch, bonus) * (1 + bonus.get("slashDmg", 0)) * rng.uniform(.9, 1.1) * (2 if crit else 1)
         _hit(st, t, d, "你揮劍斬出" + ("（會心一擊！）" if crit else ""))
@@ -102,12 +176,17 @@ def command(st, ch, realms, rng, cmd, arg=None, target=None, bonus=None):
             ch.remove("mpill")
             ch.mp = min(ch.max_mp, ch.mp + ch.max_mp * 0.5)
             st["log"].append("服下聚氣丹，靈力恢復了一半")
+    elif cmd in ("talisman", "formation", "treasure"):
+        used_turn = _use_gear(st, ch, rng, bonus, cmd, arg, t)
     elif cmd == "guard":
         st["guard"] = True
         ch.mp = min(ch.max_mp, ch.mp + ch.max_mp * 0.04)
         st["log"].append("你運功守禦，靈力略有恢復")
     elif cmd == "flee":
-        chance = max(0.05, min(0.95, (0.35 if st["deep"] else 0.6) + st.get("diff", {}).get("flee", 0) + (0.1 if st.get("partner") else 0)))
+        base = 0.35 if st["deep"] else 0.6
+        if st.get("boss"):
+            base = 0.4
+        chance = max(0.05, min(0.95, base + st.get("diff", {}).get("flee", 0) + (0.1 if st.get("partner") else 0) + (0.25 if ch.mp <= 0 else 0)))
         if rng.random() < chance:
             st["log"].append("你成功逃脫了！")
             st["over"] = "flee"
@@ -120,30 +199,184 @@ def command(st, ch, realms, rng, cmd, arg=None, target=None, bonus=None):
         return False
     if not alive(st):
         return _win(st, ch, realms, rng)
+    _formation_tick(st, ch, rng, bonus)
+    if not alive(st):
+        return _win(st, ch, realms, rng)
     _partner_act(st, ch, realms, rng)
     if not alive(st):
         return _win(st, ch, realms, rng)
-    # 敵方回合
+    if _enemy_phase(st, ch, rng):
+        return True
+    _end_round(st, ch)
+    return False
+
+
+# ---- 陣法 / 符錄 / 法寶 ----
+def _use_gear(st, ch, rng, bonus, cmd, arg, t):
+    if not st.get("boss"):
+        st["log"].append(REFUSE_NON_BOSS)
+        return False
+    info = items.info(arg) if arg else None
+    want = {"talisman": "符錄", "formation": "陣法", "treasure": "法寶"}[cmd]
+    if not info or info["cat"] != want or "battle" not in info:
+        st["log"].append("沒有這樣東西。")
+        return False
+    b = info["battle"]
+    e = st["enemies"][t]
+    if cmd == "treasure":
+        if not loot.owned(ch, arg):
+            st["log"].append(f"你沒有{info['name']}。")
+            return False
+        if st["cd"].get(arg, 0) > 0:
+            st["log"].append(f"{info['name']}還需要 {st['cd'][arg]} 回合才能再次催動。")
+            return False
+        cost = max(3, round(ch.max_mp * b.get("mp", 0.1)))
+        if ch.mp < cost:
+            st["log"].append("靈力不足，催動不了法寶！")
+            return False
+        ch.mp -= cost
+        st["cd"][arg] = b.get("cd", 3)
+    else:
+        if ch.count(arg) <= 0:
+            st["log"].append(f"儲物袋裡沒有{info['name']}了。")
+            return False
+        ch.remove(arg)
+    k = b["kind"]
+    atk = hero_atk(ch, bonus)
+    if k == "damage":
+        mult = b.get("mult", 2.0) + b.get("grade_mult", 0) * ch.treasures.get("qingzhu_fengyunjian", 0)
+        m = element_multiplier(b["el"], e["el"]) if b.get("el") else 1.0
+        _hit(st, t, atk * mult * m * rng.uniform(.92, 1.08), f"你祭出{info['name']}" + ("（剋制！）" if m > 1 else ""))
+    elif k == "bell":
+        _hit(st, t, atk * b["mult"] * rng.uniform(.92, 1.08), f"你搖動{info['name']}")
+        if not e["dead"]:
+            _stun(st, t)
+    elif k == "stun":
+        st["log"].append(f"你甩出{info['name']}！")
+        _stun(st, t, b.get("turns", 1))
+    elif k == "shield":
+        st["shield"] += ch.max_hp * b["frac"]
+        st["log"].append(f"{info['name']}化作光罩護住全身（可抵擋 {round(st['shield'])} 傷害）")
+    elif k == "mp":
+        ch.mp = min(ch.max_mp, ch.mp + ch.max_mp * b["frac"])
+        st["log"].append(f"{info['name']}的清氣入體，靈力回復了")
+    elif k == "invuln":
+        st["invuln"] = True
+        st["log"].append(f"{info['name']}升起，擋在你的身前！")
+    elif k == "mirror":
+        st["mirror"] = 3
+        st["mirror_hit"] = True
+        st["log"].append(f"{info['name']}照出了敵人的破綻——敵人攻擊力下降，你的下一擊將勢不可擋！")
+    elif k == "formation":
+        st["formation"] = {"id": b["id"], "turns": b["turns"]}
+        st["log"].append(f"你佈下{FORMATION_NAMES[b['id']]}！（持續 {b['turns']} 回合）")
+    return True
+
+
+def _formation_tick(st, ch, rng, bonus):
+    f = st.get("formation")
+    if not f:
+        return
+    if f["id"] == "ju":
+        ch.mp = min(ch.max_mp, ch.mp + ch.max_mp * 0.08)
+        st["log"].append("聚靈陣運轉，靈力回流")
+    elif f["id"] == "sha":
+        for i in alive(st):
+            _hit(st, i, hero_atk(ch, bonus) * 0.8 * rng.uniform(.9, 1.1), "殺陣運轉")
+
+
+def _enemy_phase(st, ch, rng):
+    """敵方回合。回傳 True＝戰鬥因你倒下（死亡）而結束。"""
     prim = ch.elements[0] if ch.elements else ""
+    inv = st.get("invuln")
+    st["invuln"] = False
+    f = st.get("formation")
     for i in alive(st):
         e = st["enemies"][i]
-        if rng.random() < 0.12:
+        if e.get("boss") and not e["rage"] and e["hp"] < e["maxhp"] * 0.5:
+            e["rage"] = True
+            e["atk"] *= 1.25
+            st["log"].append(f"{e['name']}怒吼一聲，氣勢暴漲！")
+        if e.get("stun", 0) > 0:
+            e["stun"] -= 1
+            e["charging"] = False
+            st["log"].append(f"{e['name']}被定住，無法行動")
+            continue
+        if not e.get("boss") and rng.random() < 0.12:
             st["log"].append(f"{e['name']}遲疑了一下")
             continue
-        if st.get("partner") and rng.random() < 0.35:            # 有道侶在側，部分攻擊被她擋下
+        skill = None
+        if e.get("boss"):
+            e["t"] += 1
+            for sk in e["skills"]:
+                if e["t"] % sk["every"] == 0:
+                    skill = sk
+                    break
+        if not skill and st.get("partner") and rng.random() < 0.35:      # 有道侶在側，部分攻擊被她擋下
             st["log"].append(f"{e['name']}撲向{st['partner']['name']}，被她輕巧地化解了")
             continue
         m = element_multiplier(e["el"], prim)
-        d = e["atk"] * m * rng.uniform(.85, 1.15) * (0.5 if st["guard"] else 1.0)
-        ch.hp -= d
-        st["log"].append(f"{e['name']}撲來，你受到 {round(d)} 傷害" + ("（被剋制）" if m > 1 else ""))
-        if ch.hp <= 0:
-            ch.hp = 0
-            st["over"] = "lose"
-            st["log"].append("你重傷倒下了……")
-            return True
-    st["turn"] += 1
+        d = e["atk"] * m * rng.uniform(.85, 1.15) * (skill["mult"] if skill else 1.0) * (0.5 if st["guard"] else 1.0)
+        if st.get("mirror", 0) > 0:
+            d *= 0.8
+        if f and f["id"] == "kun":
+            d *= 0.6
+        if f and f["id"] == "hu":
+            d *= 0.65
+        name = f"{e['name']}的「{skill['name']}」" if skill else e["name"]
+        if inv:
+            st["log"].append(f"{name}襲來，卻被法寶擋了下來！")
+        else:
+            if st["shield"] > 0:
+                ab = min(st["shield"], d)
+                st["shield"] -= ab
+                d -= ab
+                st["log"].append(f"護盾吸收了 {round(ab)} 傷害")
+            if d > 0:
+                ch.hp -= d
+                st["log"].append(f"{name}襲來，你受到 {round(d)} 傷害" + ("（被剋制）" if m > 1 else ""))
+            if ch.hp <= 0:
+                ch.hp = 0
+                if ch.realm >= NASCENT_REALM:
+                    st["down"] = True
+                    st["log"].append("你氣血耗盡，元神搖搖欲墜……只有元嬰出竅才能保住性命！")
+                    return False
+                st["over"] = "lose"
+                st["log"].append("你重傷倒下了……")
+                return True
+        if e.get("boss"):
+            e["charging"] = any((e["t"] + 1) % sk["every"] == 0 for sk in e["skills"])
+            if e["charging"]:
+                st["log"].append(f"{e['name']}周身靈氣暴漲，正在凝聚力量！（下一擊將是絕招——可防禦、開護盾或定住它）")
     return False
+
+
+def _end_round(st, ch):
+    st["turn"] += 1
+    ch.mp = min(ch.max_mp, ch.mp + ch.max_mp * 0.01)
+    for k in list(st["cd"]):
+        st["cd"][k] = max(0, st["cd"][k] - 1)
+    if st.get("mirror", 0) > 0:
+        st["mirror"] -= 1
+    for e in st["enemies"]:
+        if e.get("stun_imm", 0) > 0 and e.get("stun", 0) == 0:
+            e["stun_imm"] -= 1
+    f = st.get("formation")
+    if f:
+        f["turns"] -= 1
+        if f["turns"] <= 0:
+            st["log"].append(f"{FORMATION_NAMES[f['id']]}的靈光散去了")
+            st["formation"] = None
+
+
+def _soul(st, ch):
+    """元嬰出竅：元嬰帶著殘存的元神逃離，保住性命，但元氣大傷。"""
+    ch.hp = max(1.0, ch.max_hp * 0.2)
+    ch.mp = 0.0
+    st["over"] = "soul"
+    st["down"] = False
+    st["log"].append("你的元嬰破體而出，化作一道流光遁走……肉身暫且不顧，性命保住了。")
+    return True
 
 
 def _partner_act(st, ch, realms, rng):
@@ -175,13 +408,16 @@ def _partner_act(st, ch, realms, rng):
 def _win(st, ch, realms, rng):
     st["over"] = "win"
     st["log"].append("戰鬥勝利！")
+    gold_mult = st.get("diff", {}).get("gold", 1.0)
     for e in st["enemies"]:
-        msgs = kill_reward(realms, ch, rng, st["loc"], st["deep"], st.get("diff", {}).get("gold", 1.0) * e.get("loot", 1.0))
+        msgs = kill_reward(realms, ch, rng, st["loc"], st["deep"], gold_mult * e.get("loot", 1.0))
         st["rewards"].extend(msgs)
     ch.mp = min(ch.max_mp, ch.mp + ch.max_mp * 0.1)
-    if rng.random() < 0.25:
-        ch.add("heal")
-        st["rewards"].append("拾得回春丹 ×1")
+    for e in st["enemies"]:
+        if e.get("boss"):
+            for eff in e.get("on_win", []):
+                if "flag" in eff:
+                    ch.flags[eff["flag"]] = True
     st["log"].extend(st["rewards"])
     return True
 
@@ -189,6 +425,9 @@ def _win(st, ch, realms, rng):
 def view(st, ch):
     if not st:
         return None
-    return {"loc": st["loc"], "deep": st["deep"], "over": st["over"], "turn": st["turn"], "log": st["log"],
-            "enemies": [{k: e[k] for k in ("id", "kind", "name", "el", "hp", "maxhp", "dead")} for e in st["enemies"]],
-            "partner": st.get("partner"), "pact": st.get("pact"), "spellCost": spell_cost(ch), "diff": st.get("diff", {}).get("name", ""), "killed": st["killed"], "rewards": st["rewards"]}
+    return {"loc": st["loc"], "deep": st["deep"], "over": st["over"], "turn": st["turn"], "log": st["log"], "boss": st.get("boss", False),
+            "down": st.get("down", False), "exhausted": ch.mp <= 0, "shield": round(st.get("shield", 0)), "formation": st.get("formation"),
+            "cd": st.get("cd", {}), "mirror": st.get("mirror", 0), "attackCost": attack_cost(ch),
+            "enemies": [{k: e.get(k) for k in ("id", "kind", "name", "el", "hp", "maxhp", "dead", "sprite", "boss", "charging", "stun")} for e in st["enemies"]],
+            "partner": st.get("partner"), "pact": st.get("pact"), "spellCost": spell_cost(ch), "diff": st.get("diff", {}).get("name", ""),
+            "killed": st["killed"], "rewards": st["rewards"]}
