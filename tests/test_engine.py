@@ -1261,3 +1261,156 @@ class SocialTest(unittest.TestCase):
         s2 = self.Session(s.save_path)
         s2.load()
         self.assertEqual((s2.hero.companion, s2.hero.members, s2.hero.affinity), ("nangong", ["qixuanmen"], {"nangong": 100}))
+
+
+class BossAndBagTest(unittest.TestCase):
+    def setUp(self):
+        import pathlib, tempfile
+        from chineserim.session import Session
+        self.s = Session(pathlib.Path(tempfile.mkdtemp()) / "s.json", seed=5)
+        self.s.act("new", diff="normal")
+        self.h = self.s.hero
+
+    def _boss(self, bid="yuzitong", realm=None):
+        if realm is not None:
+            self.h.realm = realm
+            self.s.rs.apply_stats(self.h)
+            self.h.hp, self.h.mp = self.h.max_hp, self.h.max_mp
+        self.s.start_boss_fight(bid, None)
+        return self.s.battle
+
+    def test_gear_only_in_boss_battle(self):
+        from chineserim import battle
+        self.h.add("fu_lei", 2)
+        st = battle.start(self.h, "x", [{"kind": "wolf", "el": "木"}])
+        battle.command(st, self.h, self.s.rs, self.s.rng, "talisman", "fu_lei", None, {})
+        self.assertEqual(self.h.count("fu_lei"), 2)
+        self.assertIn("用不著", st["log"][0])
+
+    def test_talisman_formation_treasure(self):
+        st = self._boss()
+        for it in ("fu_lei", "fu_hu", "zhen_sha"):
+            self.h.add(it)
+        hp0 = st["enemies"][0]["hp"]
+        self.s.act("battle", cmd="talisman", arg="fu_lei")
+        self.assertLess(st["enemies"][0]["hp"], hp0)
+        self.assertEqual(self.h.count("fu_lei"), 0)
+        self.s.act("battle", cmd="formation", arg="zhen_sha")
+        self.assertEqual(st["formation"]["id"], "sha")
+        self.s.act("battle", cmd="talisman", arg="fu_lei")            # 用完了
+        self.h.add("fb_shield")
+        # 法寶：有冷卻
+        self.h.hp = self.h.max_hp
+        self.s.act("battle", cmd="treasure", arg="fb_shield")
+        self.assertGreater(st["cd"].get("fb_shield", 0), 0)
+        before = self.h.count("fb_shield")
+        self.s.act("battle", cmd="treasure", arg="fb_shield")
+        self.assertEqual(self.h.count("fb_shield"), before)           # 法寶不消耗
+
+    def test_exhausted_only_flee(self):
+        st = self._boss()
+        self.h.mp = 0
+        self.s.act("battle", cmd="attack")
+        self.assertEqual(st["turn"], 1)
+        self.assertTrue(self.s.snapshot()["battle"]["exhausted"])
+        self.h.add("mpill")
+        self.s.act("battle", cmd="mpill")
+        self.assertGreater(self.h.mp, 0)
+
+    def test_pre_nascent_defeat_rolls_back_to_checkpoint(self):
+        self.s.act("enter", loc="qingniu")
+        label = self.s.checkpoint["label"]
+        self.h.add("lingshi", 5)
+        st = self._boss()
+        self.h.hp = 1
+        for _ in range(30):
+            if not self.s.battle:
+                break
+            self.h.hp = 1
+            self.s.act("battle", cmd="guard")
+        self.assertIsNone(self.s.battle)
+        self.assertEqual(self.s.hero.hp, self.s.hero.max_hp)
+        self.assertIn(label, self.s.log[-1])
+
+    def test_nascent_soul_escape(self):
+        self.h.realm = 4
+        self.s.rs.apply_stats(self.h)
+        self.h.hp, self.h.mp = self.h.max_hp, self.h.max_mp
+        st = self._boss("xuangu")
+        st["enemies"][0]["atk"] = 1e9
+        self.s.act("battle", cmd="guard")
+        self.assertTrue(st["down"])
+        self.s.act("battle", cmd="attack")                           # 氣血耗盡：其他指令無效
+        self.assertTrue(st["down"])
+        self.assertTrue(self.s.snapshot()["battle"]["down"])
+        self.s.act("battle", cmd="soul")
+        self.assertEqual(st["over"], "soul")
+        self.assertGreaterEqual(self.h.hp, 1)
+        self.assertEqual(self.h.mp, 0)
+
+    def test_boss_win_drops_into_bag_and_sets_flag(self):
+        st = self._boss("yuzitong")
+        st["enemies"][0]["hp"] = 1
+        self.h.add("lingshi", 1)
+        n0 = self.h.count("lingshi")
+        self.s.act("battle", cmd="attack")
+        self.assertEqual(st["over"], "win")
+        self.assertTrue(self.h.flags.get("beat:yuzitong"))
+        self.assertTrue(any("儲物袋" in r for r in st["rewards"]))
+        self.assertGreater(self.h.count("lingshi"), n0)
+
+    def test_bag_is_unlimited(self):
+        self.h.add("lingshi", 10 ** 7)
+        self.h.add("fu_lei", 999)
+        bag = self.s.snapshot()["bag"]
+        self.assertEqual(next(b for b in bag if b["id"] == "lingshi")["n"], self.h.count("lingshi"))
+        self.assertIn("符錄", {b["cat"] for b in bag})
+
+    def test_guardian_and_well(self):
+        s = self.s
+        s.h = self.h
+        loc = next(l["id"] for w in s.data.regions for g in w["regions"] for l in g["locations"] if l["type"] in ("洞窟", "秘境", "禁地") or l.get("profile"))
+        self.h.realm = 5
+        s.rs.apply_stats(self.h)
+        s.act("enter", loc=loc)
+        m = s.get_map(s.map_id)
+        self.assertTrue(any(e["k"] == "well" for e in m["entities"]))
+        well = next(e for e in m["entities"] if e["k"] == "well")
+        s.act("talk", ent=well["id"])
+        self.assertIn("井", s.checkpoint["label"])
+        g = next((e for e in m["entities"] if e["k"] == "guardian"), None)
+        if g:
+            s.act("talk", ent="guardian")
+            self.assertTrue(s.battle and s.battle["boss"])
+
+    def test_every_location_has_well(self):
+        s = self.s
+        for w in s.data.regions:
+            for g in w["regions"]:
+                for l in g["locations"]:
+                    m = s.get_map("loc:" + l["id"])
+                    self.assertTrue(any(e["k"] == "well" for e in m["entities"]), l["id"])
+
+    def test_checkpoint_persisted(self):
+        from chineserim.session import Session
+        self.s.act("enter", loc="qingniu")
+        lab = self.s.checkpoint["label"]
+        s2 = Session(self.s.save_path)
+        s2.load()
+        self.assertEqual(s2.checkpoint["label"], lab)
+
+    def test_dialogue_boss_flow_with_retry(self):
+        from chineserim import dialogue
+        s, h = self.s, self.h
+        dialogue.start(s.data, h, "d_yuzitong", s.log, s.rs)
+        s.act("choose", i="0")
+        s.act("choose", i="")
+        self.assertTrue(s.battle and s.battle["boss"])
+        self.assertEqual(s.battle["enemies"][0]["name"], "余子童")
+        s.act("battle", cmd="flee")
+        for _ in range(30):
+            if s.battle and s.battle["over"]:
+                break
+            s.act("battle", cmd="flee")
+        if s.battle and s.battle["over"] == "flee":
+            self.assertFalse(h.flags.get("seen:d_yuzitong"))       # 逃跑後可重新挑戰
