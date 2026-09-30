@@ -51,6 +51,16 @@ def _apply(ch, effects, data, log, realms=None):
             else:
                 ch.remove(e["item"], min(-n, ch.count(e["item"])))
                 log.append(f"  消耗 {item_name(e['item'])} ×{-n}")
+        elif "affinity" in e and realms is not None:
+            sess = realms.session
+            sess._add_affinity(e["affinity"], e["n"])
+            log.append(f"  好感 +{e['n']}")
+        elif "companion" in e and realms is not None:
+            if not ch.companion:
+                ch.companion = e["companion"]
+                log.append(f"  ♥ {realms.session.cand_of(e['companion'])['name']}成為了你的道侶，從此與你並肩作戰！")
+        elif "join" in e and realms is not None:
+            realms.session.join_sect(e["join"])
         elif "learn" in e:
             if e["learn"] not in ch.gongfa:
                 ch.gongfa.append(e["learn"])

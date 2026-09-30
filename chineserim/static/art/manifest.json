@@ -108,6 +108,30 @@
   },
   "soldier": {
    "row": 96
+  },
+  "pharmacist": {
+   "row": 102
+  },
+  "shady": {
+   "row": 108
+  },
+  "dongxuaner": {
+   "row": 114
+  },
+  "mocaihuan": {
+   "row": 120
+  },
+  "chenqiaoqian": {
+   "row": 126
+  },
+  "yuanyao": {
+   "row": 132
+  },
+  "wenshier": {
+   "row": 138
+  },
+  "ziling": {
+   "row": 144
   }
  },
  "npcAnims": {
@@ -155,8 +179,15 @@
   "凌玉靈": "lingyu",
   "余子童": "yuzitong",
   "攤主": "merchant",
-  "藥鋪掌櫃": "merchant",
-  "掌櫃": "merchant",
+  "藥鋪掌櫃": "pharmacist",
+  "掌櫃": "pharmacist",
+  "奸商": "shady",
+  "董萱兒": "dongxuaner",
+  "墨彩環": "mocaihuan",
+  "陳巧倩": "chenqiaoqian",
+  "元瑤": "yuanyao",
+  "文詩兒": "wenshier",
+  "紫靈": "ziling",
   "船夫": "boatman",
   "天淵守軍": "soldier"
  },
@@ -1968,14 +1999,26 @@
     48,
     34
    ],
-   "icon_garden": [
+   "board": [
     212,
+    213,
+    52,
+    60
+   ],
+   "pharmacy": [
+    265,
+    213,
+    76,
+    66
+   ],
+   "icon_garden": [
+    342,
     213,
     44,
     38
    ],
    "icon_hut": [
-    257,
+    387,
     213,
     40,
     38
@@ -2240,14 +2283,26 @@
     48,
     34
    ],
-   "icon_garden": [
+   "board": [
     212,
+    213,
+    52,
+    60
+   ],
+   "pharmacy": [
+    265,
+    213,
+    76,
+    66
+   ],
+   "icon_garden": [
+    342,
     213,
     44,
     38
    ],
    "icon_hut": [
-    257,
+    387,
     213,
     40,
     38
@@ -2512,14 +2567,26 @@
     48,
     34
    ],
-   "icon_garden": [
+   "board": [
     212,
+    213,
+    52,
+    60
+   ],
+   "pharmacy": [
+    265,
+    213,
+    76,
+    66
+   ],
+   "icon_garden": [
+    342,
     213,
     44,
     38
    ],
    "icon_hut": [
-    257,
+    387,
     213,
     40,
     38
@@ -2784,14 +2851,26 @@
     48,
     34
    ],
-   "icon_garden": [
+   "board": [
     212,
+    213,
+    52,
+    60
+   ],
+   "pharmacy": [
+    265,
+    213,
+    76,
+    66
+   ],
+   "icon_garden": [
+    342,
     213,
     44,
     38
    ],
    "icon_hut": [
-    257,
+    387,
     213,
     40,
     38
@@ -3056,14 +3135,26 @@
     48,
     34
    ],
-   "icon_garden": [
+   "board": [
     212,
+    213,
+    52,
+    60
+   ],
+   "pharmacy": [
+    265,
+    213,
+    76,
+    66
+   ],
+   "icon_garden": [
+    342,
     213,
     44,
     38
    ],
    "icon_hut": [
-    257,
+    387,
     213,
     40,
     38

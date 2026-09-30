@@ -10,17 +10,19 @@ from .data import ROOT, GameData
 from .elements import ADV_MULT, DIS_MULT, PAIRS, PARENT
 from .explore import DEEP, WorldMap, is_wild, kill_reward, min_realm, visit
 from .realms import RealmSystem
+from .social import SocialMixin
 from .topdown import TD_KINDS, TopDownMixin
 
 SAVE_VERSION = 1
 DEFAULT_SAVE = ROOT / "saves" / "save.json"
 
 
-class Session(TopDownMixin):
+class Session(TopDownMixin, SocialMixin):
     def __init__(self, save_path=DEFAULT_SAVE, seed=None):
         self.data = GameData()
         self.rng = random.Random(seed)
         self.rs = RealmSystem(self.data, self.rng)
+        self.rs.session = self
         self.world = WorldMap(self.data)
         self.save_path = pathlib.Path(save_path) if save_path else None
         self.rs.on("CR_OnRealmChanged", lambda actor, order, sub, old: self.log.append(f"★ 境界變更 → {self.data.realms[order]['name']}"))
@@ -47,7 +49,7 @@ class Session(TopDownMixin):
 
     def set_difficulty(self, name):
         self.difficulty = name if name in difficulty.DIFFICULTY else difficulty.DEFAULT
-        self.rs.chance_bonus = self.dcfg["breakthrough"]
+        self.rs.chance_bonus = self.dcfg["breakthrough"] + (self.perk_totals()["breakthrough"] if getattr(self, "hero", None) else 0)
 
     def new_game(self, name=None, root=None, elems=None, diff=None, configured=True):
         self.log = []
@@ -61,7 +63,7 @@ class Session(TopDownMixin):
         self.hero.add("heal", self.dcfg["start_heal"])
         self.log = ["你是青牛鎮少年韓立。走上地圖上的地點圖示就能進入；先去看看家鄉青牛鎮吧。"]
         quests.ensure(self.hero, self.data)
-        self.shop_open = False
+        self.ui = {}
         self.td_reset()
 
     # ---- 存檔 ----
@@ -79,7 +81,7 @@ class Session(TopDownMixin):
         self.day, self.region, self.log = d["day"], d["region"], d["log"]
         if self.region not in self.world.regions:
             raise ValueError("存檔區域不存在")
-        self.shop_open = False
+        self.ui = {}
         self.set_difficulty(d.get("difficulty"))
         self.configured = d.get("configured", True)
         td = d.get("td")
@@ -113,6 +115,8 @@ class Session(TopDownMixin):
         d0 = self.day
         self.day += days
         for d in range(d0 + 1, self.day + 1):
+            if d % 30 == 0:
+                self.pay_stipends()
             if d % treasures.MOON_CYCLE_DAYS == 0:
                 n = self.hero.count("lingye")
                 treasures.tick_zhangtianping(self.rs, self.hero, d, 22)
@@ -201,7 +205,18 @@ class Session(TopDownMixin):
                 out[k] += c.get(k, 0.0)
             for el, v in c.get("elemDmg", {}).items():
                 out["elemDmg"][el] = out["elemDmg"].get(el, 0.0) + v
+        pt = self.perk_totals()
+        for k in ("allDmg", "slashDmg", "critChance"):
+            out[k] += pt[k]
+        for el, v in pt["elemDmg"].items():
+            out["elemDmg"][el] = out["elemDmg"].get(el, 0.0) + v
         return out
+
+    def shady_view(self):
+        if self.mode != "loc":
+            return None
+        sh = self.shady_now(self.cur_loc)
+        return {"x": sh["x"], "y": sh["y"]} if sh else None
 
     def snapshot(self):
         h, w = self.hero, self.world
@@ -218,9 +233,11 @@ class Session(TopDownMixin):
             "dialogue": dialogue.view(self.data, h),
             "difficulty": self.difficulty, "difficultyName": self.dcfg["name"], "configured": self.configured, "difficulties": {k: {"name": v["name"], "desc": v["desc"]} for k, v in difficulty.DIFFICULTY.items()},
             "mode": self.mode, "map_id": self.map_id, "pos": self.pos, "tp": getattr(self, "tp", 0), "cur_loc": self.cur_loc, "defeated": self.defeated,
-            "battle": battle.view(self.battle, h), "shop": self.shop_open and self.mode == "loc", "mp": round(h.mp), "max_mp": round(h.max_mp), "heal": h.count("heal"), "mpills": h.count("mpill"), "herbs": h.count("herb"), "plots": self.plots_view(),
+            "battle": battle.view(self.battle, h), "shop": self.shop_view(), "board": self.board_view(), "cand": self.cand_view(), "shady": self.shady_view(),
+            "members": [{"id": m, "name": self.data.sects[m]["name"], "perk": self.perk_of(m)["name"], "desc": self.perk_of(m)["desc"]} for m in h.members],
+            "partner": self.partner_spec(), "affinity": h.affinity, "mp": round(h.mp), "max_mp": round(h.max_mp), "heal": h.count("heal"), "mpills": h.count("mpill"), "herbs": h.count("herb"), "plots": self.plots_view(),
             "seeds": {k: dict(v, cost=round(v["cost"] * self.dcfg["price"])) for k, v in self.data.farming["seeds"].items()},
-            "recipes": {k: dict(v, needs={n: (round(c * self.dcfg["price"]) if n == "lingshi" else c) for n, c in v["needs"].items()}) for k, v in self.data.farming["recipes"].items()}, "prices": {k: round(v * self.dcfg["price"]) for k, v in self.data.ambient["shop"].items()},
+            "recipes": {k: dict(v, needs={n: (round(c * self.dcfg["price"]) if n == "lingshi" else c) for n, c in v["needs"].items()}) for k, v in self.data.farming["recipes"].items()}, "prices": {k: round(v["price"] * self.dcfg["price"]) for k, v in self.data.market["shops"]["shop"]["items"].items()},
             "questNpc": dialogue.pending_npc(self.data, h, self.cur_loc) if self.mode == "loc" else None,
             "opened": [k.split(":", 3)[3] for k in h.flags if k.startswith(f"chest:{self.map_id}:")],
             "region": self.region, "region_name": reg["name"], "gongfa": [{"id": g, "name": self.data.gongfa[g]["name"]} for g in h.gongfa if g in self.data.gongfa],

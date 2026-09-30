@@ -25,7 +25,7 @@ OBJ = {
     "crystal": (1, 1, 1), "altar": (1, 2, 1), "tomb": (1, 1, 1), "dummy": (1, 1, 1),
     "bush": (1, 1, 1), "flowers": (1, 0, 0), "boulder": (1, 1, 1),
     "furnace": (1, 1, 1), "plot0": (1, 0, 0), "plot1": (1, 0, 0), "plot2": (1, 0, 0), "plot3": (1, 0, 0),
-    "scarecrow": (1, 1, 1), "bed": (1, 2, 1),
+    "scarecrow": (1, 1, 1), "bed": (1, 2, 1), "board": (1, 2, 1), "pharmacy": (1, 2, 1),
 }
 OBJ_SCALE = {k: v[0] for k, v in OBJ.items()}
 
@@ -552,12 +552,31 @@ class LocBuilder:
             return r.choice(["normal", "rich", "empty", "mimic"])
         return "normal"
 
+    def _place_board(self, x, y):
+        for dx, dy in ((0, 0), (2, 0), (-2, 0), (0, -2), (3, -1), (-3, -1), (5, -2), (-5, -2), (0, -4), (7, -3), (-7, -3), (0, -6)):
+            if self.place("board", x + dx, y + dy, 0):
+                self.entities.append({"id": "board", "k": "board", "x": x + dx, "y": y + dy, "name": "布告欄"})
+                return
+
+    def add_candidate(self):
+        """道侶候選人：站在自己的地點裡。"""
+        for cid, c in self.data.companions["candidates"].items():
+            if c["loc"] != self.loc["id"]:
+                continue
+            nx, ny = getattr(self, "npc_spot", (self.W // 2, self.H // 2))
+            cells = sorted(self.free_cells(0), key=lambda p: math.hypot(p[0] - nx - 3, p[1] - ny))
+            for (x, y) in cells[:30]:
+                if math.hypot(x - nx, y - ny) >= 2:
+                    self.entities.append({"id": "cand:" + cid, "k": "candidate", "cid": cid, "name": c["name"], "npc": c["sprite"], "x": x, "y": y})
+                    break
+
     def add_npc(self, role, name, x, y, wander=True):
         self.entities.append({"id": self.eid("n"), "k": "npc", "role": role, "name": name, "npc": role_sprite(role, self.rng), "x": x, "y": y, "wander": wander})
 
     # ---- 版型 ----
     def build(self):
         getattr(self, "_" + self.cat)()
+        self.add_candidate()
         # 入口告示牌
         sx, sy = self.spawn
         for dx in (-3, 3, -4, 4):
@@ -568,17 +587,21 @@ class LocBuilder:
         solid = _solid_grid(ground, self.W, self.H, BLOCK_LOC, self.objects)
         # 保證：出口、出生點、任務 NPC 位置、實體皆連通
         reach = bfs(solid, self.W, self.H, self.spawn)
-        self.entities = [e for e in self.entities if e["k"] not in ("enemy", "npc", "plot") or (e["x"], e["y"]) in reach]
+        self.entities = [e for e in self.entities if e["k"] not in ("enemy", "npc", "plot", "candidate") or (e["x"], e["y"]) in reach]
         # 寶箱／告示／假人本身是實心，需其相鄰格可達
         def touch(e):
             return any((e["x"] + dx, e["y"] + dy) in reach for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
-        self.entities = [e for e in self.entities if e["k"] not in ("chest", "sign", "dummy", "portal", "altar", "furnace", "bed") or touch(e)]
+        self.entities = [e for e in self.entities if e["k"] not in ("chest", "sign", "dummy", "portal", "altar", "furnace", "bed", "board") or touch(e)]
         self.objects = [o for o in self.objects if o["t"] != "chest_c" or any(e["k"] == "chest" and (e["x"], e["y"]) == (o["x"], o["y"]) for e in self.entities)]
         solid = _solid_grid(ground, self.W, self.H, BLOCK_LOC, self.objects)
         npc_spot = getattr(self, "npc_spot", None)
         if not npc_spot or (npc_spot not in bfs(solid, self.W, self.H, self.spawn)):
             npc_spot = min(bfs(solid, self.W, self.H, self.spawn), key=lambda c: math.hypot(c[0] - self.W / 2, c[1] - self.H * .4))
+        occupied = {(e["x"], e["y"]) for e in self.entities}
+        rr = sorted(c for c in bfs(solid, self.W, self.H, self.spawn) if c not in occupied and math.hypot(c[0] - npc_spot[0], c[1] - npc_spot[1]) <= 9 and c[1] < self.H - 4)
+        spots = [list(c) for c in random.Random(_seed_of("spots" + self.loc["id"])).sample(rr, min(14, len(rr)))]
         return {
+            "spots": spots,
             "id": "loc:" + self.loc["id"], "kind": "loc", "objScale": OBJ_SCALE, "w": self.W, "h": self.H, "biome": self.region, "cat": self.cat,
             "name": self.loc["name"].split("（")[0], "type": self.loc["type"], "ground": ground,
             "solid": ["".join(map(str, r)) for r in solid], "objects": self.objects, "entities": self.entities,
@@ -608,7 +631,18 @@ class LocBuilder:
         self.scatter(["tree", "bush", "flowers"], 12)
         self.npc_spot = (cx + 3, mid + 4) if (cx + 3, mid + 4) not in self._solid_cells else (cx - 2, mid + 4)
         self.add_npc("inn", "旅店老闆", cx - 4, mid + 4)
-        self.add_npc("shop", "藥販", cx + 5, mid + 4)
+        if self.loc["type"] == "村鎮":
+            self.add_npc("shop", "藥販", cx + 5, mid + 4)
+        else:                                                  # 較大的城鎮／坊市：正式的丹藥鋪
+            placed = False
+            for px, py in ((cx + 10, mid + 4), (cx - 11, mid + 4), (cx + 9, mid - 4), (cx - 10, mid - 4), (cx + 11, mid + 8)):
+                if self.place("pharmacy", px, py, 1):
+                    self.add_npc("pharmacy", "丹藥鋪掌櫃", px, py + 2, wander=False)
+                    placed = True
+                    break
+            if not placed:
+                self.add_npc("pharmacy", "丹藥鋪掌櫃", cx + 5, mid + 4, wander=False)
+        self._place_board(cx - 6, H - 6)
         self.add_npc("villager", "村民", R.randrange(4, W - 4), mid - 1)
         self.add_npc("villager", "行商", R.randrange(4, W - 4), mid + 1)
         self.add_npc("guard", "守衛", cx + 3, H - 4, wander=False)
@@ -644,6 +678,7 @@ class LocBuilder:
         for i in range(3):
             self.add_npc("disciple", "弟子", R.randrange(cx - 5, cx + 5), R.randrange(13, H - 7))
         self.add_npc("guard", "守門弟子", cx - 4, H - 4, wander=False)
+        self._place_board(cx + 9, H - 7)
 
     def _wild(self):
         W, H, R = self.W, self.H, self.rng
@@ -811,3 +846,4 @@ def _dwelling(self):
 LocBuilder._garden = _garden
 LocBuilder._dwelling = _dwelling
 ROLE_SPRITES["farmer"] = ["villager_m", "merchant"]
+ROLE_SPRITES["pharmacy"] = ["pharmacist"]

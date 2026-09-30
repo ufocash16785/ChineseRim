@@ -27,13 +27,13 @@ def make_enemy(ch, spec, deep, idx, diff=None):
             "hp": hp, "maxhp": hp, "atk": 9.0 * scale * (1.15 if deep else 1.0) * diff.get("enemy_atk", 1.0), "dead": False, "loot": spec.get("loot", 1.0)}
 
 
-def start(ch, loc_id, specs, deep=False, diff=None):
+def start(ch, loc_id, specs, deep=False, diff=None, partner=None):
     specs = specs[:2 if deep else 3]
     if not specs:
         raise ValueError("沒有敵人")
     return {"loc": loc_id, "deep": bool(deep), "enemies": [make_enemy(ch, s, deep, i, diff) for i, s in enumerate(specs)], "diff": diff or {},
             "log": [f"遭遇 {'、'.join(s.get('name') or KINDS.get(s['kind'], '妖獸') for s in specs)}！"], "guard": False, "over": None, "turn": 1,
-            "killed": [], "rewards": []}
+            "killed": [], "rewards": [], "partner": partner, "pact": None}
 
 
 def alive(st):
@@ -107,7 +107,7 @@ def command(st, ch, realms, rng, cmd, arg=None, target=None, bonus=None):
         ch.mp = min(ch.max_mp, ch.mp + ch.max_mp * 0.04)
         st["log"].append("你運功守禦，靈力略有恢復")
     elif cmd == "flee":
-        chance = max(0.05, min(0.95, (0.35 if st["deep"] else 0.6) + st.get("diff", {}).get("flee", 0)))
+        chance = max(0.05, min(0.95, (0.35 if st["deep"] else 0.6) + st.get("diff", {}).get("flee", 0) + (0.1 if st.get("partner") else 0)))
         if rng.random() < chance:
             st["log"].append("你成功逃脫了！")
             st["over"] = "flee"
@@ -120,12 +120,18 @@ def command(st, ch, realms, rng, cmd, arg=None, target=None, bonus=None):
         return False
     if not alive(st):
         return _win(st, ch, realms, rng)
+    _partner_act(st, ch, realms, rng)
+    if not alive(st):
+        return _win(st, ch, realms, rng)
     # 敵方回合
     prim = ch.elements[0] if ch.elements else ""
     for i in alive(st):
         e = st["enemies"][i]
         if rng.random() < 0.12:
             st["log"].append(f"{e['name']}遲疑了一下")
+            continue
+        if st.get("partner") and rng.random() < 0.35:            # 有道侶在側，部分攻擊被她擋下
+            st["log"].append(f"{e['name']}撲向{st['partner']['name']}，被她輕巧地化解了")
             continue
         m = element_multiplier(e["el"], prim)
         d = e["atk"] * m * rng.uniform(.85, 1.15) * (0.5 if st["guard"] else 1.0)
@@ -138,6 +144,32 @@ def command(st, ch, realms, rng, cmd, arg=None, target=None, bonus=None):
             return True
     st["turn"] += 1
     return False
+
+
+def _partner_act(st, ch, realms, rng):
+    """道侶自動出手：血量低時可能治療，否則攻擊或施展五行法術。"""
+    p = st.get("partner")
+    st["pact"] = None
+    if not p or not alive(st):
+        return
+    heal_p = {"healer": 0.6, "mage": 0.25, "fighter": 0.15}.get(p["role"], 0.2)
+    if ch.hp < 0.5 * ch.max_hp and rng.random() < heal_p + 0.15:
+        amt = ch.max_hp * (0.28 if p["role"] == "healer" else 0.18)
+        ch.hp = min(ch.max_hp, ch.hp + amt)
+        st["log"].append(f"{p['name']}為你施展療傷之術，回復 {round(amt)} 點氣血")
+        st["pact"] = {"kind": "heal", "target": None}
+        return
+    al = alive(st)
+    t = min(al, key=lambda i: st["enemies"][i]["hp"])
+    base = hero_atk(ch, {}) * p["atk"] * rng.uniform(.9, 1.1)
+    e = st["enemies"][t]
+    if p["role"] != "fighter" and rng.random() < 0.55:
+        m = element_multiplier(p["el"], e["el"])
+        _hit(st, t, base * 1.6 * m, f"{p['name']}施展{p['el']}系法術" + ("（剋制！）" if m > 1 else ""))
+        st["pact"] = {"kind": "spell", "target": t, "el": p["el"]}
+    else:
+        _hit(st, t, base, f"{p['name']}出手攻擊")
+        st["pact"] = {"kind": "attack", "target": t}
 
 
 def _win(st, ch, realms, rng):
@@ -159,4 +191,4 @@ def view(st, ch):
         return None
     return {"loc": st["loc"], "deep": st["deep"], "over": st["over"], "turn": st["turn"], "log": st["log"],
             "enemies": [{k: e[k] for k in ("id", "kind", "name", "el", "hp", "maxhp", "dead")} for e in st["enemies"]],
-            "spellCost": spell_cost(ch), "diff": st.get("diff", {}).get("name", ""), "killed": st["killed"], "rewards": st["rewards"]}
+            "partner": st.get("partner"), "pact": st.get("pact"), "spellCost": spell_cost(ch), "diff": st.get("diff", {}).get("name", ""), "killed": st["killed"], "rewards": st["rewards"]}

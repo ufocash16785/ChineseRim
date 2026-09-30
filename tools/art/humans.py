@@ -10,12 +10,17 @@ HAIR_DARK = hexc("#2b2233")
 
 class Pal:
     def __init__(self, robe, trim, sash, hair, skin=SKIN, boots="#3a2c3c", beard=None, hairstyle="topknot",
-                 accessory=None, sword=True, robe2=None, hat=None):
+                 accessory=None, sword=True, robe2=None, hat=None, female=False, eye=None, shawl=None, ornament="#ff7a9a"):
         self.robe, self.trim, self.sash = hexc(robe), hexc(trim), hexc(sash)
         self.robe2 = hexc(robe2) if robe2 else darken(hexc(robe), .18)
         self.hair, self.skin, self.boots = hexc(hair), skin, hexc(boots)
         self.beard = hexc(beard) if beard else None
         self.hairstyle, self.accessory, self.sword, self.hat = hairstyle, accessory, sword, hat
+        self.female = female
+        self.eye = hexc(eye) if eye else hexc("#5a3a6a")
+        self.shawl = hexc(shawl) if shawl else lighten(hexc(trim), .1)
+        self.ornament = hexc(ornament)
+        self.hair_hi = lighten(hexc(hair), .35)
 
 
 def _sword(c, x0, y0, x1, y1):
@@ -61,9 +66,22 @@ def draw_human(p: Pal, pose: dict):
     sway = [0, 1, 2][flutter]
     for y in range(top, bot):
         t = (y - top) / (bot - top)
-        w = 5 + int(t * 3.4)
+        if p.female:       # 收腰、裙擺外展
+            w = int(5 - 1.6 * min(t, .4) / .4 + max(0, t - .4) / .6 * 6.4)
+        else:
+            w = 5 + int(t * 3.4)
         x0, x1 = cx - w - (sway if t > .6 else 0), cx + w
         c.rect(x0, y, x1, y, p.robe if t < .85 else p.robe2, "robe")
+        if p.female and t > .4:
+            c.rect(cx - 1 - w // 3, y, cx + w // 3, y, lighten(p.robe, .18), "robe")   # 裙面中央淺色
+    if p.female:
+        for xx in range(cx - 9 - sway, cx + 9, 3):                                   # 裙襬波浪
+            c.rect(xx, bot - 1, xx + 1, bot, p.trim, "trim")
+        # 披帛：從肩頭繞到身後，隨風飄動
+        fl = [0, 2, 4][flutter]
+        c.line(cx + 3, top + 1, cx - 5, top + 6, p.shawl, "shawl", 2)
+        c.line(cx - 5, top + 6, cx - 11 - fl, top + 13 - (flutter == 1), p.shawl, "shawl", 2)
+        c.line(cx - 11 - fl, top + 13, cx - 13 - fl, top + 17, p.shawl, "shawl", 1)
     c.rect(cx - 8 - sway, bot - 2, cx + 8, bot - 1, p.trim, "trim")     # 下擺滾邊
     c.rect(cx - 5, top, cx + 4, top + 1, p.trim, "trim")                # 領口
     c.line(cx - 2, top + 1, cx + 1, top + 5, p.trim, "trim")            # 交領
@@ -76,7 +94,7 @@ def draw_human(p: Pal, pose: dict):
         for (lx, ly, front) in ((pose.get("legB", (0, 0)) + (False,)), (pose.get("legF", (0, 0)) + (True,))):
             x = cx - 1 + (3 if front else -4) + lx
             y = bot - 1 + bob + ly
-            c.rect(x, y, x + 3, base - 2 + min(0, ly) + 0, p.robe2, "robe")
+            c.rect(x, y, x + 3, base - 2 + min(0, ly) + 0, lighten(p.robe, .3) if p.female else p.robe2, "robe")
             c.rect(x - 1, base - 3 + min(0, ly), x + 4, base + min(0, ly), p.boots, "boots")
     else:
         c.rect(cx - 5, base - 3, cx - 2, base, p.boots, "boots")
@@ -93,7 +111,10 @@ def draw_human(p: Pal, pose: dict):
         c.line(sx, sy, tx, ty, p.robe, "robe", 3)
         c.line(sx + 1, sy, tx + 1, ty, p.robe, "robe", 3)
         c.rect(tx - 1, ty - 1, tx + 1, ty + 1, p.trim, "trim")          # 袖口
-        c.put(tx + (1 if front else 0), ty + 2, p.skin, "skin")
+        if p.female:                                                    # 寬袖垂墜
+            c.poly([(tx - 2, ty), (tx + 2, ty), (tx + 1, ty + 5)], p.robe, "robe")
+            c.rect(tx - 2, ty + 4, tx + 1, ty + 5, p.trim, "trim")
+        c.put(tx + (1 if front else 0), ty + 2 if not p.female else ty + 6, p.skin, "skin")
         return tx, ty
 
     if not pose.get("armBack") is None:
@@ -108,7 +129,23 @@ def draw_human(p: Pal, pose: dict):
         c.rect(cx + 9, hy - 5, cx + 10, hy, p.hair, "hair")
     for i, bx in enumerate(range(cx - 7, cx + 9, 3)):
         c.rect(bx, hy - 3, bx + 1, hy - (0 if i % 2 == 0 else 1), p.hair, "hair")
+    if p.female:            # 髮絲高光、側掃瀏海、耳墜
+        for i in range(4):
+            c.line(cx - 8 + i * 4, hy - 8, cx - 6 + i * 4, hy - 3, p.hair_hi, "hair")
+        c.line(cx - 9, hy - 3, cx + 3, hy + 1, p.hair, "hair", 2)
+        c.put(cx - 8, hy + 5, hexc("#ffd35a"), "trim")
+        c.put(cx - 8, hy + 6, hexc("#ffe98a"), "trim")
     # 髮髻 / 髮飾
+    if p.female and p.accessory in ("flower", "bow"):
+        if p.accessory == "flower":
+            for fx, fy in ((cx + 4, hy - 9), (cx + 7, hy - 7), (cx + 5, hy - 5)):
+                c.rect(fx, fy, fx + 1, fy + 1, p.ornament, "trim")
+            c.put(cx + 6, hy - 8, hexc("#fff5b0"), "trim")
+            c.put(cx + 3, hy - 6, hexc("#4aa860"), "trim")
+        else:
+            c.rect(cx - 12, hy - 4, cx - 9, hy - 1, p.ornament, "trim")
+            c.rect(cx - 12, hy + 1, cx - 9, hy + 4, p.ornament, "trim")
+            c.rect(cx - 10, hy - 1, cx - 9, hy + 1, lighten(p.ornament, .3), "trim")
     if hs == "topknot":
         c.ellipse(cx - 1, hy - 12, 3, 3, p.hair, "hair")
         c.rect(cx - 2, hy - 10, cx, hy - 9, p.trim, "trim")
@@ -137,9 +174,16 @@ def draw_human(p: Pal, pose: dict):
         for ex in (cx - 3, cx + 4):
             c.rect(ex, ey - 1, ex + 2, ey + 3, HAIR_DARK, "eye")
             c.rect(ex, ey - 1, ex + 1, ey, (255, 255, 255), "eye")
+            if p.female:
+                c.rect(ex, ey + 1, ex + 1, ey + 2, p.eye, "eye")          # 虹膜上色
+                c.rect(ex - 1, ey - 2, ex + 2, ey - 2, HAIR_DARK, "eye")   # 睫毛
+                c.put(ex + 2, ey - 1, HAIR_DARK, "eye")
     c.put(cx - 5, ey + 4, hexc("#f2a0a0"), "skin")
     c.put(cx + 7, ey + 4, hexc("#f2a0a0"), "skin")
-    c.rect(cx + 1, ey + 6, cx + 3, ey + 6, hexc("#b0605a"), "eye")
+    c.rect(cx + 1, ey + 6, cx + 3, ey + 6, hexc("#d8506a") if p.female else hexc("#b0605a"), "eye")
+    if p.female:
+        c.rect(cx - 6, ey + 4, cx - 5, ey + 4, hexc("#ff9aa8"), "skin")
+        c.rect(cx + 7, ey + 4, cx + 8, ey + 4, hexc("#ff9aa8"), "skin")
     if p.beard:
         c.poly([(cx - 5, ey + 5), (cx + 8, ey + 5), (cx + 6, ey + 14), (cx, ey + 17), (cx - 4, ey + 12)], p.beard, "beard")
         c.rect(cx + 1, ey + 6, cx + 3, ey + 6, hexc("#b0605a"), "eye")
@@ -204,8 +248,16 @@ def draw_human_dir(p: Pal, pose: dict):
     # ---- 長袍 ----
     for y in range(top, bot):
         t = (y - top) / (bot - top)
-        w = 6 + int(t * 3.2)
+        if p.female:
+            w = int(6 - 1.8 * min(t, .4) / .4 + max(0, t - .4) / .6 * 6.0)
+        else:
+            w = 6 + int(t * 3.2)
         c.rect(cx - w, y, cx + w - 1, y, p.robe if t < .85 else p.robe2, "robe")
+        if p.female and t > .4:
+            c.rect(cx - 1 - w // 3, y, cx + w // 3 - 1, y, lighten(p.robe, .18), "robe")
+    if p.female:
+        for xx in range(cx - 11, cx + 11, 3):
+            c.rect(xx, bot - 1, xx + 1, bot, p.trim, "trim")
     c.rect(cx - 9, bot - 2, cx + 8, bot - 1, p.trim, "trim")
     if not back:
         c.rect(cx - 5, top, cx + 4, top + 1, p.trim, "trim")
@@ -225,9 +277,16 @@ def draw_human_dir(p: Pal, pose: dict):
         fwd = 1 if step == -side else 0
         x = cx + (side * 3) - 2
         y0 = bot - 1
-        c.rect(x, y0, x + 3, BASE - 2 + lift * 0, p.robe2, "robe")
+        c.rect(x, y0, x + 3, BASE - 2 + lift * 0, lighten(p.robe, .3) if p.female else p.robe2, "robe")
         c.rect(x - 1, BASE - 3 + lift + fwd, x + 4, BASE + lift + fwd, p.boots, "boots")
 
+    if p.female:
+        if back:
+            c.rect(cx - 8, top + 1, cx + 7, top + 3, p.shawl, "shawl")
+            c.rect(cx - 9, top + 3, cx - 7, top + 12, p.shawl, "shawl")
+        else:
+            for xx in (cx - 7, cx + 5):
+                c.rect(xx, top + 1, xx + 2, top + 12 + (1 if xx > cx else 0), p.shawl, "shawl")
     # ---- 手臂（垂在兩側，走路時前後擺）----
     for side in (-1, 1):
         sw = step * side * 2
@@ -235,7 +294,9 @@ def draw_human_dir(p: Pal, pose: dict):
         c.line(sx, top + 4, sx + side, top + 12 + sw, p.robe, "robe", 3)
         c.line(sx + 1, top + 4, sx + side + 1, top + 12 + sw, p.robe, "robe", 3)
         c.rect(sx + side - 1, top + 12 + sw, sx + side + 1, top + 14 + sw, p.trim, "trim")
-        c.rect(sx + side - 1, top + 15 + sw, sx + side + 1, top + 16 + sw, p.skin, "skin")
+        if p.female:
+            c.poly([(sx + side - 2, top + 13 + sw), (sx + side + 2, top + 13 + sw), (sx + side + (1 if side > 0 else -1), top + 18 + sw)], p.robe, "robe")
+        c.rect(sx + side - 1, top + 15 + sw + (3 if p.female else 0), sx + side + 1, top + 16 + sw + (3 if p.female else 0), p.skin, "skin")
 
     # ---- 背劍 ----
     if p.sword:
@@ -257,6 +318,19 @@ def draw_human_dir(p: Pal, pose: dict):
         c.rect(cx + 8, hy - 5, cx + 9, hy + 2, p.hair, "hair")
         for i, bx in enumerate(range(cx - 8, cx + 9, 3)):
             c.rect(bx, hy - 3, bx + 1, hy - (0 if i % 2 == 0 else 1), p.hair, "hair")
+    if p.female:
+        for i in range(5):
+            c.line(cx - 8 + i * 4, hy - 8, cx - 7 + i * 4, hy - 3, p.hair_hi, "hair")
+        if not back:
+            c.put(cx - 9, hy + 5, hexc("#ffd35a"), "trim"); c.put(cx + 8, hy + 5, hexc("#ffd35a"), "trim")
+            c.put(cx - 9, hy + 6, hexc("#ffe98a"), "trim"); c.put(cx + 8, hy + 6, hexc("#ffe98a"), "trim")
+        if p.accessory == "flower":
+            for fx, fy in ((cx + 5, hy - 9), (cx + 8, hy - 7), (cx + 6, hy - 5)):
+                c.rect(fx, fy, fx + 1, fy + 1, p.ornament, "trim")
+            c.put(cx + 7, hy - 8, hexc("#fff5b0"), "trim")
+        elif p.accessory == "bow":
+            c.rect(cx - 3, hy - 11, cx + 3, hy - 9, p.ornament, "trim")
+            c.rect(cx - 1, hy - 10, cx + 1, hy - 10, lighten(p.ornament, .4), "trim")
     # 髮型細節
     if hs == "topknot":
         c.ellipse(cx, hy - 12, 3, 3, p.hair, "hair")
@@ -296,9 +370,15 @@ def draw_human_dir(p: Pal, pose: dict):
             for ex in (cx - 5, cx + 3):
                 c.rect(ex, ey - 1, ex + 2, ey + 3, HAIR_DARK, "eye")
                 c.rect(ex, ey - 1, ex + 1, ey, (255, 255, 255), "eye")
+                if p.female:
+                    c.rect(ex, ey + 1, ex + 1, ey + 2, p.eye, "eye")
+                    c.rect(ex - 1, ey - 2, ex + 3, ey - 2, HAIR_DARK, "eye")
         c.put(cx - 7, ey + 4, hexc("#f2a0a0"), "skin")
         c.put(cx + 7, ey + 4, hexc("#f2a0a0"), "skin")
-        c.rect(cx - 1, ey + 6, cx + 1, ey + 6, hexc("#b0605a"), "eye")
+        if p.female:
+            c.rect(cx - 8, ey + 4, cx - 7, ey + 4, hexc("#ff9aa8"), "skin")
+            c.rect(cx + 7, ey + 4, cx + 8, ey + 4, hexc("#ff9aa8"), "skin")
+        c.rect(cx - 1, ey + 6, cx + 1, ey + 6, hexc("#d8506a") if p.female else hexc("#b0605a"), "eye")
         if p.beard:
             c.poly([(cx - 7, ey + 5), (cx + 7, ey + 5), (cx + 5, ey + 14), (cx, ey + 17), (cx - 5, ey + 14)], p.beard, "beard")
             c.rect(cx - 1, ey + 6, cx + 1, ey + 6, hexc("#b0605a"), "eye")

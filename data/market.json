@@ -1,0 +1,115 @@
+{
+  "description": "市場（獨立引擎用）。shops：各類店舖的販售（price 基礎靈石價、daily 每日限量；省略＝不限量）與收購價 sell。shady：奸商——出現機率、種類權重與價格倍率。fair：布告欄交易會的物品估值。",
+  "shops": {
+    "shop": {
+      "name": "藥販",
+      "items": {
+        "heal": {
+          "price": 30
+        },
+        "pill": {
+          "price": 100
+        }
+      },
+      "sell": {}
+    },
+    "pharmacy": {
+      "name": "丹藥鋪",
+      "items": {
+        "heal": {
+          "price": 30,
+          "daily": 8
+        },
+        "mpill": {
+          "price": 45,
+          "daily": 6
+        },
+        "pill": {
+          "price": 110,
+          "daily": 2
+        },
+        "herb": {
+          "price": 16,
+          "daily": 12
+        }
+      },
+      "sell": {
+        "herb": 8,
+        "heal": 12,
+        "mpill": 18,
+        "pill": 55,
+        "lingye": 90
+      }
+    }
+  },
+  "shady": {
+    "types_in": [
+      "坊市",
+      "城市",
+      "都城",
+      "府城",
+      "港口",
+      "集市",
+      "國都"
+    ],
+    "chance": 0.4,
+    "period_days": 3,
+    "appraise_cost": 15,
+    "items": {
+      "heal": {
+        "price": 30,
+        "daily": 5
+      },
+      "mpill": {
+        "price": 45,
+        "daily": 4
+      },
+      "pill": {
+        "price": 110,
+        "daily": 3
+      }
+    },
+    "kinds": {
+      "fake": {
+        "weight": 4,
+        "price_mult": 0.55,
+        "fake_rate": 0.6,
+        "hint": "這批貨有問題——價錢低得不合常理，多半是假丹！"
+      },
+      "gouge": {
+        "weight": 4,
+        "price_mult": 2.2,
+        "fake_rate": 0.0,
+        "hint": "貨是真的，但開的價錢黑得離譜。"
+      },
+      "bargain": {
+        "weight": 2,
+        "price_mult": 0.7,
+        "fake_rate": 0.0,
+        "hint": "難得！這批貨是真的，而且價格公道。"
+      }
+    },
+    "greetings": [
+      "嘿嘿，這位道友，看你骨骼清奇，有筆好買賣要不要做？",
+      "噓——小聲點，內部價，只賣有緣人。",
+      "祖傳秘方煉的丹，別處買不到哦。"
+    ]
+  },
+  "fair": {
+    "value": {
+      "lingshi": 1,
+      "herb": 12,
+      "heal": 28,
+      "mpill": 40,
+      "pill": 100,
+      "lingye": 160
+    },
+    "themes": [
+      "丹藥",
+      "靈草",
+      "百草",
+      "法器",
+      "煉丹師"
+    ]
+  }
+}

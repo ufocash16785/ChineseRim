@@ -22,30 +22,39 @@ HERO_OUTFITS = [
 ]
 
 NPCS = {
-    "villager_f": dict(robe="#b98a5a", trim="#e8d8b0", sash="#8a5a3a", hair="#3a2a2a", hairstyle="long"),
+    "villager_f": dict(robe="#b98a5a", trim="#e8d8b0", sash="#8a5a3a", hair="#3a2a2a", hairstyle="long", female=True, eye="#6a4a3a", shawl="#e8d8b0", accessory="bow", ornament="#e0a070"),
     "villager_m": dict(robe="#8a7a5a", trim="#c8b88a", sash="#5a4a2a", hair="#3a2a2a", hairstyle="short"),
     "disciple": dict(robe="#8a3a2a", trim="#e8d0a0", sash="#3a2a2a", hair="#2b2233", hairstyle="topknot"),
     "lifeiyu": dict(robe="#6a7b8c", trim="#d8e0e8", sash="#3a4a5a", hair="#2b2233", hairstyle="ponytail"),
     "zhangtie": dict(robe="#7a6a4a", trim="#b8a878", sash="#4a3a2a", hair="#2b2233", hairstyle="short"),
     "mo": dict(robe="#6a8a5a", trim="#e0e0c0", sash="#4a5a3a", hair="#b0b0b0", beard="#c0c0c0", hairstyle="elder"),
     "li": dict(robe="#d8a82a", trim="#fff0b0", sash="#8a5a1a", hair="#d0d0d0", beard="#d8d8d8", hairstyle="elder"),
-    "nangong": dict(robe="#f4f6fb", trim="#8ec5e8", sash="#6aa0d8", hair="#1e1a2a", hairstyle="long", accessory="pin"),
+    "nangong": dict(robe="#f4f6fb", trim="#8ec5e8", sash="#6aa0d8", hair="#1e1a2a", hairstyle="long", accessory="pin", female=True, eye="#4a7ac8", shawl="#bfe2ff"),
     "dayan": dict(robe="#d8c880", trim="#fff8d0", sash="#a08830", hair="#f0f0f0", beard="#f0f0f0", hairstyle="elder"),
     "villain": dict(robe="#3a2a4a", trim="#c0406a", sash="#1a1020", hair="#1a1020", hairstyle="ponytail"),
     "xuangu": dict(robe="#2a2030", trim="#a03030", sash="#6a1a1a", hair="#d0d0d0", beard="#d0d0d0", hairstyle="elder"),
-    "mupei": dict(robe="#c0492b", trim="#f0d090", sash="#6a2a1a", hair="#3a2418", hairstyle="long", accessory="pin"),
-    "lingyu": dict(robe="#7a6ad8", trim="#f0e0ff", sash="#4a3a9a", hair="#241a34", hairstyle="long", accessory="pin"),
+    "mupei": dict(robe="#c0492b", trim="#f0d090", sash="#6a2a1a", hair="#3a2418", hairstyle="long", accessory="flower", female=True, eye="#8a4a2a", shawl="#f8d8a0", ornament="#ffb84a"),
+    "lingyu": dict(robe="#7a6ad8", trim="#f0e0ff", sash="#4a3a9a", hair="#241a34", hairstyle="long", accessory="pin", female=True, eye="#8a4ac8", shawl="#e0d0ff"),
     "yuzitong": dict(robe="#5a3a3a", trim="#a08a7a", sash="#2a1a1a", hair="#1a1414", hairstyle="topknot"),
     "merchant": dict(robe="#5a7a3a", trim="#e8d8a0", sash="#8a6a2a", hair="#3a2a2a", hairstyle="short", hat="#6a4a2a"),
     "boatman": dict(robe="#4a6a8a", trim="#a8c0d0", sash="#2a3a4a", hair="#3a3a3a", hairstyle="short", hat="#b89a5a"),
     "soldier": dict(robe="#7a8592", trim="#e0c060", sash="#4a5560", hair="#2b2233", hairstyle="short", hat="#5a6570"),
+    # 新增：藥鋪掌櫃、奸商、道侶候選人
+    "pharmacist": dict(robe="#e8e0c0", trim="#4aa070", sash="#2a6a4a", hair="#2a2a2a", beard="#2a2a2a", hairstyle="elder"),
+    "shady": dict(robe="#4a3a2a", trim="#c8a040", sash="#2a1a10", hair="#1a1a1a", hairstyle="short", hat="#3a2a1a"),
+    "dongxuaner": dict(robe="#fbe7a8", trim="#fff8e0", sash="#f08a4a", hair="#3a2a20", hairstyle="long", accessory="flower", female=True, eye="#a06a2a", shawl="#fff0c0", ornament="#ffb84a"),
+    "mocaihuan": dict(robe="#a8d8b8", trim="#f0fff0", sash="#3a8a5a", hair="#2a2a2a", hairstyle="ponytail", accessory="bow", female=True, eye="#3a8a5a", shawl="#e8ffe0", ornament="#ffd0e0"),
+    "chenqiaoqian": dict(robe="#f2a8b8", trim="#fff0f0", sash="#c0304a", hair="#3a2028", hairstyle="long", accessory="flower", female=True, eye="#a0406a", shawl="#ffe0e8", ornament="#ff3a6a"),
+    "yuanyao": dict(robe="#b8d0f0", trim="#f0f6ff", sash="#5a7ac8", hair="#2a2a3a", hairstyle="long", accessory="pin", female=True, eye="#5a7ac8", shawl="#e0eeff"),
+    "wenshier": dict(robe="#f8c898", trim="#fff4e0", sash="#c8683a", hair="#4a2a1a", hairstyle="ponytail", accessory="bow", female=True, eye="#c8683a", shawl="#ffe8c8", ornament="#ffd35a"),
+    "ziling": dict(robe="#c8b0f0", trim="#f4ecff", sash="#7a4ac8", hair="#5a3a8a", hairstyle="long", accessory="flower", female=True, eye="#8a4ac8", shawl="#ecdcff", ornament="#e08aff"),
 }
 
 SPEAKERS = {
     "母親": "villager_f", "三叔": "villager_m", "執事": "disciple", "落雲宗執事": "disciple", "靈獸山弟子": "disciple",
     "聯盟使者": "disciple", "厲飛雨": "lifeiyu", "張鐵": "zhangtie", "墨大夫": "mo", "李化元": "li",
     "南宮婉": "nangong", "大衍神君": "dayan", "曲魂": "villain", "玄骨老祖": "xuangu", "慕沛靈": "mupei",
-    "凌玉靈": "lingyu", "余子童": "yuzitong", "攤主": "merchant", "藥鋪掌櫃": "merchant", "掌櫃": "merchant", "船夫": "boatman",
+    "凌玉靈": "lingyu", "余子童": "yuzitong", "攤主": "merchant", "藥鋪掌櫃": "pharmacist", "掌櫃": "pharmacist", "奸商": "shady", "董萱兒": "dongxuaner", "墨彩環": "mocaihuan", "陳巧倩": "chenqiaoqian", "元瑤": "yuanyao", "文詩兒": "wenshier", "紫靈": "ziling", "船夫": "boatman",
     "天淵守軍": "soldier",
 }
 
@@ -175,7 +184,7 @@ def main():
               ("icon_battle", tiles.icon_battle(b)), ("icon_camp", tiles.icon_camp(b)), ("icon_port", tiles.icon_port(b)),
               ("icon_ruin", tiles.icon_ruin(b)), ("icon_portal", tiles.icon_portal(b)),
               ("furnace", tiles.furnace(b)), ("plot0", tiles.plot(b, 0)), ("plot1", tiles.plot(b, 1)), ("plot2", tiles.plot(b, 2)), ("plot3", tiles.plot(b, 3)),
-              ("scarecrow", tiles.scarecrow(b)), ("bed", tiles.bed(b)), ("icon_garden", tiles.icon_garden(b)), ("icon_hut", tiles.icon_hut(b))]
+              ("scarecrow", tiles.scarecrow(b)), ("bed", tiles.bed(b)), ("board", tiles.board(b)), ("pharmacy", tiles.pharmacy(b)), ("icon_garden", tiles.icon_garden(b)), ("icon_hut", tiles.icon_hut(b))]
         atlas, rects = pack_atlas([(n, cv.image()) for n, cv in ob], 512)
         atlas.save(OUT / f"objects_{b}.png")
         manifest["objects"][b] = rects

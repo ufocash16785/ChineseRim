@@ -135,7 +135,7 @@ class SaveQuestTest(unittest.TestCase):
         self.assertEqual(s.hero.quest["arc"], "arc6_lingjie")
         self.assertTrue(s.hero.flags.get("arc0_complete"))
         seen = {k[5:] for k in s.hero.flags if k.startswith("seen:")}
-        self.assertEqual(set(s.data.dialogues) - seen, set(), "有對話沒被觸發")
+        self.assertEqual({k for k, v in s.data.dialogues.items() if "cmp" not in v["trigger"]} - seen, set(), "有對話沒被觸發")
 
 
 class DialogueTest(unittest.TestCase):
@@ -619,7 +619,7 @@ class TopDownSessionTest(unittest.TestCase):
         s.act("leave")
         s.act("enter", loc="jiazhou")
         m = s.get_map(s.map_id)
-        shop = next(e for e in m["entities"] if e.get("role") == "shop")
+        shop = next(e for e in m["entities"] if e.get("role") in ("shop", "pharmacy"))
         inn = next(e for e in m["entities"] if e.get("role") == "inn")
         s.act("talk", ent=shop["id"])
         self.assertTrue(s.snapshot()["shop"])
@@ -687,7 +687,7 @@ class TopDownFullPlaythroughTest(unittest.TestCase):
         self.assertTrue(s.hero.quest["done"], f"卡住：{s.hero.quest}（{steps} 步）")
         self.assertEqual(s.hero.quest["arc"], "arc6_lingjie")
         seen = {k[5:] for k in s.hero.flags if k.startswith("seen:")}
-        self.assertEqual(set(s.data.dialogues) - seen, set())
+        self.assertEqual({k for k, v in s.data.dialogues.items() if "cmp" not in v["trigger"]} - seen, set())
 
 
 class TeleportCounterTest(unittest.TestCase):
@@ -751,7 +751,7 @@ class DifficultyTest(unittest.TestCase):
         s.act("new", diff="hard")
         self.assertEqual(s.rs.chance_bonus, -0.1)
         s.act("enter", loc="jiazhou")
-        shop = next(e for e in s.get_map(s.map_id)["entities"] if e.get("role") == "shop")
+        shop = next(e for e in s.get_map(s.map_id)["entities"] if e.get("role") in ("shop", "pharmacy"))
         s.act("talk", ent=shop["id"])
         self.assertEqual(s.snapshot()["prices"]["heal"], round(30 * 1.25))
         s.act("leave")
@@ -955,3 +955,308 @@ class FarmingAndCavesTest(unittest.TestCase):
         s.hero.realm = 3
         s.act("enter", loc="haishen_temple")
         self.assertEqual(s.mode, "loc")
+
+
+class SocialTest(unittest.TestCase):
+    def setUp(self):
+        import pathlib, tempfile
+        from chineserim.session import Session
+        self.Session = Session
+        self.s = Session(pathlib.Path(tempfile.mkdtemp()) / "s.json", seed=3)
+        self.s.hero.add("lingshi", 5000)
+
+    def in_town(self, loc="tiannan_fangshi"):
+        self.s.act("enter", loc=loc)
+        while self.s.hero.dialogue:
+            self.s.act("choose", i=0)
+        m = self.s.get_map(self.s.map_id)
+        return m
+
+    # ---- 丹藥鋪與奸商 ----
+    def test_pharmacy_daily_stock_and_sell(self):
+        s = self.s
+        m = self.in_town()
+        p = next(e for e in m["entities"] if e.get("role") == "pharmacy")
+        s.act("talk", ent=p["id"])
+        v = s.snapshot()["shop"]
+        self.assertEqual(v["kind"], "pharmacy")
+        left = next(i for i in v["items"] if i["id"] == "pill")["left"]
+        self.assertEqual(left, 2)
+        for _ in range(3):
+            s.act("buy", item="pill")
+        self.assertEqual(s.hero.count("pill"), 2)                      # 每日限量 2
+        self.assertIn("賣完", s.log[-1])
+        s.advance(1)                                                    # 隔天補貨
+        s.act("buy", item="pill")
+        self.assertEqual(s.hero.count("pill"), 3)
+        s.hero.add("herb", 4)
+        n = s.hero.count("lingshi")
+        s.act("sell", item="herb")
+        self.assertEqual((s.hero.count("herb"), s.hero.count("lingshi")), (3, n + 8))
+
+    def test_shady_merchant_appears_randomly_and_deterministically(self):
+        s = self.s
+        self.in_town()
+        seen = {}
+        for period in range(40):
+            s.day = period * 3
+            sh = s.shady_now("tiannan_fangshi")
+            seen[period] = sh["kind"] if sh else None
+            self.assertEqual(seen[period], (s.shady_now("tiannan_fangshi") or {}).get("kind"))    # 決定性
+        kinds = {k for k in seen.values() if k}
+        self.assertEqual(kinds, {"fake", "gouge", "bargain"})
+        self.assertIn(None, seen.values())                                                        # 不是每天都有
+        s.day = 0
+        s.act("enter", loc="qingniu")                                                             # 村鎮不會有奸商
+        for period in range(20):
+            s.day = period * 3
+            self.assertIsNone(s.shady_now("qingniu"))
+
+    def test_shady_prices_appraisal_and_fakes(self):
+        s = self.s
+        self.in_town()
+        for kind, mult in (("fake", .55), ("gouge", 2.2), ("bargain", .7)):
+            day = next(d for d in range(0, 300, 3) if (s.__setattr__("day", d) or (s.shady_now("tiannan_fangshi") or {}).get("kind")) == kind)
+            s.day = day
+            s.act("talk", ent="shady")
+            v = s.snapshot()["shop"]
+            self.assertEqual(v["kind"], "shady")
+            self.assertEqual(next(i for i in v["items"] if i["id"] == "heal")["price"], round(30 * mult))
+            n = s.hero.count("lingshi")
+            s.act("appraise")
+            self.assertEqual(s.hero.count("lingshi"), n - 15)
+            self.assertIn({"fake": "問題", "gouge": "黑", "bargain": "公道"}[kind], s.snapshot()["shop"]["appraised"])
+            got = 0
+            for _ in range(5):
+                h0 = s.hero.count("heal")
+                s.act("buy", item="heal")
+                got += s.hero.count("heal") - h0
+            if kind == "fake":
+                self.assertLess(got, 5)                                  # 假貨：花了錢沒拿到東西
+            else:
+                self.assertEqual(got, 5)
+            s.act("shop_close")
+
+    # ---- 布告欄：交易會與招募 ----
+    def test_board_exists_in_towns_and_sects(self):
+        for loc in ("jiazhou", "caixia", "huangfeng"):
+            m = self.in_town(loc)
+            self.assertTrue(any(e["k"] == "board" for e in m["entities"]), loc)
+            self.s.act("leave")
+
+    def test_fair_offers_deterministic_per_week_and_tailored_to_realm(self):
+        s = self.s
+        a = s.fair_offers("jiazhou")
+        self.assertEqual(a, s.fair_offers("jiazhou"))
+        s.advance(7)
+        self.assertNotEqual(a, s.fair_offers("jiazhou"))
+        s.day = 0
+        s.hero.realm = 1
+        s.hero.level = 19                                              # 卡在瓶頸、沒有突破丹 → 交易會有突破丹
+        self.assertTrue(any("pill" in o["get"] for o in s.fair_offers("jiazhou")))
+        prices = []
+        for realm in (1, 3, 5):
+            s.hero.realm = realm
+            s.hero.gongfa = []
+            o = s.fair_offers("jiazhou")
+            prices.append(max(x["give"].get("lingshi", 0) for x in o))
+        self.assertLess(prices[0], prices[1])
+        self.assertLess(prices[1], prices[2])                          # 價碼隨境界成長
+
+    def test_barter_executes_once(self):
+        s = self.s
+        m = self.in_town("jiazhou")
+        s.act("talk", ent="board")
+        v = s.snapshot()["board"]
+        self.assertTrue(v["offers"] and "交易會" in v["title"])
+        o = v["offers"][0]
+        (item, qty), = o["get"].items()
+        n, have = s.hero.count("lingshi"), s.hero.count(item)
+        s.act("barter", idx=0)
+        self.assertEqual(s.hero.count("lingshi"), n - o["give"]["lingshi"])
+        self.assertEqual(s.hero.count(item), have + qty)
+        n2 = s.hero.count("lingshi")
+        s.act("barter", idx=0)                                          # 同一筆不能重複
+        self.assertEqual(s.hero.count("lingshi"), n2)
+
+    def test_barter_gongfa_scroll(self):
+        s = self.s
+        self.in_town("jiazhou")
+        s.hero.realm = 3
+        s.hero.add("lingye", 3)
+        s.act("talk", ent="board")
+        offers = s.snapshot()["board"]["offers"]
+        g = next((o for o in offers if "gongfa" in o["get"]), None)
+        self.assertIsNotNone(g)
+        s.act("barter", idx=g["id"])
+        self.assertIn(g["get"]["gongfa"], s.hero.gongfa)
+
+    def test_recruit_join_perks_stipend_and_limit(self):
+        s = self.s
+        s.hero.realm = 3
+        self.in_town("jiazhou")
+        rec = s.recruit_offer("jiazhou")
+        self.assertIsNotNone(rec)
+        s.act("talk", ent="board")
+        n = s.hero.count("lingshi")
+        s.act("join", sect=rec["sect"])
+        self.assertIn(rec["sect"], s.hero.members)
+        self.assertEqual(s.hero.count("lingshi"), n - rec["fee"])
+        # 福利生效
+        s.hero.members = []
+        s.join_sect("jujianmen")
+        self.assertAlmostEqual(s.combat_bonus()["slashDmg"], .18)
+        s.join_sect("yanyuezong")
+        self.assertAlmostEqual(s.combat_bonus()["elemDmg"]["水"], .15)
+        s.join_sect("huangfenggu")
+        self.assertFalse(s.join_sect("qingxumen"))                      # 最多 3 個
+        self.assertEqual(len(s.hero.members), 3)
+        # 每 30 日俸祿（黃楓谷 30 × (1+境界)）
+        n = s.hero.count("lingshi")
+        s.advance(30)
+        self.assertEqual(s.hero.count("lingshi") - n, 30 * (1 + s.hero.realm))
+
+    def test_recruit_respects_realm_and_membership(self):
+        s = self.s
+        s.hero.realm = 0
+        for loc in ("a", "b", "c", "d", "e", "f"):
+            r = s.recruit_offer(loc)
+            if r:
+                self.assertLessEqual(s.data.sect_perks["perks"][r["sect"]]["minRealm"], 0)
+        s.hero.realm = 5
+        s.hero.members = ["qixuanmen"]
+        for w in range(10):
+            s.day = w * 7
+            r = s.recruit_offer("x")
+            self.assertNotEqual(r["sect"], "qixuanmen")
+
+    def test_story_joins_and_perk_breakthrough(self):
+        s = self.s
+        s.act("enter", loc="qingniu")
+        s.act("talk", ent="quest")
+        s.act("choose", i=0); s.act("choose", i="")
+        s.act("leave")
+        s.act("enter", loc="caixia")
+        s.act("talk", ent="quest")
+        while s.hero.dialogue:
+            v = s.snapshot()["dialogue"]
+            s.act("choose", i=v["choices"][0]["i"] if v["choices"] else "")
+        self.assertIn("qixuanmen", s.hero.members)
+        s.join_sect("qingxumen")
+        self.assertAlmostEqual(s.rs.chance_bonus, .05)
+
+    # ---- 道侶 ----
+    def test_candidates_stand_in_their_places(self):
+        seen = {}
+        for cid, c in self.s.data.companions["candidates"].items():
+            m = self.s.get_map("loc:" + c["loc"])
+            self.assertTrue(any(e["k"] == "candidate" and e["cid"] == cid for e in m["entities"]), cid)
+            seen[cid] = c["name"]
+        self.assertEqual(len(seen), 9)
+
+    def walk(self, prefer=0):
+        s = self.s
+        for _ in range(20):
+            if not s.hero.dialogue:
+                return
+            v = s.snapshot()["dialogue"]
+            s.act("choose", i=prefer if v["choices"] else "")
+        self.fail("對話沒有結束")
+
+    def test_courtship_flow_to_partner(self):
+        s = self.s
+        s.hero.realm = 3
+        s.hero.add("lingye", 30)
+        s.act("enter", loc="yanyue")
+        ent = "cand:nangong"
+        s.act("talk", ent=ent)                                          # 初識
+        self.assertEqual(s.hero.dialogue["id"], "cmp_nangong_intro")
+        self.walk()
+        self.assertEqual(s.hero.affinity["nangong"], 10)
+        s.act("talk", ent=ent)
+        self.assertIsNotNone(s.snapshot()["cand"])                      # 之後是贈禮／閒聊選單
+        s.act("gift", item="lingye")                                    # 南宮婉喜歡靈液 → 好感 ×2
+        self.assertEqual(s.hero.affinity["nangong"], 10 + 28)
+        s.act("gift", item="lingye")                                    # 一天只能送一次
+        self.assertEqual(s.hero.affinity["nangong"], 38)
+        s.act("chat")
+        self.assertEqual(s.hero.affinity["nangong"], 41)
+        s.act("chat")
+        self.assertEqual(s.hero.affinity["nangong"], 41)
+        s.act("cand_close")
+        s.act("talk", ent=ent)                                          # 好感 ≥ 40：觸發特別事件
+        self.assertEqual(s.hero.dialogue["id"], "cmp_nangong_event")
+        self.walk()
+        self.assertGreaterEqual(s.hero.affinity["nangong"], 60)
+        for _ in range(8):                                              # 天天送禮，累積到求緣
+            s.advance(1)
+            s.act("talk", ent=ent)
+            if s.hero.dialogue:
+                break
+            if s.snapshot()["cand"]:
+                s.act("gift", item="lingye")
+                s.act("cand_close")
+        self.assertEqual(s.hero.dialogue["id"], "cmp_nangong_propose")
+        self.walk(prefer=1)                                             # 先拒絕：不會綁死
+        self.assertEqual(s.hero.companion, "")
+        s.advance(1)
+        s.act("talk", ent=ent)
+        self.assertEqual(s.hero.dialogue["id"], "cmp_nangong_propose")
+        self.walk(prefer=0)
+        self.assertEqual(s.hero.companion, "nangong")
+        self.assertEqual(s.snapshot()["partner"]["name"], "南宮婉")
+
+    def test_proposal_needs_realm(self):
+        s = self.s
+        s.hero.realm = 0
+        s.hero.affinity["nangong"] = 120
+        s.hero.flags["met:nangong"] = True
+        s.hero.flags["event:nangong"] = True
+        s.act("enter", loc="yanyue")
+        s.act("talk", ent="cand:nangong")
+        self.assertFalse(s.hero.dialogue)                               # 境界不足，不會有求緣
+
+    def test_partner_fights_and_makes_battles_easier(self):
+        from chineserim import battle, difficulty
+        wins = {}
+        for with_partner in (False, True):
+            w = 0
+            for seed in range(60):
+                rng = random.Random(seed)
+                rs = RealmSystem(GameData(), rng)
+                c = Character("t", elements=["金", "木", "水", "火"])
+                c.realm = 0
+                rs.apply_stats(c)
+                c.add("heal", 1)
+                partner = {"id": "x", "name": "南宮婉", "el": "水", "role": "mage", "atk": .55, "sprite": "nangong"} if with_partner else None
+                st = battle.start(c, "x", [{"kind": "bear", "el": "土"}] * 3, False, difficulty.get("hard"), partner)
+                for _ in range(80):
+                    cmd = ("item", None) if c.hp < .4 * c.max_hp and c.count("heal") else ("spell", 0) if c.mp >= battle.spell_cost(c) else ("attack", None)
+                    if battle.command(st, c, rs, rng, cmd[0], cmd[1], None, {}):
+                        break
+                w += st["over"] == "win"
+            wins[with_partner] = w
+        self.assertGreater(wins[True], wins[False] + 8)                 # 有道侶：明顯更容易獲勝
+
+    def test_partner_logs_and_pact_in_battle_view(self):
+        from chineserim import battle
+        s = self.s
+        s.hero.companion = "nangong"
+        s.act("enter", loc="taiyue")
+        e = next(e for e in s.get_map(s.map_id)["entities"] if e["k"] == "enemy")
+        s.act("battle_start", ids=e["id"])
+        self.assertEqual(s.battle["partner"]["name"], "南宮婉")
+        s.act("battle", cmd="attack")
+        text = "".join(s.battle["log"])
+        self.assertIn("南宮婉", text)
+        self.assertIsNotNone(battle.view(s.battle, s.hero)["partner"])
+
+    def test_partner_saved_and_story_grants_nangong(self):
+        s = self.s
+        s.hero.companion = "nangong"
+        s.hero.members = ["qixuanmen"]
+        s.hero.affinity = {"nangong": 100}
+        s.save()
+        s2 = self.Session(s.save_path)
+        s2.load()
+        self.assertEqual((s2.hero.companion, s2.hero.members, s2.hero.affinity), ("nangong", ["qixuanmen"], {"nangong": 100}))

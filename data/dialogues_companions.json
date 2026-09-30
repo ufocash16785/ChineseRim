@@ -1,0 +1,1148 @@
+{
+  "description": "道侶候選人的專屬劇情（初識／特別事件／求緣）。由好感度系統在與候選人對話時觸發，不屬於主線任務。",
+  "dialogues": {
+    "cmp_nangong_intro": {
+      "trigger": {
+        "cmp": "nangong",
+        "stage": "intro"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "南宮婉",
+          "text": "（她抬眼看你，目光清冷如霜）你來掩月宗做什麼？",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "南宮婉",
+          "text": "……罷了。若無事，就別在此久留。",
+          "effects": [
+            {
+              "affinity": "nangong",
+              "n": 10
+            },
+            {
+              "flag": "met:nangong"
+            }
+          ]
+        }
+      }
+    },
+    "cmp_nangong_event": {
+      "trigger": {
+        "cmp": "nangong",
+        "stage": "event"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "那日雪夜，你與她同守一處山口。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "南宮婉",
+          "text": "她攏了攏衣袖，忽然低聲說：『其實我很少與人並肩。』",
+          "choices": [
+            {
+              "text": "遞給她一顆丹藥暖身",
+              "effects": [
+                {
+                  "affinity": "nangong",
+                  "n": 20
+                },
+                {
+                  "flag": "event:nangong"
+                }
+              ],
+              "next": "a"
+            },
+            {
+              "text": "靜靜陪著她，什麼也不說",
+              "effects": [
+                {
+                  "affinity": "nangong",
+                  "n": 15
+                },
+                {
+                  "flag": "event:nangong"
+                }
+              ],
+              "next": "b"
+            }
+          ]
+        },
+        "a": {
+          "speaker": "南宮婉",
+          "text": "（她微微一怔，隨即露出淺淺的笑）……謝謝你。"
+        },
+        "b": {
+          "speaker": "南宮婉",
+          "text": "（她低下頭，耳根悄悄紅了）你這人，真是……"
+        }
+      }
+    },
+    "cmp_nangong_propose": {
+      "trigger": {
+        "cmp": "nangong",
+        "stage": "propose"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "南宮婉",
+          "text": "歲月漫長，我這一生……只願與你同行。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "南宮婉",
+          "text": "你可願與我結為道侶？",
+          "choices": [
+            {
+              "text": "（鄭重點頭）我願意。從今往後，我們結為道侶。",
+              "effects": [
+                {
+                  "companion": "nangong"
+                },
+                {
+                  "flag": "partner:nangong"
+                }
+              ],
+              "next": "yes"
+            },
+            {
+              "text": "再讓我想想……",
+              "effects": [
+                {
+                  "flag": "decline:nangong"
+                }
+              ],
+              "next": "wait"
+            }
+          ]
+        },
+        "yes": {
+          "speaker": "南宮婉",
+          "text": "（她的眼中映著光）好。從今日起，我陪你一起走這條路。"
+        },
+        "wait": {
+          "speaker": "南宮婉",
+          "text": "……我會等你的答案。"
+        }
+      }
+    },
+    "cmp_dongxuaner_intro": {
+      "trigger": {
+        "cmp": "dongxuaner",
+        "stage": "intro"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "董萱兒",
+          "text": "呀，新面孔！我是萱兒，你也是黃楓谷的師兄嗎？",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "董萱兒",
+          "text": "谷裡的靈草我都認得，需要什麼儘管問我！",
+          "effects": [
+            {
+              "affinity": "dongxuaner",
+              "n": 10
+            },
+            {
+              "flag": "met:dongxuaner"
+            }
+          ]
+        }
+      }
+    },
+    "cmp_dongxuaner_event": {
+      "trigger": {
+        "cmp": "dongxuaner",
+        "stage": "event"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "百藥園裡，她蹲在藥田邊，替一株病懨懨的靈草發愁。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "董萱兒",
+          "text": "『它已經三天沒精神了……』她皺著小臉。",
+          "choices": [
+            {
+              "text": "幫她一起照料藥苗",
+              "effects": [
+                {
+                  "affinity": "dongxuaner",
+                  "n": 20
+                },
+                {
+                  "flag": "event:dongxuaner"
+                }
+              ],
+              "next": "a"
+            },
+            {
+              "text": "遞上一滴靈液救活它",
+              "effects": [
+                {
+                  "affinity": "dongxuaner",
+                  "n": 15
+                },
+                {
+                  "flag": "event:dongxuaner"
+                }
+              ],
+              "next": "b"
+            }
+          ]
+        },
+        "a": {
+          "speaker": "董萱兒",
+          "text": "（她微微一怔，隨即露出淺淺的笑）……謝謝你。"
+        },
+        "b": {
+          "speaker": "董萱兒",
+          "text": "（她低下頭，耳根悄悄紅了）你這人，真是……"
+        }
+      }
+    },
+    "cmp_dongxuaner_propose": {
+      "trigger": {
+        "cmp": "dongxuaner",
+        "stage": "propose"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "董萱兒",
+          "text": "我想一直待在你身邊，替你煉丹、替你療傷。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "董萱兒",
+          "text": "你願意嗎？",
+          "choices": [
+            {
+              "text": "（鄭重點頭）我願意。從今往後，我們結為道侶。",
+              "effects": [
+                {
+                  "companion": "dongxuaner"
+                },
+                {
+                  "flag": "partner:dongxuaner"
+                }
+              ],
+              "next": "yes"
+            },
+            {
+              "text": "再讓我想想……",
+              "effects": [
+                {
+                  "flag": "decline:dongxuaner"
+                }
+              ],
+              "next": "wait"
+            }
+          ]
+        },
+        "yes": {
+          "speaker": "董萱兒",
+          "text": "（她的眼中映著光）好。從今日起，我陪你一起走這條路。"
+        },
+        "wait": {
+          "speaker": "董萱兒",
+          "text": "……我會等你的答案。"
+        }
+      }
+    },
+    "cmp_mocaihuan_intro": {
+      "trigger": {
+        "cmp": "mocaihuan",
+        "stage": "intro"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "墨彩環",
+          "text": "你是……來谷裡採藥的？我爹爹脾氣古怪，你別介意。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "墨彩環",
+          "text": "我叫彩環。這裡的藥我都熟。",
+          "effects": [
+            {
+              "affinity": "mocaihuan",
+              "n": 10
+            },
+            {
+              "flag": "met:mocaihuan"
+            }
+          ]
+        }
+      }
+    },
+    "cmp_mocaihuan_event": {
+      "trigger": {
+        "cmp": "mocaihuan",
+        "stage": "event"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "神手谷的黃昏，她在藥圃邊整理著曬乾的草藥。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "墨彩環",
+          "text": "『有時我也想離開這座山谷，看看外面。』",
+          "choices": [
+            {
+              "text": "說外面很大，我可以帶你去看",
+              "effects": [
+                {
+                  "affinity": "mocaihuan",
+                  "n": 20
+                },
+                {
+                  "flag": "event:mocaihuan"
+                }
+              ],
+              "next": "a"
+            },
+            {
+              "text": "說山谷也很好，這裡有你",
+              "effects": [
+                {
+                  "affinity": "mocaihuan",
+                  "n": 15
+                },
+                {
+                  "flag": "event:mocaihuan"
+                }
+              ],
+              "next": "b"
+            }
+          ]
+        },
+        "a": {
+          "speaker": "墨彩環",
+          "text": "（她微微一怔，隨即露出淺淺的笑）……謝謝你。"
+        },
+        "b": {
+          "speaker": "墨彩環",
+          "text": "（她低下頭，耳根悄悄紅了）你這人，真是……"
+        }
+      }
+    },
+    "cmp_mocaihuan_propose": {
+      "trigger": {
+        "cmp": "mocaihuan",
+        "stage": "propose"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "墨彩環",
+          "text": "若你不嫌棄……彩環願隨你走遍天涯。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "墨彩環",
+          "text": "這一次，我想自己做決定。",
+          "choices": [
+            {
+              "text": "（鄭重點頭）我願意。從今往後，我們結為道侶。",
+              "effects": [
+                {
+                  "companion": "mocaihuan"
+                },
+                {
+                  "flag": "partner:mocaihuan"
+                }
+              ],
+              "next": "yes"
+            },
+            {
+              "text": "再讓我想想……",
+              "effects": [
+                {
+                  "flag": "decline:mocaihuan"
+                }
+              ],
+              "next": "wait"
+            }
+          ]
+        },
+        "yes": {
+          "speaker": "墨彩環",
+          "text": "（她的眼中映著光）好。從今日起，我陪你一起走這條路。"
+        },
+        "wait": {
+          "speaker": "墨彩環",
+          "text": "……我會等你的答案。"
+        }
+      }
+    },
+    "cmp_chenqiaoqian_intro": {
+      "trigger": {
+        "cmp": "chenqiaoqian",
+        "stage": "intro"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "陳巧倩",
+          "text": "喲，這位道友面生得很，哪個門派的？",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "陳巧倩",
+          "text": "我陳巧倩走南闖北，什麼消息都打聽得到。",
+          "effects": [
+            {
+              "affinity": "chenqiaoqian",
+              "n": 10
+            },
+            {
+              "flag": "met:chenqiaoqian"
+            }
+          ]
+        }
+      }
+    },
+    "cmp_chenqiaoqian_event": {
+      "trigger": {
+        "cmp": "chenqiaoqian",
+        "stage": "event"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "京城的夜市，她拉著你逛遍每個攤位，笑聲不斷。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "陳巧倩",
+          "text": "『你這人看著悶，其實挺有意思的。』",
+          "choices": [
+            {
+              "text": "請她吃一碗熱騰騰的湯麵",
+              "effects": [
+                {
+                  "affinity": "chenqiaoqian",
+                  "n": 20
+                },
+                {
+                  "flag": "event:chenqiaoqian"
+                }
+              ],
+              "next": "a"
+            },
+            {
+              "text": "陪她逛到攤販收攤",
+              "effects": [
+                {
+                  "affinity": "chenqiaoqian",
+                  "n": 15
+                },
+                {
+                  "flag": "event:chenqiaoqian"
+                }
+              ],
+              "next": "b"
+            }
+          ]
+        },
+        "a": {
+          "speaker": "陳巧倩",
+          "text": "（她微微一怔，隨即露出淺淺的笑）……謝謝你。"
+        },
+        "b": {
+          "speaker": "陳巧倩",
+          "text": "（她低下頭，耳根悄悄紅了）你這人，真是……"
+        }
+      }
+    },
+    "cmp_chenqiaoqian_propose": {
+      "trigger": {
+        "cmp": "chenqiaoqian",
+        "stage": "propose"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "陳巧倩",
+          "text": "跟著你，日子肯定不無聊。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "陳巧倩",
+          "text": "我陳巧倩看上的人，可不會放手。當你的道侶，如何？",
+          "choices": [
+            {
+              "text": "（鄭重點頭）我願意。從今往後，我們結為道侶。",
+              "effects": [
+                {
+                  "companion": "chenqiaoqian"
+                },
+                {
+                  "flag": "partner:chenqiaoqian"
+                }
+              ],
+              "next": "yes"
+            },
+            {
+              "text": "再讓我想想……",
+              "effects": [
+                {
+                  "flag": "decline:chenqiaoqian"
+                }
+              ],
+              "next": "wait"
+            }
+          ]
+        },
+        "yes": {
+          "speaker": "陳巧倩",
+          "text": "（她的眼中映著光）好。從今日起，我陪你一起走這條路。"
+        },
+        "wait": {
+          "speaker": "陳巧倩",
+          "text": "……我會等你的答案。"
+        }
+      }
+    },
+    "cmp_lingyuling_intro": {
+      "trigger": {
+        "cmp": "lingyuling",
+        "stage": "intro"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "凌玉靈",
+          "text": "（少女模樣的她眼神卻很老成）你身上的靈氣，有點特別。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "凌玉靈",
+          "text": "我叫凌玉靈。想結識我，可不容易。",
+          "effects": [
+            {
+              "affinity": "lingyuling",
+              "n": 10
+            },
+            {
+              "flag": "met:lingyuling"
+            }
+          ]
+        }
+      }
+    },
+    "cmp_lingyuling_event": {
+      "trigger": {
+        "cmp": "lingyuling",
+        "stage": "event"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "天星城的觀星台上，她指著漫天星斗。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "凌玉靈",
+          "text": "『我活了很久，看過很多人來，也看過很多人走。』",
+          "choices": [
+            {
+              "text": "說我不會走",
+              "effects": [
+                {
+                  "affinity": "lingyuling",
+                  "n": 20
+                },
+                {
+                  "flag": "event:lingyuling"
+                }
+              ],
+              "next": "a"
+            },
+            {
+              "text": "說我陪你看下一個三百年",
+              "effects": [
+                {
+                  "affinity": "lingyuling",
+                  "n": 15
+                },
+                {
+                  "flag": "event:lingyuling"
+                }
+              ],
+              "next": "b"
+            }
+          ]
+        },
+        "a": {
+          "speaker": "凌玉靈",
+          "text": "（她微微一怔，隨即露出淺淺的笑）……謝謝你。"
+        },
+        "b": {
+          "speaker": "凌玉靈",
+          "text": "（她低下頭，耳根悄悄紅了）你這人，真是……"
+        }
+      }
+    },
+    "cmp_lingyuling_propose": {
+      "trigger": {
+        "cmp": "lingyuling",
+        "stage": "propose"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "凌玉靈",
+          "text": "活了這麼久，第一次想與人長久相伴。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "凌玉靈",
+          "text": "你，願意做那個人嗎？",
+          "choices": [
+            {
+              "text": "（鄭重點頭）我願意。從今往後，我們結為道侶。",
+              "effects": [
+                {
+                  "companion": "lingyuling"
+                },
+                {
+                  "flag": "partner:lingyuling"
+                }
+              ],
+              "next": "yes"
+            },
+            {
+              "text": "再讓我想想……",
+              "effects": [
+                {
+                  "flag": "decline:lingyuling"
+                }
+              ],
+              "next": "wait"
+            }
+          ]
+        },
+        "yes": {
+          "speaker": "凌玉靈",
+          "text": "（她的眼中映著光）好。從今日起，我陪你一起走這條路。"
+        },
+        "wait": {
+          "speaker": "凌玉靈",
+          "text": "……我會等你的答案。"
+        }
+      }
+    },
+    "cmp_mupeiling_intro": {
+      "trigger": {
+        "cmp": "mupeiling",
+        "stage": "intro"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "慕沛靈",
+          "text": "天南來的修士？我是慕沛靈，草原的女兒。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "慕沛靈",
+          "text": "別用那種眼神看我，我不是你的敵人。",
+          "effects": [
+            {
+              "affinity": "mupeiling",
+              "n": 10
+            },
+            {
+              "flag": "met:mupeiling"
+            }
+          ]
+        }
+      }
+    },
+    "cmp_mupeiling_event": {
+      "trigger": {
+        "cmp": "mupeiling",
+        "stage": "event"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "草原的夜風裡，她騎馬與你並轡而行。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "慕沛靈",
+          "text": "『我的族人與你們打了那麼多年，你不恨我嗎？』",
+          "choices": [
+            {
+              "text": "說仇恨不該由你來背",
+              "effects": [
+                {
+                  "affinity": "mupeiling",
+                  "n": 20
+                },
+                {
+                  "flag": "event:mupeiling"
+                }
+              ],
+              "next": "a"
+            },
+            {
+              "text": "說我只在乎眼前的你",
+              "effects": [
+                {
+                  "affinity": "mupeiling",
+                  "n": 15
+                },
+                {
+                  "flag": "event:mupeiling"
+                }
+              ],
+              "next": "b"
+            }
+          ]
+        },
+        "a": {
+          "speaker": "慕沛靈",
+          "text": "（她微微一怔，隨即露出淺淺的笑）……謝謝你。"
+        },
+        "b": {
+          "speaker": "慕沛靈",
+          "text": "（她低下頭，耳根悄悄紅了）你這人，真是……"
+        }
+      }
+    },
+    "cmp_mupeiling_propose": {
+      "trigger": {
+        "cmp": "mupeiling",
+        "stage": "propose"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "慕沛靈",
+          "text": "草原的風可以帶我去任何地方，我想讓它帶我去你身邊。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "慕沛靈",
+          "text": "願意與我結伴同行嗎？",
+          "choices": [
+            {
+              "text": "（鄭重點頭）我願意。從今往後，我們結為道侶。",
+              "effects": [
+                {
+                  "companion": "mupeiling"
+                },
+                {
+                  "flag": "partner:mupeiling"
+                }
+              ],
+              "next": "yes"
+            },
+            {
+              "text": "再讓我想想……",
+              "effects": [
+                {
+                  "flag": "decline:mupeiling"
+                }
+              ],
+              "next": "wait"
+            }
+          ]
+        },
+        "yes": {
+          "speaker": "慕沛靈",
+          "text": "（她的眼中映著光）好。從今日起，我陪你一起走這條路。"
+        },
+        "wait": {
+          "speaker": "慕沛靈",
+          "text": "……我會等你的答案。"
+        }
+      }
+    },
+    "cmp_yuanyao_intro": {
+      "trigger": {
+        "cmp": "yuanyao",
+        "stage": "intro"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "元瑤",
+          "text": "落雲宗的客卿？我是元瑤。你的來歷，似乎不簡單。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "元瑤",
+          "text": "在這裡，不問來歷是規矩。",
+          "effects": [
+            {
+              "affinity": "yuanyao",
+              "n": 10
+            },
+            {
+              "flag": "met:yuanyao"
+            }
+          ]
+        }
+      }
+    },
+    "cmp_yuanyao_event": {
+      "trigger": {
+        "cmp": "yuanyao",
+        "stage": "event"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "落雲宗的雲海邊，她獨自練劍，劍氣引來電光。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "元瑤",
+          "text": "『修行路上，我一直是一個人。』",
+          "choices": [
+            {
+              "text": "說從今往後不必了",
+              "effects": [
+                {
+                  "affinity": "yuanyao",
+                  "n": 20
+                },
+                {
+                  "flag": "event:yuanyao"
+                }
+              ],
+              "next": "a"
+            },
+            {
+              "text": "遞上一壺熱茶",
+              "effects": [
+                {
+                  "affinity": "yuanyao",
+                  "n": 15
+                },
+                {
+                  "flag": "event:yuanyao"
+                }
+              ],
+              "next": "b"
+            }
+          ]
+        },
+        "a": {
+          "speaker": "元瑤",
+          "text": "（她微微一怔，隨即露出淺淺的笑）……謝謝你。"
+        },
+        "b": {
+          "speaker": "元瑤",
+          "text": "（她低下頭，耳根悄悄紅了）你這人，真是……"
+        }
+      }
+    },
+    "cmp_yuanyao_propose": {
+      "trigger": {
+        "cmp": "yuanyao",
+        "stage": "propose"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "元瑤",
+          "text": "雷霆再烈，也不及你給我的安穩。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "元瑤",
+          "text": "元瑤想與你結為道侶。",
+          "choices": [
+            {
+              "text": "（鄭重點頭）我願意。從今往後，我們結為道侶。",
+              "effects": [
+                {
+                  "companion": "yuanyao"
+                },
+                {
+                  "flag": "partner:yuanyao"
+                }
+              ],
+              "next": "yes"
+            },
+            {
+              "text": "再讓我想想……",
+              "effects": [
+                {
+                  "flag": "decline:yuanyao"
+                }
+              ],
+              "next": "wait"
+            }
+          ]
+        },
+        "yes": {
+          "speaker": "元瑤",
+          "text": "（她的眼中映著光）好。從今日起，我陪你一起走這條路。"
+        },
+        "wait": {
+          "speaker": "元瑤",
+          "text": "……我會等你的答案。"
+        }
+      }
+    },
+    "cmp_wenshier_intro": {
+      "trigger": {
+        "cmp": "wenshier",
+        "stage": "intro"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "文詩兒",
+          "text": "宮裡少見外來的修士，你是來辦事的？",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "文詩兒",
+          "text": "我叫詩兒，你叫我一聲文姑娘就好。",
+          "effects": [
+            {
+              "affinity": "wenshier",
+              "n": 10
+            },
+            {
+              "flag": "met:wenshier"
+            }
+          ]
+        }
+      }
+    },
+    "cmp_wenshier_event": {
+      "trigger": {
+        "cmp": "wenshier",
+        "stage": "event"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "皇宮的花園裡，她替你講起宮中的舊事，笑得眉眼彎彎。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "文詩兒",
+          "text": "『你聽得這麼認真，我都不好意思了。』",
+          "choices": [
+            {
+              "text": "說你講什麼我都愛聽",
+              "effects": [
+                {
+                  "affinity": "wenshier",
+                  "n": 20
+                },
+                {
+                  "flag": "event:wenshier"
+                }
+              ],
+              "next": "a"
+            },
+            {
+              "text": "笑著遞給她一朵花",
+              "effects": [
+                {
+                  "affinity": "wenshier",
+                  "n": 15
+                },
+                {
+                  "flag": "event:wenshier"
+                }
+              ],
+              "next": "b"
+            }
+          ]
+        },
+        "a": {
+          "speaker": "文詩兒",
+          "text": "（她微微一怔，隨即露出淺淺的笑）……謝謝你。"
+        },
+        "b": {
+          "speaker": "文詩兒",
+          "text": "（她低下頭，耳根悄悄紅了）你這人，真是……"
+        }
+      }
+    },
+    "cmp_wenshier_propose": {
+      "trigger": {
+        "cmp": "wenshier",
+        "stage": "propose"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "文詩兒",
+          "text": "宮牆再高，也留不住我想去的地方。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "文詩兒",
+          "text": "帶我走吧，好嗎？我想做你的道侶。",
+          "choices": [
+            {
+              "text": "（鄭重點頭）我願意。從今往後，我們結為道侶。",
+              "effects": [
+                {
+                  "companion": "wenshier"
+                },
+                {
+                  "flag": "partner:wenshier"
+                }
+              ],
+              "next": "yes"
+            },
+            {
+              "text": "再讓我想想……",
+              "effects": [
+                {
+                  "flag": "decline:wenshier"
+                }
+              ],
+              "next": "wait"
+            }
+          ]
+        },
+        "yes": {
+          "speaker": "文詩兒",
+          "text": "（她的眼中映著光）好。從今日起，我陪你一起走這條路。"
+        },
+        "wait": {
+          "speaker": "文詩兒",
+          "text": "……我會等你的答案。"
+        }
+      }
+    },
+    "cmp_ziling_intro": {
+      "trigger": {
+        "cmp": "ziling",
+        "stage": "intro"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "紫靈",
+          "text": "（她的眼睛像紫色的星辰）你從下界來的？我叫紫靈。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "紫靈",
+          "text": "靈界很大，也很孤單。",
+          "effects": [
+            {
+              "affinity": "ziling",
+              "n": 10
+            },
+            {
+              "flag": "met:ziling"
+            }
+          ]
+        }
+      }
+    },
+    "cmp_ziling_event": {
+      "trigger": {
+        "cmp": "ziling",
+        "stage": "event"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "天淵城的城頭，她指著遠方翻湧的魔氣。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "紫靈",
+          "text": "『若有一日守不住了，你會走嗎？』",
+          "choices": [
+            {
+              "text": "說我會擋在你前面",
+              "effects": [
+                {
+                  "affinity": "ziling",
+                  "n": 20
+                },
+                {
+                  "flag": "event:ziling"
+                }
+              ],
+              "next": "a"
+            },
+            {
+              "text": "說我們一起守到最後",
+              "effects": [
+                {
+                  "affinity": "ziling",
+                  "n": 15
+                },
+                {
+                  "flag": "event:ziling"
+                }
+              ],
+              "next": "b"
+            }
+          ]
+        },
+        "a": {
+          "speaker": "紫靈",
+          "text": "（她微微一怔，隨即露出淺淺的笑）……謝謝你。"
+        },
+        "b": {
+          "speaker": "紫靈",
+          "text": "（她低下頭，耳根悄悄紅了）你這人，真是……"
+        }
+      }
+    },
+    "cmp_ziling_propose": {
+      "trigger": {
+        "cmp": "ziling",
+        "stage": "propose"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "紫靈",
+          "text": "在這無邊的靈界，我終於遇見一個想並肩走下去的人。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "紫靈",
+          "text": "紫靈願意與你結為道侶。",
+          "choices": [
+            {
+              "text": "（鄭重點頭）我願意。從今往後，我們結為道侶。",
+              "effects": [
+                {
+                  "companion": "ziling"
+                },
+                {
+                  "flag": "partner:ziling"
+                }
+              ],
+              "next": "yes"
+            },
+            {
+              "text": "再讓我想想……",
+              "effects": [
+                {
+                  "flag": "decline:ziling"
+                }
+              ],
+              "next": "wait"
+            }
+          ]
+        },
+        "yes": {
+          "speaker": "紫靈",
+          "text": "（她的眼中映著光）好。從今日起，我陪你一起走這條路。"
+        },
+        "wait": {
+          "speaker": "紫靈",
+          "text": "……我會等你的答案。"
+        }
+      }
+    }
+  }
+}

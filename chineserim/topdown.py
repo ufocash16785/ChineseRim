@@ -4,12 +4,14 @@ from .character import item_name
 from .explore import DEEP, min_realm
 
 _MAP_CACHE = {}          # 地圖只由資料決定，行程內共用（唯讀）
-TD_KINDS = {"plant", "harvest", "boost", "craft", "shop_close", "enter", "leave", "talk", "region", "ferry", "pos", "battle_start", "battle", "battle_end", "buy", "chest", "portal"}
+TD_KINDS = {"sell", "appraise", "barter", "join", "board_close", "gift", "chat", "cand_close", "plant", "harvest", "boost", "craft", "shop_close", "enter", "leave", "talk", "region", "ferry", "pos", "battle_start", "battle", "battle_end", "buy", "chest", "portal"}
 STEPS_PER_DAY = 160
 FERRY_DAYS = 8
 
 
 class TopDownMixin:
+    ui = {}
+
     # ---- 地圖 ----
     def get_map(self, map_id):
         cache = _MAP_CACHE
@@ -62,13 +64,13 @@ class TopDownMixin:
     def _td(self, kind, **q):
         if self.battle and kind not in ("battle", "battle_end"):
             return
-        if kind not in ("buy", "pos", "talk"):
-            self.shop_open = False
+        if kind not in ("buy", "sell", "appraise", "barter", "join", "gift", "chat", "pos", "talk"):
+            self.ui = {}
         fn = getattr(self, "_td_" + kind)
         fn(**q)
 
     def _td_shop_close(self, **_):
-        self.shop_open = False
+        self.ui = {}
 
     def _td_pos(self, x=None, y=None, steps=0, **_):
         if x not in (None, ""):
@@ -182,11 +184,22 @@ class TopDownMixin:
             else:
                 self.log.append("對方朝你點了點頭，似乎沒有新的事情。")
             return
+        if ent == "shady":
+            sh = self.shady_now(self.cur_loc)
+            if sh:
+                self.log.append(f"「神秘商人」{_shady_line(self)}")
+                self._open_shop("shady")
+            return
         e = self._entity(ent)
         if not e:
             return
         k = e["k"]
-        if k == "npc":
+        if k == "board":
+            self.ui = {"board": {"loc": self.cur_loc}}
+            self.log.append("你湊近布告欄，仔細看著上面的告示……")
+        elif k == "candidate":
+            self._talk_candidate(e)
+        elif k == "npc":
             self._talk_npc(e)
         elif k == "chest":
             self._open_chest(e)
@@ -223,9 +236,9 @@ class TopDownMixin:
             self.log.append(f"「{e['name']}」{self.rng.choice(lines)}（歇息一晚，氣血靈力全滿）")
             self._after_td()
             return
-        if role == "shop":
-            self.log.append(f"「{e['name']}」{self.rng.choice(lines)}（回春丹 30 靈石／突破丹 100 靈石）")
-            self.shop_open = True
+        if role in ("shop", "pharmacy"):
+            self.log.append(f"「{e['name']}」{self.rng.choice(lines)}")
+            self._open_shop(role)
             return
         tgt = quests.target(self.data, h)
         if tgt and self.rng.random() < .45:
@@ -251,17 +264,6 @@ class TopDownMixin:
                     if g["id"] == tgt["region"]:
                         return g["name"]
         return None
-
-    def _td_buy(self, item="heal", **_):
-        prices = {k: round(v * self.dcfg["price"]) for k, v in self.data.ambient["shop"].items()}
-        if item not in prices or self.mode != "loc":
-            return
-        if self.hero.remove("lingshi", prices[item]):
-            self.hero.add(item)
-            from .character import item_name
-            self.log.append(f"買下了{item_name(item)}（-{prices[item]} 靈石）")
-        else:
-            self.log.append("靈石不夠。")
 
     def _open_chest(self, e):
         h = self.hero
@@ -382,7 +384,7 @@ class TopDownMixin:
         if lack:
             self.log.append("材料不足：" + "、".join(lack))
             return
-        chance = max(.05, min(1.0, r["chance"] + (self.dcfg["craft"] if r["chance"] < 1 else 0)))
+        chance = max(.05, min(1.0, r["chance"] + ((self.dcfg["craft"] + self.perk_totals()["craft"]) if r["chance"] < 1 else 0)))
         self.advance(1)
         if self.rng.random() < chance:
             for k, v in needs.items():
@@ -405,7 +407,7 @@ class TopDownMixin:
         if not ents:
             return
         deep = m["cat"] == "deep"
-        self.battle = battle.start(self.hero, self.cur_loc, [{"id": e["id"], "kind": e["kind"], "el": e["el"], "loot": e.get("loot", 1.0), "name": e.get("name")} for e in ents], deep, self.dcfg)
+        self.battle = battle.start(self.hero, self.cur_loc, [{"id": e["id"], "kind": e["kind"], "el": e["el"], "loot": e.get("loot", 1.0) * (1 + self.perk_totals()["loot"]), "name": e.get("name")} for e in ents], deep, self.dcfg, self.partner_spec())
 
     def _td_battle(self, cmd="attack", arg=None, target=None, **_):
         if not self.battle:
@@ -434,3 +436,7 @@ class TopDownMixin:
 
     def _td_battle_end(self, **_):
         self.battle = None
+
+
+def _shady_line(sess):
+    return sess.rng.choice(sess.data.market["shady"]["greetings"])

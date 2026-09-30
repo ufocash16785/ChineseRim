@@ -35,6 +35,9 @@ class GameData:
         self.dialogues = _merge(d, "dialogues*.json", "dialogues")
         self.ambient = _load(d / "ambient.json")
         self.farming = _load(d / "farming.json")
+        self.market = _load(d / "market.json")
+        self.sect_perks = _load(d / "sect_perks.json")
+        self.companions = _load(d / "companions.json")
         self.quest_rules = _merge(d, "quests*.json", "arcs")
         self.regions = _load(d / "regions.json")["worlds"]
         self.config = {"elemAdvMult": 1.5, "elemDisMult": 0.75}

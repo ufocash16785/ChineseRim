@@ -1,0 +1,127 @@
+{
+  "description": "道侶候選人（獨立引擎用）。atk＝戰鬥出手強度倍率，role：fighter 物理、mage 五行法術、healer 治療。likes：喜歡的禮物（好感 ×2）。minRealm：求緣所需境界。",
+  "gifts": {
+    "herb": 2,
+    "heal": 4,
+    "mpill": 4,
+    "pill": 12,
+    "lingye": 14
+  },
+  "lingshi_per_point": 25,
+  "candidates": {
+    "nangong": {
+      "name": "南宮婉",
+      "loc": "yanyue",
+      "sprite": "nangong",
+      "element": "水",
+      "role": "mage",
+      "atk": 0.5,
+      "minRealm": 2,
+      "likes": [
+        "lingye"
+      ]
+    },
+    "dongxuaner": {
+      "name": "董萱兒",
+      "loc": "huangfeng",
+      "sprite": "dongxuaner",
+      "element": "木",
+      "role": "healer",
+      "atk": 0.4,
+      "minRealm": 1,
+      "likes": [
+        "herb",
+        "heal"
+      ]
+    },
+    "mocaihuan": {
+      "name": "墨彩環",
+      "loc": "shenshougu",
+      "sprite": "mocaihuan",
+      "element": "木",
+      "role": "healer",
+      "atk": 0.45,
+      "minRealm": 0,
+      "likes": [
+        "herb"
+      ]
+    },
+    "chenqiaoqian": {
+      "name": "陳巧倩",
+      "loc": "yuejing",
+      "sprite": "chenqiaoqian",
+      "element": "火",
+      "role": "fighter",
+      "atk": 0.65,
+      "minRealm": 1,
+      "likes": [
+        "pill",
+        "lingshi"
+      ]
+    },
+    "lingyuling": {
+      "name": "凌玉靈",
+      "loc": "tianxing_cheng",
+      "sprite": "lingyu",
+      "element": "金",
+      "role": "mage",
+      "atk": 0.55,
+      "minRealm": 2,
+      "likes": [
+        "mpill",
+        "lingye"
+      ]
+    },
+    "mupeiling": {
+      "name": "慕沛靈",
+      "loc": "mulan_court",
+      "sprite": "mupei",
+      "element": "風",
+      "role": "fighter",
+      "atk": 0.62,
+      "minRealm": 2,
+      "likes": [
+        "heal",
+        "lingshi"
+      ]
+    },
+    "yuanyao": {
+      "name": "元瑤",
+      "loc": "luoyun",
+      "sprite": "yuanyao",
+      "element": "雷",
+      "role": "mage",
+      "atk": 0.58,
+      "minRealm": 3,
+      "likes": [
+        "lingye",
+        "pill"
+      ]
+    },
+    "wenshier": {
+      "name": "文詩兒",
+      "loc": "dajin_palace",
+      "sprite": "wenshier",
+      "element": "土",
+      "role": "fighter",
+      "atk": 0.6,
+      "minRealm": 3,
+      "likes": [
+        "heal",
+        "mpill"
+      ]
+    },
+    "ziling": {
+      "name": "紫靈",
+      "loc": "tianyuan_cheng",
+      "sprite": "ziling",
+      "element": "水",
+      "role": "mage",
+      "atk": 0.7,
+      "minRealm": 5,
+      "likes": [
+        "lingye"
+      ]
+    }
+  }
+}

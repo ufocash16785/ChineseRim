@@ -550,3 +550,43 @@ def bed(b):
     c.rect(2, 29, 5, 33, hexc("#5a3018"), "leg")
     c.rect(42, 29, 45, 33, hexc("#5a3018"), "leg")
     return c
+
+
+def board(b):
+    """布告欄：木框、屋簷、貼滿告示。"""
+    c = Canvas(52, 60)
+    wood, dk = hexc("#8a5a2b"), hexc("#5a3a1a")
+    c.rect(4, 14, 6, 56, dk, "post")
+    c.rect(45, 14, 47, 56, dk, "post")
+    c.poly([(0, 14), (26, 2), (51, 14)], hexc(BIOMES[b]["roof"]), "roof")
+    c.rect(0, 13, 51, 15, dk, "roof")
+    c.rect(6, 16, 45, 42, wood, "board")
+    c.rect(6, 16, 45, 17, lighten(wood, .25), "board")
+    for x, y, w, h, col in ((9, 19, 10, 13, "#f4ecd0"), (21, 19, 10, 9, "#fff2a8"), (33, 19, 10, 14, "#f4ecd0"), (11, 34, 9, 7, "#ffd0c0"), (24, 30, 10, 10, "#f4ecd0"), (36, 35, 7, 6, "#c8e8ff")):
+        c.rect(x, y, x + w - 1, y + h - 1, hexc(col), "note")
+        for ly in range(y + 2, y + h - 1, 3):
+            c.rect(x + 1, ly, x + w - 2, ly, (150, 130, 110), "txt")
+        c.put(x + w // 2, y, hexc("#c0392b"), "pin")
+    c.rect(20, 34, 22, 36, hexc("#c0392b"), "seal")
+    return c
+
+
+def pharmacy(b):
+    """丹藥鋪：紅簷小店、櫃檯、藥罐、丹字招牌。"""
+    P = BIOMES[b]
+    c = Canvas(76, 66)
+    c.rect(6, 26, 69, 62, hexc("#e8dcc0"), "wall")
+    c.rect(6, 26, 8, 62, hexc("#7a4a2a"), "beam"); c.rect(67, 26, 69, 62, hexc("#7a4a2a"), "beam")
+    c.poly([(0, 28), (38, 6), (75, 28)], hexc(P["roof"]), "roof")
+    c.poly([(8, 28), (38, 12), (67, 28)], lighten(hexc(P["roof"]), .12), "roof")
+    c.rect(2, 26, 73, 29, darken(hexc(P["roof"]), .3), "roof")
+    for i in range(7):
+        c.rect(8 + i * 9, 30, 15 + i * 9, 38, hexc("#c0392b") if i % 2 == 0 else hexc("#f0e6d0"), "awn")
+    c.rect(10, 46, 65, 62, hexc("#8a5a2b"), "counter")
+    c.rect(10, 46, 65, 49, hexc("#b98a58"), "counter")
+    for x, col in ((16, "#e8503a"), (26, "#4aa860"), (36, "#f0c040"), (46, "#5a8ac0"), (56, "#c060d0")):
+        c.rect(x, 40, x + 6, 46, hexc(col), "jar"); c.rect(x + 1, 38, x + 5, 40, hexc("#5a3a22"), "jar")
+    c.ellipse(60, 20, 7, 7, hexc("#fff4c0"), "sign"); c.ellipse(60, 20, 5, 5, hexc("#c0392b"), "sign")
+    c.ellipse(60, 18, 2, 2, hexc("#fff4c0"), "sign"); c.ellipse(60, 22, 2, 2, hexc("#3a2a1a"), "sign")
+    c.rect(59, 27, 61, 30, hexc("#5a3a22"), "sign")
+    return c

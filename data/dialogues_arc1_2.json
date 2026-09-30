@@ -89,11 +89,21 @@
         },
         "yes": {
           "speaker": "李化元",
-          "text": "好。往後在谷中，守規矩，少說話，多做事。"
+          "text": "好。往後在谷中，守規矩，少說話，多做事。",
+          "effects": [
+            {
+              "join": "huangfenggu"
+            }
+          ]
         },
         "honest": {
           "speaker": "李化元",
-          "text": "（微微頷首）能自知者不多。留下吧。"
+          "text": "（微微頷首）能自知者不多。留下吧。",
+          "effects": [
+            {
+              "join": "huangfenggu"
+            }
+          ]
         }
       }
     },

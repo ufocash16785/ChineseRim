@@ -176,6 +176,21 @@ def main() -> int:
                     errors.append(f"regions/{l['id']}: 未知 profile {l['profile']}")
                 if "minRealm" in l and not isinstance(l["minRealm"], int):
                     errors.append(f"regions/{l['id']}: minRealm 需為整數")
+    perks, comp, mk = load("sect_perks"), load("companions"), load("market")
+    for sid in perks["perks"]:
+        if sid not in sect_ids:
+            errors.append(f"sect_perks/{sid}: 不在 sects.json")
+    dlg_all = load_merged("dialogues*.json", "dialogues")
+    for cid, c in comp["candidates"].items():
+        if c["loc"] not in all_locs:
+            errors.append(f"companions/{cid}: 未知地點 {c['loc']}")
+        for st in ("intro", "event", "propose"):
+            if f"cmp_{cid}_{st}" not in dlg_all:
+                errors.append(f"companions/{cid}: 缺少對話 cmp_{cid}_{st}")
+    for kind, sh in mk["shops"].items():
+        for it in list(sh["items"]) + list(sh["sell"]):
+            if it not in known_items:
+                errors.append(f"market/{kind}: 未知物品 {it}")
     for a in arcs["arcs"]:
         for reg in a["region"].split("/"):
             if reg not in region_ids:

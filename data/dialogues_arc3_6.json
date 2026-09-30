@@ -114,15 +114,30 @@
         },
         "xg": {
           "speaker": "旁白",
-          "text": "你在星宮名冊上簽下化名。"
+          "text": "你在星宮名冊上簽下化名。",
+          "effects": [
+            {
+              "join": "xinggong"
+            }
+          ]
         },
         "nx": {
           "speaker": "旁白",
-          "text": "逆星盟的人笑了：『識時務者。』並塞給你一袋靈石。"
+          "text": "逆星盟的人笑了：『識時務者。』並塞給你一袋靈石。",
+          "effects": [
+            {
+              "join": "nixingmeng"
+            }
+          ]
         },
         "free": {
           "speaker": "旁白",
-          "text": "誰也不靠，你的路只能靠自己。"
+          "text": "誰也不靠，你的路只能靠自己。",
+          "effects": [
+            {
+              "join": "waixinghai_sanxiu"
+            }
+          ]
         }
       }
     },
@@ -317,11 +332,21 @@
         },
         "alias": {
           "speaker": "執事",
-          "text": "好，往後便以此名行走。"
+          "text": "好，往後便以此名行走。",
+          "effects": [
+            {
+              "join": "luoyunzong"
+            }
+          ]
         },
         "real": {
           "speaker": "執事",
-          "text": "（微怔）倒是坦蕩。"
+          "text": "（微怔）倒是坦蕩。",
+          "effects": [
+            {
+              "join": "luoyunzong"
+            }
+          ]
         }
       }
     },
@@ -660,11 +685,21 @@
         },
         "yes": {
           "speaker": "旁白",
-          "text": "她微微一笑，眼角似有淚光。"
+          "text": "她微微一笑，眼角似有淚光。",
+          "effects": [
+            {
+              "companion": "nangong"
+            }
+          ]
         },
         "guard": {
           "speaker": "旁白",
-          "text": "她輕輕點頭，並未再多說。"
+          "text": "她輕輕點頭，並未再多說。",
+          "effects": [
+            {
+              "companion": "nangong"
+            }
+          ]
         }
       }
     },

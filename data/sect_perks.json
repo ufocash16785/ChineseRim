@@ -1,0 +1,27 @@
+{
+  "description": "加入宗門的福利（獨立引擎用）。minRealm＝可被招募的最低境界。effects：stipend 每 30 日俸祿（×(1+境界)）、allDmg/slashDmg/critChance、elemDmg{屬性:加成}、loot 戰利品加成、craft 煉丹成功率加成、discount 商店折扣、breakthrough 突破成功率加成。",
+  "default": { "name": "宗門俸祿", "desc": "每月領取少量俸祿。", "minRealm": 1, "effects": { "stipend": 15 } },
+  "perks": {
+    "qixuanmen": { "name": "外家拳腳", "desc": "劍擊傷害 +5%，每月俸祿 20。", "minRealm": 0, "effects": { "stipend": 20, "slashDmg": 0.05 } },
+    "huangfenggu": { "name": "煉丹傳承", "desc": "煉丹成功率 +15%，每月俸祿 30。", "minRealm": 1, "effects": { "stipend": 30, "craft": 0.15 } },
+    "yanyuezong": { "name": "冰肌玉骨", "desc": "水系法術 +15%。", "minRealm": 1, "effects": { "elemDmg": { "水": 0.15 } } },
+    "lingshoushan": { "name": "馭獸之術", "desc": "妖獸戰利品 +20%。", "minRealm": 1, "effects": { "loot": 0.2 } },
+    "tianquebao": { "name": "堡壘之盾", "desc": "全傷害 +6%，商店折扣 5%。", "minRealm": 1, "effects": { "allDmg": 0.06, "discount": 0.05 } },
+    "jujianmen": { "name": "巨劍訣", "desc": "劍擊傷害 +18%。", "minRealm": 1, "effects": { "slashDmg": 0.18 } },
+    "huadaowu": { "name": "化刀術", "desc": "暴擊率 +8%，劍擊 +8%。", "minRealm": 1, "effects": { "critChance": 0.08, "slashDmg": 0.08 } },
+    "qingxumen": { "name": "清心咒", "desc": "突破成功率 +5%，每月俸祿 25。", "minRealm": 1, "effects": { "breakthrough": 0.05, "stipend": 25 } },
+    "guilingmen": { "name": "鬼火", "desc": "火系法術 +12%，戰利品 +10%。", "minRealm": 1, "effects": { "elemDmg": { "火": 0.12 }, "loot": 0.1 } },
+    "hehuanzong": { "name": "交際手腕", "desc": "商店折扣 12%，煉丹 +5%。", "minRealm": 1, "effects": { "discount": 0.12, "craft": 0.05 } },
+    "tiangangjianzong": { "name": "天罡劍氣", "desc": "劍擊傷害 +20%。", "minRealm": 1, "effects": { "slashDmg": 0.2 } },
+    "wangumen": { "name": "蠱毒", "desc": "木系法術 +15%。", "minRealm": 1, "effects": { "elemDmg": { "木": 0.15 } } },
+    "yaoshengmen": { "name": "妖聖之力", "desc": "戰利品 +25%。", "minRealm": 1, "effects": { "loot": 0.25 } },
+    "xinggong": { "name": "星辰祝福", "desc": "金系法術 +10%，每月俸祿 60。", "minRealm": 2, "effects": { "stipend": 60, "elemDmg": { "金": 0.1 } } },
+    "nixingmeng": { "name": "逆命", "desc": "全傷害 +8%，戰利品 +10%。", "minRealm": 2, "effects": { "allDmg": 0.08, "loot": 0.1 } },
+    "waixinghai_sanxiu": { "name": "散修人脈", "desc": "商店折扣 10%。", "minRealm": 1, "effects": { "discount": 0.1 } },
+    "luoyunzong": { "name": "客卿供奉", "desc": "突破成功率 +5%，每月俸祿 50。", "minRealm": 3, "effects": { "breakthrough": 0.05, "stipend": 50 } },
+    "guilingmen_hq": { "name": "本宗秘傳", "desc": "全傷害 +10%。", "minRealm": 3, "effects": { "allDmg": 0.1 } },
+    "yinluozong": { "name": "陰羅功", "desc": "水系法術 +15%。", "minRealm": 3, "effects": { "elemDmg": { "水": 0.15 } } },
+    "tianmozong": { "name": "天魔訣", "desc": "暴擊率 +10%，全傷害 +5%。", "minRealm": 3, "effects": { "critChance": 0.1, "allDmg": 0.05 } },
+    "qianzhujiao": { "name": "竹海心法", "desc": "木系法術 +12%，煉丹 +10%。", "minRealm": 3, "effects": { "elemDmg": { "木": 0.12 }, "craft": 0.1 } }
+  }
+}

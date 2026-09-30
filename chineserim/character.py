@@ -47,3 +47,7 @@ class Character:
     flags: dict = field(default_factory=dict)
     dialogue: dict = field(default_factory=dict)   # 進行中的對話 {"id","node"}
     plots: dict = field(default_factory=dict)      # "loc:plot_id" -> {"seed","day","boost"}
+    members: list = field(default_factory=list)     # 已加入的宗門 id
+    companion: str = ""                              # 道侶（候選人 id）
+    affinity: dict = field(default_factory=dict)     # 候選人 id -> 好感度
+    bought: dict = field(default_factory=dict)       # "loc:item:day" -> 今日已購數量
