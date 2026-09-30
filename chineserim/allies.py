@@ -123,6 +123,28 @@ class AlliesMixin:
             self.hero.flags["stance"] = mode
             self.log.append(f"出戰戰術：{self.data.pets['stances'][mode]['name']}（{self.data.pets['stances'][mode]['desc']}）")
 
+    def battle_stance(self, mode):
+        """戰鬥中即時切換戰術：不耗回合，但每回合只能調整一次。"""
+        st = self.battle
+        cfg = self.data.pets["stances"]
+        if not st or st["over"] or st.get("down") or mode not in cfg or not st.get("allies"):
+            return
+        cur = st.get("stance") or self.stance()
+        if mode == cur:
+            return
+        if st.get("stance_turn") == st["turn"]:
+            st["log"] = ["本回合已經調整過戰術了，下一回合再換。"]
+            return
+        c = cfg[mode]
+        for a in st["allies"]:
+            a["atk"] = a["atk_b"] * c["atk"]
+            if a["type"] == "puppet":
+                a["absorb"] = min(0.95, a["absorb_b"] * c["absorb"])
+                a["absorb_frac"] = a["frac_b"] * c["frac"]
+        st["stance"], st["stance_turn"] = mode, st["turn"]
+        self.hero.flags["stance"] = mode
+        st["log"] = [f"你打出手勢，夥伴改變陣型——戰術切換為「{c['name']}」！（{c['desc']}）"]
+
     def stance(self):
         s = self.hero.flags.get("stance")
         return s if s in self.data.pets["stances"] else "balanced"
@@ -299,13 +321,13 @@ class AlliesMixin:
             stage = self.pet_stage(h.pet)
             sk = self.pet_skill(h.pet)
             out.append({"type": "pet", "name": self.pet_name(h.pet), "kind": h.pet["kind"], "el": h.pet["el"], "level": h.pet["level"],
-                        "atk": (c["atk_base"] + c["atk_per_level"] * h.pet["level"]) * stn["atk"], "hp": 1, "maxhp": 1, "absorb": 0,
+                        "atk_b": c["atk_base"] + c["atk_per_level"] * h.pet["level"], "atk": (c["atk_base"] + c["atk_per_level"] * h.pet["level"]) * stn["atk"], "hp": 1, "maxhp": 1, "absorb": 0,
                         "skill": sk, "cd": 0, "cd_max": c["skill_cd"][min(1, max(0, stage - 1))] if sk else 0})
         if h.puppet:
             sp = c["puppets"][h.puppet["kind"]]
             stt = self.puppet_stats(h.puppet)
             sk = self.puppet_skill(h.puppet)
-            out.append({"type": "puppet", "name": sp["name"], "sprite": sp["sprite"], "level": h.puppet["level"], "atk": stt["atk"] * stn["atk"],
+            out.append({"type": "puppet", "name": sp["name"], "sprite": sp["sprite"], "level": h.puppet["level"], "atk_b": stt["atk"], "absorb_b": stt["absorb"], "frac_b": stt["absorb_frac"], "atk": stt["atk"] * stn["atk"],
                         "absorb": min(0.95, stt["absorb"] * stn["absorb"]), "hp": h.puppet["hp"], "maxhp": stt["maxhp"], "absorb_frac": stt["absorb_frac"] * stn["frac"],
                         "mods": list(h.puppet.get("mods", [])), "skill": sk, "cd": 0, "cd_max": c["puppet_skill_cd"][sk["tier"]] if sk else 0, "boom_used": False})
         return out

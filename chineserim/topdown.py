@@ -633,6 +633,9 @@ class TopDownMixin:
         if not self.battle:
             return
         h = self.hero
+        if cmd == "stance":
+            self.battle_stance(arg)
+            return
         a = (arg if cmd in ("talisman", "formation", "treasure") else int(arg)) if arg not in (None, "") else None
         t = int(target) if target not in (None, "") else None
         done = battle.command(self.battle, h, self.rs, self.rng, cmd, a, t, self.combat_bonus())

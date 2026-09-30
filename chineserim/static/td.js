@@ -501,7 +501,7 @@ const TD = (() => {
   function btUI() {
     const b = S.battle, p = $('bt');
     if (!b) { p.style.display = 'none'; return; }
-    const k = JSON.stringify([b.over, b.turn, S.hp, S.mp, S.heal, S.mpills, b.log.length, bt.menu, b.down, b.shield, b.cd, b.formation, (S.bag || []).map(x => x.n).join()]);
+    const k = JSON.stringify([b.stance, b.stanceLocked, b.over, b.turn, S.hp, S.mp, S.heal, S.mpills, b.log.length, bt.menu, b.down, b.shield, b.cd, b.formation, (S.bag || []).map(x => x.n).join()]);
     if (p._k === k) return; p._k = k;
     p.style.display = 'block';
     let h = `<div id=btlog>${b.log.map(x => '<div>' + x + '</div>').join('')}</div>`;
@@ -524,6 +524,7 @@ const TD = (() => {
       const ex = b.exhausted, dis = ex ? 'disabled' : '', gear = b.boss ? `<button ${dis} onclick="TD.menu('formation')">☯ 陣法</button><button ${dis} onclick="TD.menu('talisman')">📜 符錄</button><button ${dis} onclick="TD.menu('treasure')">🗡 法寶</button>` : '';
       h += `<div class=row><button ${dis} onclick="TD.cmd('attack')">⚔ 劍擊(-${b.attackCost})</button><button ${dis} onclick="TD.menu('spell')">✦ 法術</button>${gear}<button ${S.heal ? '' : 'disabled'} onclick="TD.cmd('item')">💊 回春丹 ×${S.heal}</button><button ${S.mpills ? '' : 'disabled'} onclick="TD.cmd('mpill')">🔮 聚氣丹 ×${S.mpills}</button><button ${dis} onclick="TD.cmd('guard')">🛡 防禦</button><button onclick="TD.cmd('flee')">💨 逃跑</button>${b.boss ? '<small style="margin-left:10px;color:#e8a020">主要對手戰：可用陣法、符錄、法寶</small>' : '<small style="margin-left:10px">點擊敵人可選目標</small>'}</div>`;
     }
+    if (!b.over && !b.down && b.allies && b.allies.length && !bt.menu) h += `<div class=row style="margin-top:4px;font-size:13px"><b>夥伴戰術：</b>${Object.entries(b.stances).map(([k, v]) => `<button ${b.stance === k ? 'disabled' : ''} title="${v.desc}${b.stanceLocked ? '（本回合已調整過）' : ''}" onclick="TD.stance('${k}')">${v.name}</button>`).join('')}<small style="color:#aaa">${b.stances[b.stance].desc}　（切換不耗回合，每回合限一次）</small></div>`;
     p.innerHTML = h;
     const l = $('btlog'); l.scrollTop = 1e6;
   }
@@ -534,6 +535,7 @@ const TD = (() => {
     $('quest').innerHTML = q ? `<b>▶ ${q.name}</b>` + q.objectives.filter(o => o.state !== 'locked').map(o => `<div>${o.state === 'done' ? '☑' : '☐'} ${o.text}${o.progress && o.state === 'active' ? ' <small>(' + o.progress + ')</small>' : ''}</div>`).join('') : (S.quest.done ? '全部任務完成' : '');
     const nl = (S.news || []).filter(n => !n.resolved);
     $('quest').innerHTML += nl.length ? '<div style="margin-top:6px;border-top:1px solid #654;padding-top:4px"><b style="color:#ffd24a">📰 傳聞</b>' + nl.map(n => `<div style="font-size:12px;color:#ddd">${n.text}<small style="color:#999">（剩 ${n.left} 日）</small></div>`).join('') + '</div>' : '';
+    $('quest').style.display = S.battle ? 'none' : 'block';
     $('top').innerHTML = `<b>${S.name}</b><span>${S.realm}·${S.sub}</span><span>Lv ${S.level}/${S.cap}${S.bottleneck ? ' <b style=color:#e6a>【瓶頸→按突破】</b>' : ''}</span>
       <span>氣血 <span class=bar><i style="width:${100 * S.hp / S.max_hp}%;background:#c44"></i></span> ${S.hp}/${S.max_hp}</span>
       <span>靈力 <span class=bar><i style="width:${100 * S.mp / S.max_mp}%;background:#48c"></i></span> ${S.mp}/${S.max_mp}</span>
@@ -718,5 +720,5 @@ const TD = (() => {
   }
   boot();
   window.__td = {get S() { return S; }, get MAP() { return MAP; }, hero, get ents() { return ents; }, post, load, get bt() { return bt; }};
-  return {post, act, openNew, cmd: btCmd, btEnd, bag: toggleBag, comp: toggleComp, codex: toggleCodex, menu: v => { bt.menu = v; $('bt')._k = ''; btUI(); }, spellMenu: v => { bt.menu = v ? 'spell' : null; $('bt')._k = ''; btUI(); }};
+  return {post, act, openNew, cmd: btCmd, btEnd, bag: toggleBag, comp: toggleComp, stance: mode => { if (!busy && S.battle && !S.battle.over) post('battle', {cmd: 'stance', arg: mode}); }, codex: toggleCodex, menu: v => { bt.menu = v; $('bt')._k = ''; btUI(); }, spellMenu: v => { bt.menu = v ? 'spell' : null; $('bt')._k = ''; btUI(); }};
 })();

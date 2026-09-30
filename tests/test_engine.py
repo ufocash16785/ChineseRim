@@ -2297,3 +2297,62 @@ class LoadoutTest(unittest.TestCase):
         s2.load()
         self.assertEqual(s2.hero.pet_bench[0]["kind"], "bear")
         self.assertEqual(s2.stance(), "offense")
+
+
+class BattleStanceSwitchTest(unittest.TestCase):
+    def setUp(self):
+        import pathlib, tempfile
+        from chineserim.session import Session
+        self.s = Session(pathlib.Path(tempfile.mkdtemp()) / "s.json", seed=20)
+        self.s.act("new", diff="normal")
+        self.h = self.s.hero
+        self.h.realm = 4
+        self.s.rs.apply_stats(self.h)
+        self.h.hp, self.h.mp = self.h.max_hp, self.h.max_mp
+        self.h.add("lingshi", 9000)
+        self.h.pet = {"kind": "wolf", "el": "火", "level": 5, "exp": 0}
+        self.s.act("puppet_build", ptype="iron")
+
+    def _start(self):
+        self.s.start_boss_fight("yuzitong")
+        st = self.s.battle
+        st["enemies"][0]["hp"] *= 50
+        return st
+
+    def test_switch_changes_stats_without_using_turn(self):
+        st = self._start()
+        atk0 = {a["type"]: (a["atk"], a["absorb"]) for a in st["allies"]}
+        self.s.act("battle", cmd="stance", arg="offense")
+        self.assertEqual(st["turn"], 1)                          # 不耗回合
+        self.assertEqual(self.s.snapshot()["battle"]["stance"], "offense")
+        atk1 = {a["type"]: (a["atk"], a["absorb"]) for a in st["allies"]}
+        self.assertGreater(atk1["pet"][0], atk0["pet"][0])
+        self.assertLess(atk1["puppet"][1], atk0["puppet"][1])
+        self.assertEqual(self.h.flags["stance"], "offense")      # 記住，回到平時也是這個戰術
+
+    def test_once_per_turn_and_resets_next_turn(self):
+        st = self._start()
+        self.s.act("battle", cmd="stance", arg="offense")
+        self.s.act("battle", cmd="stance", arg="guard")          # 同一回合第二次：被擋
+        self.assertEqual(st["stance"], "offense")
+        self.assertTrue(self.s.snapshot()["battle"]["stanceLocked"])
+        self.s.act("battle", cmd="guard")                        # 過一回合
+        self.assertFalse(self.s.snapshot()["battle"]["stanceLocked"])
+        self.s.act("battle", cmd="stance", arg="guard")
+        self.assertEqual(st["stance"], "guard")
+
+    def test_guard_stance_raises_absorb_and_unknown_ignored(self):
+        st = self._start()
+        base = next(a for a in st["allies"] if a["type"] == "puppet")["absorb"]
+        self.s.act("battle", cmd="stance", arg="guard")
+        self.assertGreater(next(a for a in st["allies"] if a["type"] == "puppet")["absorb"], base)
+        self.s.act("battle", cmd="guard")
+        self.s.act("battle", cmd="stance", arg="bogus")
+        self.assertEqual(st["stance"], "guard")
+
+    def test_no_allies_no_switch(self):
+        self.h.pet = {}
+        self.h.puppet = {}
+        st = self._start()
+        self.s.act("battle", cmd="stance", arg="offense")
+        self.assertNotEqual(st.get("stance"), "offense")
