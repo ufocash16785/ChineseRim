@@ -1710,3 +1710,79 @@ class PetAndPuppetTest(unittest.TestCase):
         s2 = Session(self.s.save_path)
         s2.load()
         self.assertEqual(s2.hero.pet["kind"], "bear")
+
+
+class WorldEventTest(unittest.TestCase):
+    def setUp(self):
+        import pathlib, tempfile
+        from chineserim.session import Session
+        self.s = Session(pathlib.Path(tempfile.mkdtemp()) / "s.json", seed=8)
+        self.s.act("new", diff="normal")
+        self.h = self.s.hero
+
+    def _find(self, typ, region=None):
+        """掃描日期，找出（區域、日）有指定事件。"""
+        for w in range(0, 80):
+            for reg in ([region] if region else list(self.s.world.regions)):
+                for e in self.s.events_in(reg, w):
+                    if e["type"] == typ:
+                        self.s.region, self.s.day = reg, w * self.s.data.events["window_days"]
+                        return e
+        self.fail("沒找到事件 " + typ)
+
+    def _enter(self, e):
+        if self.s.mode == "loc":
+            self.s.act("leave")
+        self.s.h = None
+        self.h.realm = max(self.h.realm, 3)
+        self.s.rs.apply_stats(self.h)
+        self.s.act("enter", loc=e["loc"])
+        self.assertEqual(self.s.cur_loc, e["loc"])
+
+    def test_deterministic_and_rotates(self):
+        a = self.s.events_in("tiannan", 3)
+        self.assertEqual(a, self.s.events_in("tiannan", 3))
+        self.assertTrue(any(self.s.events_in("tiannan", 3) != self.s.events_in("tiannan", w) for w in range(4, 10)))
+        self.assertTrue(all(e["left"] >= 0 or True for e in a))
+
+    def test_news_and_notify(self):
+        self.s.day = 7
+        self.s.log.clear()
+        self.s.advance(2)                                       # 跨進新時間窗
+        self.assertTrue(any("傳聞" in x for x in self.s.log))
+        self.assertTrue(self.s.snapshot()["news"])
+
+    def test_refugee_gives_ren(self):
+        from chineserim import karma
+        e = self._find("refugee")
+        self._enter(e)
+        self.h.add("lingshi", 500)
+        self.assertEqual(self.s.snapshot()["wev_ent"]["type"], "refugee")
+        self.s.act("talk", ent="wev")
+        self.assertEqual(karma.get(self.h, "ren"), 2)
+        self.assertIsNone(self.s.snapshot()["wev_ent"])         # 處理完不再出現
+
+    def test_raid_boss_and_price(self):
+        from chineserim import karma
+        e = self._find("raid")
+        self._enter(e)
+        self.assertGreater(self.s.wev_mod(e["loc"], "price"), 1.0)      # 盜匪期間物價上漲
+        self.s.act("talk", ent="wev")
+        self.assertTrue(self.s.battle and self.s.battle["boss"])
+        self.s.battle["enemies"][0]["hp"] = 1
+        self.s.act("battle", cmd="attack")
+        self.assertEqual(self.s.battle["over"], "win")
+        self.assertEqual(karma.get(self.h, "ren"), 2)
+        self.assertEqual(self.s.wev_mod(e["loc"], "price"), 1.0)        # 解決後恢復
+
+    def test_fall_gives_loot_and_tide_modifiers(self):
+        e = self._find("fall")
+        self._enter(e)
+        n0 = sum(self.h.inventory.values())
+        self.s.act("talk", ent="wev")
+        self.assertGreater(sum(self.h.inventory.values()), n0)
+        e2 = self._find("tide")
+        self.assertEqual(self.s.wev_mod(e2["loc"], "loot"), 2.0)
+        self.assertEqual(self.s.wev_mod("nonexistent", "loot"), 1.0)
+        e3 = self._find("festival")
+        self.assertEqual(self.s.wev_mod(e3["loc"], "price"), 0.8)

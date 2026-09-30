@@ -402,6 +402,58 @@
         "unique": true,
         "chance": 0.1
       }
+    ],
+    "fall": [
+      {
+        "item": "lingshi",
+        "n": [
+          200,
+          400
+        ],
+        "chance": 1.0,
+        "scale": true
+      },
+      {
+        "item": "fu_lei",
+        "n": [
+          1,
+          2
+        ],
+        "chance": 0.7
+      },
+      {
+        "item": "zhen_hu",
+        "n": [
+          1,
+          1
+        ],
+        "chance": 0.5
+      },
+      {
+        "item": "pet_egg",
+        "n": [
+          1,
+          1
+        ],
+        "chance": 0.2
+      },
+      {
+        "item": "mpill",
+        "n": [
+          2,
+          3
+        ],
+        "chance": 0.6
+      },
+      {
+        "item": "fb_shield",
+        "n": [
+          1,
+          1
+        ],
+        "chance": 0.08,
+        "unique": true
+      }
     ]
   }
 }

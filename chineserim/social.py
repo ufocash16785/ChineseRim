@@ -85,7 +85,7 @@ class SocialMixin:
 
     def _price(self, ctx, item, base):
         pt = self.perk_totals()
-        p = base * self.dcfg["price"] * (1 - min(0.3, pt["discount"]))
+        p = base * self.dcfg["price"] * (1 - min(0.3, pt["discount"])) * self.wev_mod(ctx["loc"], "price")
         if ctx["kind"] == "shady":
             sh = self.shady_now(ctx["loc"])
             p *= self.data.market["shady"]["kinds"][sh["kind"]]["price_mult"] if sh else 1

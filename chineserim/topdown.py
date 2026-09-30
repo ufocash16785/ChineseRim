@@ -56,7 +56,7 @@ class TopDownMixin:
     def _start_guardian(self, e):
         g = self.data.bosses["guardian"]
         spec = {"name": e["name"], "kind": e["kind"], "el": e["el"], "hp_mult": g["hp_mult"], "atk_mult": g["atk_mult"], "skills": g["skills"],
-                "drops": loot.guardian_table(e.get("profile", "normal"), self.rng), "on_win": [{"flag": "guardian:" + self.cur_loc}], "loot": 3.0}
+                "drops": "guardian_rich" if self.wev_mod(self.cur_loc, "chest") > 1 else loot.guardian_table(e.get("profile", "normal"), self.rng), "on_win": [{"flag": "guardian:" + self.cur_loc}], "loot": 3.0}
         self.start_boss_fight("guardian", None, spec)
 
     def bag_view(self):
@@ -367,6 +367,9 @@ class TopDownMixin:
             else:
                 self.log.append("對方朝你點了點頭，似乎沒有新的事情。")
             return
+        if ent == "wev":
+            self._talk_wev()
+            return
         if ent == "karma":
             self._talk_karma()
             return
@@ -477,7 +480,7 @@ class TopDownMixin:
         h.flags[key] = True
         loot = e.get("loot", "normal")
         scale = 1 + h.realm
-        mult = self.dcfg["chest"]
+        mult = self.dcfg["chest"] * self.wev_mod(self.cur_loc, "chest")
         if loot == "empty":
             self.log.append("打開寶箱……裡面只有碎石和蜘蛛網。白忙一場！")
             return
@@ -610,7 +613,9 @@ class TopDownMixin:
         if not ents:
             return
         deep = m["cat"] == "deep"
-        self.battle = battle.start(self.hero, self.cur_loc, [{"id": e["id"], "kind": e["kind"], "el": e["el"], "loot": e.get("loot", 1.0) * (1 + self.perk_totals()["loot"]), "name": e.get("name")} for e in ents], deep, self.dcfg, self.partner_spec(), self.allies_spec())
+        lm, am = self.wev_mod(self.cur_loc, "loot"), self.wev_mod(self.cur_loc, "atk")
+        dcfg = dict(self.dcfg, enemy_atk=self.dcfg.get("enemy_atk", 1.0) * am) if am != 1.0 else self.dcfg
+        self.battle = battle.start(self.hero, self.cur_loc, [{"id": e["id"], "kind": e["kind"], "el": e["el"], "loot": e.get("loot", 1.0) * (1 + self.perk_totals()["loot"]) * lm, "name": e.get("name")} for e in ents], deep, dcfg, self.partner_spec(), self.allies_spec())
 
     def _td_battle(self, cmd="attack", arg=None, target=None, **_):
         if not self.battle:

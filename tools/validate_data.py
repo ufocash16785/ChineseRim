@@ -169,6 +169,18 @@ def main() -> int:
         for r in rows:
             if r["item"] not in item_ids:
                 errors.append(f"drops/{tname}: 未知物品 {r['item']}")
+    ev = load("events")
+    for t, tc in ev["types"].items():
+        for k in ("drops", "table"):
+            if k in tc and tc[k] not in drops["tables"]:
+                errors.append(f"events/{t}: 掉落表 {tc[k]} 不存在")
+        for x in tc.get("gifts", []):
+            if x["item"] not in item_ids:
+                errors.append(f"events/{t}: 未知物品 {x['item']}")
+    for kk in ("avenger", "benefactor"):
+        for x in load("karma")[kk].get("gifts", []):
+            if x["item"] not in item_ids:
+                errors.append(f"karma/{kk}: 未知物品 {x['item']}")
     for arc_id, rules in qr.items():
         arc = next((a for a in arcs["arcs"] if a["id"] == arc_id), None)
         for qid, rule in rules.items():

@@ -232,6 +232,7 @@ const TD = (() => {
       else if (e.k === 'furnace') out.push({id: e.id, kind: 'furnace', x: (e.x + .5) * TS, y: (e.y + 1.4) * TS, text: '使用煉丹爐'});
     }
     if (S.karma_ev) out.push({id: 'karma', x: (S.karma_ev.x + .5) * TS, y: (S.karma_ev.y + .9) * TS, text: S.karma_ev.kind === 'avenger' ? `面對仇家「${S.karma_ev.name}」` : `與故人「${S.karma_ev.name}」相見`});
+    if (S.wev_ent) { const w = S.wev_ent; out.push({id: 'wev', x: (w.x + .5) * TS, y: (w.y + .9) * TS, text: ({raid: '迎戰', refugee: '資助', fall: '查看墜落的異寶'}[w.type] || '互動') + (w.type === 'fall' ? '' : `「${w.name}」`)}); }
     if (S.shady) out.push({id: 'shady', x: (S.shady.x + .5) * TS, y: (S.shady.y + .9) * TS, text: '與神秘商人交易'});
     if (S.questNpc) { const q = questPos(); out.push({id: 'quest', x: q[0], y: q[1], text: `與${S.questNpc}交談`}); }
     return out;
@@ -525,6 +526,8 @@ const TD = (() => {
   function ui() {
     const q = S.quest.quests.find(x => x.state === 'active');
     $('quest').innerHTML = q ? `<b>▶ ${q.name}</b>` + q.objectives.filter(o => o.state !== 'locked').map(o => `<div>${o.state === 'done' ? '☑' : '☐'} ${o.text}${o.progress && o.state === 'active' ? ' <small>(' + o.progress + ')</small>' : ''}</div>`).join('') : (S.quest.done ? '全部任務完成' : '');
+    const nl = (S.news || []).filter(n => !n.resolved);
+    $('quest').innerHTML += nl.length ? '<div style="margin-top:6px;border-top:1px solid #654;padding-top:4px"><b style="color:#ffd24a">📰 傳聞</b>' + nl.map(n => `<div style="font-size:12px;color:#ddd">${n.text}<small style="color:#999">（剩 ${n.left} 日）</small></div>`).join('') + '</div>' : '';
     $('top').innerHTML = `<b>${S.name}</b><span>${S.realm}·${S.sub}</span><span>Lv ${S.level}/${S.cap}${S.bottleneck ? ' <b style=color:#e6a>【瓶頸→按突破】</b>' : ''}</span>
       <span>氣血 <span class=bar><i style="width:${100 * S.hp / S.max_hp}%;background:#c44"></i></span> ${S.hp}/${S.max_hp}</span>
       <span>靈力 <span class=bar><i style="width:${100 * S.mp / S.max_mp}%;background:#48c"></i></span> ${S.mp}/${S.max_mp}</span>
@@ -615,7 +618,7 @@ const TD = (() => {
     for (const e of ents) {
       const ax = e.px - cam.x, ay = e.py - cam.y;
       if (ax < -100 || ax > VW + 100 || ay < -100 || ay > VH + 100) continue;
-      if (e.k === 'enter') list.push({y: (e.y + 1) * TS, f: () => { const zb = e.region || 'tiannan', ix = (e.x + .5) * TS - cam.x, iy = (e.y + 1) * TS - cam.y; drawObj(zb, e.icon, ix, iy, 1); label(e.name, ix, iy + 13, '#fff', 12); }});
+      if (e.k === 'enter') list.push({y: (e.y + 1) * TS, f: () => { const zb = e.region || 'tiannan', ix = (e.x + .5) * TS - cam.x, iy = (e.y + 1) * TS - cam.y; drawObj(zb, e.icon, ix, iy, 1); label(e.name, ix, iy + 13, '#fff', 12); const nw = (S.news || []).find(n => n.loc === e.loc && !n.resolved); if (nw) label(nw.kind === 'entity' ? '❗' : '✦', ix, iy - 44 + Math.sin(now / 250) * 4, '#ffd24a', 22); }});
       else if (e.k === 'dock') list.push({y: (e.y + 1) * TS, f: () => { drawObj(e.region === 'luanxinghai' ? 'luanxinghai' : 'tiannan', 'dock', (e.x + .5) * TS - cam.x, (e.y + 1) * TS - cam.y, 1); label('渡口', (e.x + .5) * TS - cam.x, (e.y + 1) * TS - cam.y + 12, '#9df', 12); }});
       else if (e.k === 'plot') list.push({y: e.y * TS + 10, f: () => { const st = S.plots[e.id] || {stage: 0}, ix = (e.x + .5) * TS - cam.x, iy = (e.y + 1) * TS - cam.y - 2; drawObj(bio, 'plot' + st.stage, ix, iy, 1); if (st.stage === 3) label('可收成', ix, iy - 28 + Math.sin(now / 250) * 2, '#ffe36a', 11); else if (st.stage > 0) label(st.left + '日', ix, iy - 26, '#cfe', 10); }});
       else if (e.k === 'npc') list.push({y: e.py, f: () => drawNPC(e.npc, ax, ay, e.face || 'd', e.moving)});
@@ -624,6 +627,7 @@ const TD = (() => {
       else if (e.k === 'well') list.push({y: (e.y + 1) * TS + 1, f: () => label('💾', (e.x + .5) * TS - cam.x, e.y * TS - cam.y - 22 + Math.sin(now / 400) * 2, '#9df', 16)});
       else if (e.k === 'enemy' && !S.defeated.includes(e.id)) list.push({y: e.py, f: () => { const B = Art.man.beasts; drawBeast(e, ax, ay, 1, (e.dir || 1) < 0); label(e.el, ax, ay - 46 - (e.kind === 'bat' ? 26 : 0), ECOL[e.el], 13); if ((cool['f' + e.id] || 0) > now) { g.globalAlpha = .6; label('…', ax, ay - 60, '#fff', 14); g.globalAlpha = 1; } }});
     }
+    if (MAP.kind === 'loc' && S.wev_ent) { const w = S.wev_ent, ax = (w.x + .5) * TS - cam.x, ay = (w.y + .9) * TS - cam.y; list.push({y: (w.y + .9) * TS, f: () => { if (w.sprite) { drawNPC(w.sprite, ax, ay, hero.x < (w.x + .5) * TS ? 'r' : 'l', false); label(w.name, ax, ay + 14, '#ffe08a', 12); } else { g.globalAlpha = .6 + .3 * Math.sin(now / 200); g.fillStyle = '#ffe08a'; g.beginPath(); g.ellipse(ax, ay - 6, 16, 8, 0, 0, 7); g.fill(); g.globalAlpha = 1; } label(w.label, ax, ay - 62 + Math.sin(now / 230) * 3, '#ffd24a', 26); }}); }
     if (MAP.kind === 'loc' && S.karma_ev) { const k = S.karma_ev, ax = (k.x + .5) * TS - cam.x, ay = (k.y + .9) * TS - cam.y, av = k.kind === 'avenger'; list.push({y: (k.y + .9) * TS, f: () => { drawNPC(k.sprite, ax, ay, hero.x < (k.x + .5) * TS ? 'r' : 'l', false); label(av ? '仇' : '恩', ax, ay - 62 + Math.sin(now / 240) * 3, av ? '#ff5a5a' : '#7dff9a', 26); label(k.name, ax, ay + 14, av ? '#ff9a9a' : '#b8ffc8', 12); }}); }
     if (MAP.kind === 'loc' && S.questNpc) { const q = questPos(), ax = q[0] - cam.x, ay = q[1] - cam.y, id = speakerSprite(S.questNpc); if (id) list.push({y: q[1], f: () => { drawNPC(id, ax, ay, hero.x < q[0] ? 'l' : 'r', false); label('!', ax, ay - 62 + Math.sin(now / 220) * 4, '#ffd24a', 30); label(S.questNpc, ax, ay + 14, '#ffe9a6', 12); }}); }
     if (S.comp && S.comp.pet && trail.length) { const t = trail[Math.max(0, trail.length - 4)], px = t.x - cam.x + 12, py = t.y - cam.y + 2, pt = S.comp.pet; list.push({y: t.y, f: () => { shadow(px, py + 1, 10); drawBeast({kind: pt.kind, el: pt.el}, px, py, .8, t.dir === 'l', hero.moving ? Math.floor(now / 160) % 4 : 0); }}); }
