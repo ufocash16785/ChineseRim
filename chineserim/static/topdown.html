@@ -1,0 +1,37 @@
+<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>凡人修仙傳</title>
+<style>
+body{margin:0;background:#0d1015;color:#e6e2d3;font-family:sans-serif;user-select:none}
+#top{display:flex;gap:14px;align-items:center;padding:6px 12px;background:#161a21;font-size:14px;flex-wrap:wrap}
+#top b{color:#e6b45a}.bar{width:120px;height:10px;background:#333;border-radius:5px;overflow:hidden;display:inline-block;vertical-align:middle}.bar i{display:block;height:100%}
+#stage{position:relative;width:min(100vw,960px);margin:0 auto}
+canvas#c{display:block;width:100%;background:#000;image-rendering:pixelated}
+#toast{position:absolute;left:0;right:0;top:10px;text-align:center;pointer-events:none;font-size:16px;text-shadow:0 1px 3px #000,0 0 6px #000}
+#prompt{position:absolute;left:0;right:0;bottom:58px;text-align:center;pointer-events:none;font-size:18px;color:#ffd97a;text-shadow:0 1px 3px #000}
+#quest{position:absolute;right:8px;top:8px;background:#000a;border:1px solid #543;border-radius:6px;padding:6px 10px;font-size:13px;max-width:290px}
+#help{position:absolute;left:8px;bottom:6px;font-size:12px;color:#ccc;text-shadow:0 1px 2px #000}
+#mini{position:absolute;left:8px;top:8px;border:2px solid #b8893a;border-radius:4px;image-rendering:pixelated;background:#000;display:none}
+#banner{position:absolute;left:0;right:0;top:34%;text-align:center;font-size:34px;font-weight:bold;letter-spacing:6px;color:#ffe9a6;text-shadow:0 2px 6px #000,0 0 14px #000;pointer-events:none;opacity:0;transition:opacity .5s}
+#bar2{max-width:960px;margin:6px auto;padding:0 8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{padding:6px 12px;font-size:14px;cursor:pointer}
+.panel button{background:#2b3140;color:#eee;border:1px solid #7a6a3a;border-radius:4px}.panel button:hover{background:#3a4258}.panel button:disabled{opacity:.4;cursor:default}a{color:#9bd}
+.panel{display:none;position:absolute;background:#1d222aee;border:2px solid #b8893a;border-radius:8px;padding:12px 18px;z-index:9}
+#dlg{left:0;right:0;bottom:0;border-radius:0;border-width:2px 0 0}
+#dlg .sp{color:#e6b45a;font-weight:bold;margin-bottom:4px}#dlg .tx{font-size:17px;line-height:1.6;margin-bottom:8px}#dlg button,.panel button{display:block;margin:4px 0;font-size:15px;text-align:left}
+canvas.pt{float:left;width:104px;height:135px;image-rendering:pixelated;margin:-34px 16px 0 0;background:linear-gradient(#3a4256,#252a38);border:2px solid #b8893a;border-radius:6px}
+#ask{left:50%;top:40%;transform:translate(-50%,-50%);min-width:300px;text-align:center}
+#shop{right:8px;bottom:60px;min-width:220px}
+#bt{left:0;right:0;bottom:0;border-radius:0;border-width:2px 0 0;padding:8px 14px}
+#bt .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}#bt button{display:inline-block;margin:2px}
+#btlog{font-size:14px;color:#ddd;min-height:38px;max-height:76px;overflow:auto;margin-bottom:6px}
+#err{display:none;background:#7a1f1f;padding:6px 10px}
+#logp{max-width:960px;margin:0 auto;padding:4px 12px;font-size:13px;color:#aaa;min-height:60px}
+</style>
+<div id=err></div><div id=top></div>
+<div id=stage><canvas id=c width=960 height=540></canvas><canvas id=mini width=140 height=100></canvas>
+<div id=toast></div><div id=prompt></div><div id=quest></div><div id=banner></div>
+<div id=help>WASD/方向鍵 移動　Shift 奔跑　E/空白 互動　走進地圖上的地點圖示即可進入</div>
+<div id=dlg class=panel></div><div id=ask class=panel></div><div id=shop class=panel></div><div id=bt class=panel></div></div>
+<div id=bar2><button onclick="TD.act('break')">突破</button><button onclick="TD.act('refine')">祭煉青竹蜂雲劍</button><button onclick="TD.act('rest')">閉關7日</button>
+<button onclick="TD.openNew()">新遊戲</button><a href="/side">舊版卷軸</a><small>自動存檔</small></div>
+<div id=logp></div>
+<script src="/static/art.js"></script><script src="/static/td.js"></script>

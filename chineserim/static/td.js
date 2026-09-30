@@ -1,0 +1,463 @@
+/* 俯視地圖前端：大地圖行走、地點地圖、NPC 互動、遭遇戰與仙劍式回合制戰鬥。伺服器（Session）負責所有規則。 */
+const TD = (() => {
+  const TS = 32, VW = 960, VH = 540;
+  const $ = id => document.getElementById(id), cv = $('c'), g = cv.getContext('2d');
+  const ECOL = {"金": "#e0e0e0", "木": "#6c6", "水": "#48c", "火": "#e64", "土": "#ca6", "雷": "#dd4", "冰": "#8ef", "風": "#9d9"};
+  const EL = ["金", "木", "水", "火", "土", "雷", "冰", "風"];
+  let S = null, MAP = null, mapId = null;
+  const maps = {};
+  const hero = {x: 0, y: 0, dir: 'd', moving: false, inv: 0};
+  const keys = {};
+  let ents = [], solid = [], shoreMask = null, busy = false, now = 0, last = performance.now();
+  let askOpen = false, cool = {}, exitCool = 0, regionPending = false, syncT = 0, dist = 0, lastPos = null;
+  let lastTp = null, toastT = 0, lastLog = '', bannerT = 0, lastRegion = null, minimapBase = null, uiKey = '';
+  let bt = {target: 0, anim: [], hero: null, prev: null, fx: [], shake: {}, heroAnim: null, over: false};
+  const rnd = (a, b = 0) => { let h = (a * 73856093) ^ (b * 19349663); h = (h ^ (h >>> 13)) >>> 0; return (h % 1000) / 1000; };
+  const hs = (x, y) => (((x * 73856093) ^ (y * 19349663)) >>> 0);
+  const toast = (t, ms = 3200) => { $('toast').textContent = t; toastT = ms; };
+  const err = t => { $('err').style.display = 'block'; $('err').textContent = t; };
+
+  // ------------------------------------------------ 伺服器溝通
+  async function load() {
+    try { S = await (await fetch('/state')).json(); $('err').style.display = 'none'; } catch (e) { err('連不上伺服器：' + e); return; }
+    if (S.map_id !== mapId) await setMap(S.map_id);
+    if (S.tp !== lastTp) { lastTp = S.tp; hero.x = S.pos[0] * TS; hero.y = S.pos[1] * TS; hero.dir = 'd'; lastPos = null; exitCool = 1.2; ents.forEach(e => { if (e.k === 'dock') e.asked = true; }); }
+    const l = S.log[S.log.length - 1] || '';
+    if (l !== lastLog) { lastLog = l; toast(l); }
+    if (S.region !== lastRegion) { if (lastRegion !== null && MAP.kind === 'world') banner(S.region_name); lastRegion = S.region; }
+    ui();
+  }
+  async function post(path, params = {}) {
+    busy = true;
+    try { await fetch('/' + path + '?' + new URLSearchParams(params), {method: 'POST'}); await load(); } finally { busy = false; }
+  }
+  const act = c => post('act', {c});
+  async function setMap(id) {
+    if (!maps[id]) maps[id] = await (await fetch('/mapdata?id=' + encodeURIComponent(id))).json();
+    MAP = maps[id]; mapId = id;
+    solid = MAP.solid;
+    ents = MAP.entities.map(e => Object.assign({}, e, {hx: (e.x + .5) * TS, hy: (e.y + .9) * TS, px: (e.x + .5) * TS, py: (e.y + .9) * TS, dir: 1, t: Math.random() * 3, asked: false}));
+    shoreMask = null;
+    if (MAP.kind === 'world') buildWorldCaches();
+    cool = {}; regionPending = false;
+    if (MAP.kind === 'loc') banner(MAP.name);
+  }
+  function banner(t) { $('banner').textContent = t; $('banner').style.opacity = 1; bannerT = 2200; }
+
+  // ------------------------------------------------ 地圖查詢
+  const isSolidTile = (tx, ty) => tx < 0 || ty < 0 || tx >= MAP.w || ty >= MAP.h || solid[ty][tx] === '1';
+  const blockedPx = (x, y) => isSolidTile(Math.floor(x / TS), Math.floor(y / TS));
+  function npcBlocks(x, y) {
+    for (const e of ents) if ((e.k === 'npc' || e.k === 'dummy') && Math.hypot(e.px - x, e.py - y) < 15) return true;
+    if (MAP.kind === 'loc' && S.questNpc) { const q = questPos(); if (Math.hypot(q[0] - x, q[1] - y) < 15) return true; }
+    return false;
+  }
+  function free(x, y) {
+    const hw = 8;
+    return !(blockedPx(x - hw, y) || blockedPx(x + hw, y) || blockedPx(x - hw, y - 9) || blockedPx(x + hw, y - 9)) && !npcBlocks(x, y);
+  }
+  const questPos = () => [(MAP.npcSpot[0] + .5) * TS, (MAP.npcSpot[1] + .9) * TS];
+  function zoneAt(x, y) {
+    const tx = Math.floor(x / TS), ty = Math.floor(y / TS);
+    if (tx < 0 || ty < 0 || tx >= MAP.w || ty >= MAP.h) return null;
+    const c = MAP.zones[ty][tx]; return c === '.' ? null : MAP.zoneIds[+c];
+  }
+  function buildWorldCaches() {
+    shoreMask = MAP.ground.map((row, y) => Array.from(row).map((c, x) => {
+      if (!'gsdrtm'.includes(c)) return 0;
+      const w = (xx, yy) => { const k = MAP.ground[yy] && MAP.ground[yy][xx]; return k === '~' || k === ','; };
+      return (w(x, y - 1) ? 1 : 0) | (w(x + 1, y) ? 2 : 0) | (w(x, y + 1) ? 4 : 0) | (w(x - 1, y) ? 8 : 0);
+    }));
+    const W = MAP.w, H = MAP.h, cvs = document.createElement('canvas'); cvs.width = W; cvs.height = H;
+    const c2 = cvs.getContext('2d'), COL = {'~': '#1e4682', ',': '#3c78be', g: '#6ebe5a', t: '#28783c', m: '#827d87', s: '#e2d096', r: '#a07850', R: '#4682c8', b: '#8c5a32', B: '#8c5a32', d: '#96784f'};
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { c2.fillStyle = COL[MAP.ground[y][x]] || '#000'; c2.fillRect(x, y, 1, 1); }
+    minimapBase = cvs;
+  }
+
+  // ------------------------------------------------ 繪製：地磚
+  const tileXY = (b, n) => Art.man.tiles[b][n];
+  function drawTile(b, n, dx, dy) { const t = tileXY(b, n); g.drawImage(Art.img['tiles_' + b], t[0], t[1], TS, TS, dx, dy, TS, TS); }
+  function groundTile(tx, ty, cam) {
+    const c = MAP.ground[ty][tx], h = hs(tx, ty), f = Math.floor(now / 380 + tx + ty) % 4, dx = tx * TS - cam.x, dy = ty * TS - cam.y;
+    let b = MAP.biome;
+    if (MAP.kind === 'world') { const z = MAP.zones[ty][tx]; b = z === '.' ? 'tiannan' : MAP.zoneIds[+z]; }
+    let n;
+    if (MAP.kind === 'world') {
+      n = {'~': 'sea' + f, ',': 'water' + f, R: 'water' + f, g: 'grass' + [0, 0, 1, 1, 2, 2, 0, 3][h % 8], t: 'forest' + (h % 3), m: 'mountain' + (h % 3), s: 'sand' + (h % 2), r: 'path' + (h % 2), b: 'bridgeH', B: 'bridgeV', d: 'dirt' + (h % 2)}[c] || 'grass0';
+    } else {
+      n = {g: 'grass' + [0, 0, 1, 1, 2, 2, 0, 3][h % 8], d: 'dirt' + (h % 2), p: 'path' + (h % 2), c: 'court0', o: 'wood0', w: 'water' + f, k: 'cave0', W: 'cavewall0', h: 'hedge0', s: 'sand' + (h % 2), e: 'path0'}[c] || 'grass0';
+    }
+    drawTile(b, n, dx, dy);
+    if (MAP.kind === 'world' && shoreMask[ty][tx]) drawTile(b, 'shore' + shoreMask[ty][tx], dx, dy);
+    if (c === 'e') { g.fillStyle = 'rgba(255,230,140,.6)'; g.font = 'bold 18px sans-serif'; g.textAlign = 'center'; g.fillText('▼', dx + 16, dy + 22); }
+  }
+
+  // ------------------------------------------------ 繪製：物件與角色
+  function objRect(b, n) { return Art.man.objects[b][n]; }
+  function drawObj(b, n, ax, ay, scale) {           // ax,ay：底部中心
+    const r = objRect(b, n); if (!r) return;
+    const w = r[2] * scale, h = r[3] * scale;
+    g.drawImage(Art.img['objects_' + b], r[0], r[1], r[2], r[3], Math.round(ax - w / 2), Math.round(ay - h), w, h);
+  }
+  function shadow(x, y, w) { g.fillStyle = 'rgba(0,0,0,.28)'; g.beginPath(); g.ellipse(x, y, w, w * .3, 0, 0, 7); g.fill(); }
+  function human(sheet, baseRow, animRows, dir, moving, x, y, sc = 1, frameOverride = null) {
+    const fw = Art.man.human.frameW, fh = Art.man.human.frameH;
+    let anim = dir === 'u' ? (moving ? 'walk_u' : 'idle_u') : dir === 'd' ? (moving ? 'walk_d' : 'idle_d') : (moving ? 'walk' : 'idle');
+    if (frameOverride && frameOverride.anim) anim = frameOverride.anim;
+    const f = frameOverride && frameOverride.f !== undefined ? frameOverride.f : (moving ? Math.floor(now / 130) % 4 : [0, 1, 0, 1, 0, 1, 2, 1][Math.floor(now / 330) % 8]);
+    const row = baseRow + animRows[anim].row, flip = dir === 'l' || (frameOverride && frameOverride.flip);
+    const dx = x - fw * sc / 2, dy = y - 50 * sc;
+    if (flip) { g.save(); g.translate(x, 0); g.scale(-1, 1); g.drawImage(Art.img[sheet], f * fw, row * fh, fw, fh, -fw * sc / 2, dy, fw * sc, fh * sc); g.restore(); }
+    else g.drawImage(Art.img[sheet], f * fw, row * fh, fw, fh, dx, dy, fw * sc, fh * sc);
+  }
+  const heroBase = () => Art.man.heroes.outfitRows[Math.min(5, S.realm_index)];
+  function drawHero(cam) { shadow(hero.x - cam.x, hero.y - cam.y + 1, 12); if (hero.inv <= 0 || Math.floor(now / 90) % 2) human('heroes', heroBase(), Art.man.heroes.anims, hero.dir, hero.moving, hero.x - cam.x, hero.y - cam.y); }
+  function drawNPC(id, x, y, dir, moving) { const m = Art.man.npcs[id]; if (!m) return; shadow(x, y + 1, 12); human('npcs', m.row, Art.man.npcAnims, dir, moving, x, y); }
+  function drawBeast(e, x, y, sc = 1, flip = false, frame = null) {
+    const B = Art.man.beasts, k = B.kinds[e.kind], row = k.row + B.elements.indexOf(e.el), fw = B.frameW, fh = B.frameH, f = frame === null ? Math.floor(now / 180) % 4 : frame;
+    if (frame === null) shadow(x, y + 2, 20);
+    const lift = e.kind === 'bat' ? 26 : 0;
+    if (flip) { g.save(); g.translate(x, 0); g.scale(-1, 1); g.drawImage(Art.img.beasts, f * fw, row * fh, fw, fh, -fw * sc / 2, y - lift - 41 * sc, fw * sc, fh * sc); g.restore(); }
+    else g.drawImage(Art.img.beasts, f * fw, row * fh, fw, fh, x - fw * sc / 2, y - lift - 41 * sc, fw * sc, fh * sc);
+  }
+  const speakerSprite = n => Art.man.speakers[n];
+  function label(t, x, y, col = '#fff', size = 12) { g.font = `bold ${size}px sans-serif`; g.textAlign = 'center'; g.lineWidth = 3; g.strokeStyle = '#000c'; g.strokeText(t, x, y); g.fillStyle = col; g.fillText(t, x, y); }
+
+  // ------------------------------------------------ 更新
+  const down = (...k) => k.some(x => keys[x] || keys[x.toUpperCase()]);
+  function update(dt) {
+    now = performance.now();
+    if (toastT > 0) { toastT -= dt * 1000; if (toastT <= 0) $('toast').textContent = ''; }
+    if (bannerT > 0) { bannerT -= dt * 1000; if (bannerT <= 0) $('banner').style.opacity = 0; }
+    hero.inv -= dt; exitCool -= dt;
+    if (!S || !MAP) return;
+    const frozen = busy || S.dialogue || S.battle || askOpen || S.shop;
+    if (!frozen) {
+      let dx = (down('d', 'arrowright') ? 1 : 0) - (down('a', 'arrowleft') ? 1 : 0), dy = (down('s', 'arrowdown') ? 1 : 0) - (down('w', 'arrowup') ? 1 : 0);
+      hero.moving = false;
+      if (dx || dy) {
+        const len = Math.hypot(dx, dy), sp = (MAP.kind === 'world' ? 150 : 125) * (keys.Shift ? 1.6 : 1) * dt;
+        const nx = hero.x + dx / len * sp, ny = hero.y + dy / len * sp;
+        let moved = false;
+        if (dx && free(nx, hero.y)) { dist += Math.abs(nx - hero.x); hero.x = nx; moved = true; }
+        if (dy && free(hero.x, ny)) { dist += Math.abs(ny - hero.y); hero.y = ny; moved = true; }
+        hero.moving = moved;
+        hero.dir = Math.abs(dx) >= Math.abs(dy) && dx ? (dx > 0 ? 'r' : 'l') : (dy > 0 ? 'd' : 'u');
+        if (!dx) hero.dir = dy > 0 ? 'd' : 'u';
+      }
+      triggers(dt);
+      syncT += dt; if (syncT > 2) { syncT = 0; syncPos(); }
+    } else hero.moving = false;
+    if (MAP.kind === 'loc') actors(dt);
+    hud();
+  }
+  function syncPos() {
+    const steps = Math.floor(dist / 16); dist -= steps * 16;
+    const k = hero.x.toFixed(0) + ',' + hero.y.toFixed(0);
+    if (k === lastPos && !steps) return;
+    lastPos = k;
+    fetch('/pos?' + new URLSearchParams({x: (hero.x / TS).toFixed(2), y: (hero.y / TS).toFixed(2), steps}), {method: 'POST'});
+  }
+  function triggers(dt) {
+    if (MAP.kind === 'world') {
+      for (const e of ents) {
+        const cx = (e.x + .5) * TS, cy = (e.y + .6) * TS, d = Math.hypot(hero.x - cx, hero.y - cy);
+        if (e.k === 'enter' && d < 20 && !cool.enter) { cool.enter = true; post('enter', {loc: e.loc}).then(() => { cool.enter = false; }); return; }
+        if (e.k === 'dock') {
+          if (d < 30 && !e.asked && !askOpen) { e.asked = true; askFerry(e); return; }
+          if (d > 60) e.asked = false;
+        }
+      }
+      const z = zoneAt(hero.x, hero.y);
+      if (z && z !== S.region && !regionPending) { regionPending = true; post('region', {to: z}).then(() => { regionPending = false; }); }
+    } else {
+      const tx = Math.floor(hero.x / TS), ty = Math.floor(hero.y / TS);
+      if (exitCool <= 0 && MAP.exit.some(c => c[0] === tx && c[1] === ty) && !askOpen) askLeave();
+      for (const e of ents) {
+        if (e.k !== 'enemy' || S.defeated.includes(e.id) || (cool['f' + e.id] || 0) > now) continue;
+        if (Math.hypot(e.px - hero.x, e.py - hero.y) < 26 && !busy) { startBattle(e); return; }
+      }
+    }
+  }
+  function actors(dt) {
+    for (const e of ents) {
+      if (e.k === 'enemy' && !S.defeated.includes(e.id)) {
+        const d = Math.hypot(hero.x - e.px, hero.y - e.py), chase = d < 150 && !(S.battle) && !askOpen && !S.dialogue;
+        let sp = chase ? 62 : 26, tx, ty;
+        if (chase && (cool['f' + e.id] || 0) < now) { tx = hero.x; ty = hero.y; }
+        else { e.t -= dt; if (e.t <= 0) { e.t = 1 + Math.random() * 2; e.gx = e.hx + (Math.random() - .5) * e.r * TS * 2; e.gy = e.hy + (Math.random() - .5) * e.r * TS * 2; } tx = e.gx ?? e.px; ty = e.gy ?? e.py; }
+        stepTo(e, tx, ty, sp * dt, 8);
+      } else if (e.k === 'npc' && e.wander && !S.dialogue && !askOpen && !S.battle) {
+        e.t -= dt; if (e.t <= 0) { e.t = 1.5 + Math.random() * 3; e.gx = e.hx + (Math.random() - .5) * 4 * TS; e.gy = e.hy + (Math.random() - .5) * 3 * TS; }
+        e.moving = false;
+        if (e.gx !== undefined) stepTo(e, e.gx, e.gy, 22 * dt, 8, true);
+      }
+    }
+  }
+  function stepTo(e, tx, ty, sp, hw, isNpc) {
+    const dx = tx - e.px, dy = ty - e.py, d = Math.hypot(dx, dy);
+    e.moving = false;
+    if (d < 3) return;
+    const sx = dx / d * sp, sy = dy / d * sp, ok = (x, y) => !(blockedPx(x - hw, y) || blockedPx(x + hw, y) || blockedPx(x - hw, y - 6) || blockedPx(x + hw, y - 6)) && Math.hypot(hero.x - x, hero.y - y) > 14;
+    if (ok(e.px + sx, e.py)) { e.px += sx; e.moving = true; }
+    if (ok(e.px, e.py + sy)) { e.py += sy; e.moving = true; }
+    if (Math.abs(sx) > .01) e.dir = sx > 0 ? 1 : -1;
+    e.face = Math.abs(sx) > Math.abs(sy) ? (sx > 0 ? 'r' : 'l') : (sy > 0 ? 'd' : 'u');
+  }
+
+  // ------------------------------------------------ 互動
+  function interactables() {
+    const out = [];
+    if (MAP.kind !== 'loc') return out;
+    for (const e of ents) {
+      if (e.k === 'npc') out.push({id: e.id, x: e.px, y: e.py, text: `與${e.name}交談`});
+      else if (e.k === 'chest' && !S.opened.includes(e.id)) out.push({id: e.id, x: (e.x + .5) * TS, y: (e.y + .9) * TS, text: '打開寶箱'});
+      else if (e.k === 'dummy') out.push({id: e.id, x: e.px, y: e.py, text: '練習劍法（木人樁）'});
+      else if (e.k === 'altar') out.push({id: e.id, x: (e.x + .5) * TS, y: (e.y + 1.2) * TS, text: '在祭壇前調息'});
+      else if (e.k === 'portal') out.push({id: e.id, x: (e.x + .5) * TS, y: (e.y + 1.2) * TS, text: '觸碰空間節點'});
+      else if (e.k === 'sign') out.push({id: e.id, x: (e.x + .5) * TS, y: (e.y + 1.2) * TS, text: '查看告示牌'});
+    }
+    if (S.questNpc) { const q = questPos(); out.push({id: 'quest', x: q[0], y: q[1], text: `與${S.questNpc}交談`}); }
+    return out;
+  }
+  function nearest() {
+    let b = null, bd = 52;
+    for (const i of interactables()) { const d = Math.hypot(i.x - hero.x, i.y - hero.y); if (d < bd) { bd = d; b = i; } }
+    return b;
+  }
+  function interact() {
+    if (busy || S.dialogue || S.battle || askOpen || S.shop) return;
+    const n = nearest(); if (n) post('talk', {ent: n.id});
+  }
+  function askBox(title, opts) {
+    askOpen = true; const a = $('ask'); a.style.display = 'block';
+    a.innerHTML = `<div style="font-size:18px;margin-bottom:8px">${title}</div>` + opts.map((o, i) => `<button data-i="${i}">${i + 1}. ${o.label}</button>`).join('');
+    a._opts = opts;
+    a.querySelectorAll('button').forEach(b => b.onclick = () => closeAsk(+b.dataset.i));
+  }
+  function closeAsk(i) { const a = $('ask'); const o = a._opts[i]; a.style.display = 'none'; askOpen = false; if (o && o.fn) o.fn(); }
+  function askLeave() {
+    askBox(`離開「${MAP.name}」？`, [{label: '離開，回到大地圖', fn: () => post('leave')}, {label: '留下', fn: () => { hero.y -= 46; exitCool = 1.5; }}]);
+  }
+  function askFerry(d) {
+    const to = S.region === 'luanxinghai' ? 'tiannan' : 'luanxinghai';
+    const nm = S.world.find(w => w.id === to).name;
+    askBox(`搭船前往「${nm}」？（約 8 日航程）`, [{label: '出發', fn: () => post('ferry', {to})}, {label: '再等等', fn: () => {}}]);
+  }
+  const key = k => {
+    if (askOpen) { const a = $('ask'); if (k === '1' || k === 'enter') closeAsk(0); else if (k === '2') closeAsk(1); else if (k === 'escape') closeAsk(a._opts.length - 1); return; }
+    if (S && S.battle) return;
+    if (k === 'e' || k === ' ' || k === 'enter') interact();
+  };
+  addEventListener('keydown', e => { if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' '].includes(e.key)) e.preventDefault(); if (!keys[e.key]) { keys[e.key] = 1; key(e.key.toLowerCase()); } });
+  addEventListener('keyup', e => keys[e.key] = 0);
+  addEventListener('blur', () => { for (const k in keys) keys[k] = 0; });
+  addEventListener('error', e => err('頁面錯誤：' + e.message));
+
+  // ------------------------------------------------ 戰鬥
+  function startBattle(e) {
+    const near = ents.filter(o => o.k === 'enemy' && !S.defeated.includes(o.id) && Math.hypot(o.px - e.px, o.py - e.py) < TS * 6)
+      .sort((a, b) => Math.hypot(a.px - e.px, a.py - e.py) - Math.hypot(b.px - e.px, b.py - e.py)).slice(0, MAP.cat === 'deep' ? 2 : 3);
+    bt = {target: 0, fx: [], shake: {}, heroAnim: null, prev: null, over: false, ids: near.map(o => o.id), t0: now};
+    post('battle_start', {ids: near.map(o => o.id).join(',')});
+  }
+  function btCmd(cmd, arg) {
+    if (busy || !S.battle || S.battle.over) return;
+    const prevE = S.battle.enemies.map(e => e.hp), prevHp = S.hp, t = S.battle.enemies[bt.target] && !S.battle.enemies[bt.target].dead ? bt.target : S.battle.enemies.findIndex(e => !e.dead);
+    bt.heroAnim = {kind: cmd === 'attack' ? 'attack' : cmd === 'spell' ? 'attack' : 'idle', t: now, target: t, el: cmd === 'spell' ? S.elements[arg % S.elements.length] : null};
+    post('battle', {cmd, arg: arg ?? '', target: t}).then(() => {
+      S.battle.enemies.forEach((e, i) => { const d = prevE[i] - e.hp; if (d > 0.5) { bt.fx.push({x: 0, i, t: now + 320, txt: Math.round(d), c: '#ffec99'}); bt.shake[i] = now + 500; } });
+      if (S.hp < prevHp - .5) { bt.fx.push({hero: true, t: now + 500, txt: Math.round(prevHp - S.hp), c: '#ff8080'}); bt.heroHit = now + 500; }
+      else if (S.hp > prevHp + .5) bt.fx.push({hero: true, t: now, txt: '+' + Math.round(S.hp - prevHp), c: '#8f8'});
+    });
+  }
+  function btEnd() {
+    const lost = S.battle && S.battle.over === 'lose', ids = bt.ids || [];
+    if (S.battle && S.battle.over === 'flee') ids.forEach(id => cool['f' + id] = now + 3500);
+    post('battle_end');
+  }
+  function drawBattle() {
+    const b = S.battle, B = MAP.biome || 'tiannan', bio = MAP.kind === 'world' ? 'tiannan' : B;
+    const sk = Art.man.biomes[bio] ? Art.man.biomes[bio].sky : ['#274b6e', '#8fc1d8'];
+    const gr = g.createLinearGradient(0, 0, 0, 330); gr.addColorStop(0, sk[0]); gr.addColorStop(1, sk[1]); g.fillStyle = gr; g.fillRect(0, 0, VW, VH);
+    g.fillStyle = 'rgba(0,0,0,.25)';
+    for (let x = 0; x < VW; x += 4) { const h = Math.floor(90 * (.45 + .55 * Math.abs(Math.sin(x * .008) * Math.sin(x * .019 + 1))) / 4) * 4; g.fillRect(x, 330 - h, 4, h); }
+    const cave = MAP.cat === 'deep';
+    for (let cx = 0; cx * 64 < VW; cx++) for (let cy = 0; 330 + cy * 64 < VH; cy++) { const t = cave ? tileXY(bio, 'cave0') : tileXY(bio, 'grass' + ((cx + cy) % 3)); g.drawImage(Art.img['tiles_' + bio], t[0], t[1], 32, 32, cx * 64, 330 + cy * 64, 64, 64); }
+    if (cave) { g.fillStyle = 'rgba(30,10,50,.55)'; g.fillRect(0, 0, VW, 330); }
+    // 主角
+    let hx = 230, hy = 400, frame = null;
+    const ha = bt.heroAnim;
+    if (ha && now - ha.t < 520) {
+      const p = (now - ha.t) / 520;
+      if (ha.kind === 'attack') { hx += Math.sin(Math.min(1, p * 1.6) * Math.PI) * (ha.el ? 20 : 150); frame = {anim: 'attack', f: Math.min(2, Math.floor(p * 3)), flip: false}; }
+    }
+    if (bt.heroHit && now < bt.heroHit) frame = {anim: 'hurt', f: 0};
+    if (b.over === 'lose') frame = {anim: 'hurt', f: 0};
+    shadow(hx, hy + 2, 42);
+    human('heroes', heroBase(), Art.man.heroes.anims, 'r', false, hx, hy, 3, frame || {anim: 'idle', f: [0, 1, 0, 1, 0, 1, 2, 1][Math.floor(now / 330) % 8]});
+    // 敵人
+    b.enemies.forEach((e, i) => {
+      if (e.dead && !(bt.shake[i] && now < bt.shake[i] + 400)) return;
+      const ex = 660 + i * 95, ey = 360 + i * 46, sh = bt.shake[i] && now < bt.shake[i] ? Math.sin(now / 25) * 6 : 0;
+      g.globalAlpha = e.dead ? Math.max(0, 1 - (now - bt.shake[i]) / 400 + .4) : 1;
+      shadow(ex, ey + 2, 46); drawBeast(e, ex + sh, ey, 3, true, Math.floor(now / 250) % 4);
+      g.globalAlpha = 1;
+      if (!e.dead) {
+        g.fillStyle = '#222'; g.fillRect(ex - 44, ey - 150, 88, 8); g.fillStyle = '#e44'; g.fillRect(ex - 44, ey - 150, 88 * Math.max(0, e.hp / e.maxhp), 8);
+        label(e.el + ' ' + e.name, ex, ey - 158, ECOL[e.el], 13);
+        if (i === bt.target && !b.over) label('▼', ex, ey - 168 + Math.sin(now / 150) * 4, '#ffd24a', 24);
+      }
+    });
+    // 特效：法術光球
+    if (ha && ha.el && now - ha.t < 520 && now - ha.t > 120) {
+      const p = Math.min(1, (now - ha.t - 120) / 300), ti = ha.target, tx = 660 + ti * 95, ty = 300 + ti * 46, rr = Art.man.fx.rects[`orb_${ha.el}_${Math.floor(now / 100) % 2}`];
+      const x = hx + 60 + (tx - hx - 60) * p, y = hy - 90 + (ty - hy + 90) * p;
+      g.drawImage(Art.img.fx, rr[0], rr[1], rr[2], rr[3], x - rr[2] * 1.5, y - rr[3] * 1.5, rr[2] * 3, rr[3] * 3);
+    }
+    if (ha && !ha.el && ha.kind === 'attack' && now - ha.t > 160 && now - ha.t < 420) {
+      const ti = ha.target, tx = 660 + ti * 95, ty = 330 + ti * 46, r = Art.man.fx.rects['slash' + Math.min(2, Math.floor((now - ha.t - 160) / 90))];
+      g.save(); g.translate(tx, ty - 40); g.scale(-2, 2); g.drawImage(Art.img.fx, r[0], r[1], r[2], r[3], -26, -36, r[2], r[3]); g.restore();
+    }
+    // 飄字
+    bt.fx = bt.fx.filter(f => now < f.t + 900);
+    for (const f of bt.fx) {
+      if (now < f.t) continue;
+      const p = (now - f.t) / 900, x = f.hero ? hx : 660 + f.i * 95, y = (f.hero ? hy - 150 : 290 + f.i * 46) - p * 60;
+      label(String(f.txt), x, y, f.c, 26);
+    }
+    // 主角狀態
+    g.fillStyle = '#000a'; g.fillRect(16, 16, 250, 62);
+    label(S.name + '  Lv' + S.level, 141, 34, '#ffe9a6', 15);
+    g.fillStyle = '#222'; g.fillRect(24, 42, 234, 10); g.fillStyle = '#e44'; g.fillRect(24, 42, 234 * Math.max(0, S.hp / S.max_hp), 10);
+    g.fillStyle = '#222'; g.fillRect(24, 58, 234, 8); g.fillStyle = '#48c'; g.fillRect(24, 58, 234 * Math.max(0, S.mp / S.max_mp), 8);
+    label(`氣血 ${S.hp}/${S.max_hp}`, 141, 51, '#fff', 10); label(`靈力 ${S.mp}/${S.max_mp}`, 141, 66, '#fff', 9);
+  }
+  cv.addEventListener('click', ev => {
+    if (!S || !S.battle) return;
+    const r = cv.getBoundingClientRect(), x = (ev.clientX - r.left) * VW / r.width, y = (ev.clientY - r.top) * VH / r.height;
+    S.battle.enemies.forEach((e, i) => { if (!e.dead && Math.abs(x - (660 + i * 95)) < 70 && y > 190 + i * 46 && y < 420 + i * 46) bt.target = i; });
+  });
+  function btUI() {
+    const b = S.battle, p = $('bt');
+    if (!b) { p.style.display = 'none'; return; }
+    const k = JSON.stringify([b.over, b.turn, S.hp, S.mp, S.heal, b.log.length, bt.spellOpen]);
+    if (p._k === k) return; p._k = k;
+    p.style.display = 'block';
+    let h = `<div id=btlog>${b.log.map(x => '<div>' + x + '</div>').join('')}</div>`;
+    if (b.over) {
+      const t = {win: '🏆 戰鬥勝利', lose: '💀 你敗下陣來', flee: '💨 逃脫成功'}[b.over];
+      h += `<div class=row><b style="font-size:18px">${t}</b><button onclick="TD.btEnd()">確定</button></div>`;
+    } else if (bt.spellOpen) {
+      h += '<div class=row><b>選擇五行法術：</b>' + S.elements.map((e, i) => `<button ${S.mp < b.spellCost ? 'disabled' : ''} style="color:${ECOL[e]}" onclick="TD.cmd('spell',${i})">${e}（-${b.spellCost}靈力）</button>`).join('') + '<button onclick="TD.spellMenu(false)">返回</button></div>';
+    } else {
+      h += `<div class=row><button onclick="TD.cmd('attack')">⚔ 劍擊</button><button onclick="TD.spellMenu(true)">✦ 法術</button><button ${S.heal ? '' : 'disabled'} onclick="TD.cmd('item')">💊 回春丹 ×${S.heal}</button><button onclick="TD.cmd('guard')">🛡 防禦</button><button onclick="TD.cmd('flee')">💨 逃跑</button><small style="margin-left:10px">點擊敵人可選目標</small></div>`;
+    }
+    p.innerHTML = h;
+    const l = $('btlog'); l.scrollTop = 1e6;
+  }
+
+  // ------------------------------------------------ HUD
+  function ui() {
+    const q = S.quest.quests.find(x => x.state === 'active');
+    $('quest').innerHTML = q ? `<b>▶ ${q.name}</b>` + q.objectives.filter(o => o.state !== 'locked').map(o => `<div>${o.state === 'done' ? '☑' : '☐'} ${o.text}${o.progress && o.state === 'active' ? ' <small>(' + o.progress + ')</small>' : ''}</div>`).join('') : (S.quest.done ? '全部任務完成' : '');
+    $('top').innerHTML = `<b>${S.name}</b><span>${S.realm}·${S.sub}</span><span>Lv ${S.level}/${S.cap}${S.bottleneck ? ' <b style=color:#e6a>【瓶頸→按突破】</b>' : ''}</span>
+      <span>氣血 <span class=bar><i style="width:${100 * S.hp / S.max_hp}%;background:#c44"></i></span> ${S.hp}/${S.max_hp}</span>
+      <span>靈力 <span class=bar><i style="width:${100 * S.mp / S.max_mp}%;background:#48c"></i></span> ${S.mp}/${S.max_mp}</span>
+      <span>靈石 ${S.lingshi}　突破丹 ${S.pills}　回春丹 ${S.heal}　靈液 ${S.lingye}</span><span>功法：${S.gongfa.length ? S.gongfa.map(x => x.name).join('、') : '無'}</span><span>第 ${S.day} 日・${S.region_name}</span>`;
+    const d = S.dialogue, dl = $('dlg');
+    const dk = JSON.stringify(d);
+    if (dk !== dl._k) {
+      dl._k = dk; dl.style.display = d ? 'block' : 'none';
+      if (d) { dl.innerHTML = `<canvas id=pt class=pt width=40 height=52></canvas><div class=sp>${d.speaker}</div><div class=tx>${d.text}</div>` + (d.cont ? `<button onclick="TD.post('choose')">▶ 繼續</button>` : d.choices.map(c => `<button onclick="TD.post('choose',{i:${c.i}})">${c.text}</button>`).join('')); Art.portrait($('pt'), d.speaker, S); }
+    }
+    const sh = $('shop');
+    if (S.shop) { sh.style.display = 'block'; sh.innerHTML = `<b>藥販</b><div style="font-size:13px;margin:4px 0">靈石 ${S.lingshi}</div><button onclick="TD.post('buy',{item:'heal'})">回春丹　30 靈石</button><button onclick="TD.post('buy',{item:'pill'})">突破丹　100 靈石</button><button onclick="TD.post('shop_close')">離開</button>`; } else sh.style.display = 'none';
+    $('logp').innerHTML = S.log.slice(-4).map(x => '<div>' + x + '</div>').join('');
+    btUI();
+    $('mini').style.display = MAP.kind === 'world' && !S.battle ? 'block' : 'none';
+  }
+  const tgtEnt = () => {
+    if (!S.target || MAP.kind !== 'world') return null;
+    if (S.target.loc) { const e = ents.find(e => e.k === 'enter' && e.loc === S.target.loc); if (e) return {x: (e.x + .5) * TS, y: (e.y + .5) * TS}; }
+    if (S.target.region && S.target.region !== S.region && MAP.centers[S.target.region]) { const c = MAP.centers[S.target.region]; return {x: c[0] * TS, y: c[1] * TS, region: true}; }
+    return null;
+  };
+  function hud() {
+    let p = '';
+    if (MAP.kind === 'loc') { const n = nearest(); if (n) p = 'E：' + n.text; }
+    $('prompt').textContent = S.battle || S.dialogue ? '' : p;
+    if (MAP.kind === 'world' && minimapBase) {
+      const m = $('mini').getContext('2d'); m.imageSmoothingEnabled = false; m.clearRect(0, 0, 140, 100); m.drawImage(minimapBase, 0, 0, 140, 100);
+      for (const e of ents) if (e.k === 'enter') { m.fillStyle = '#f33'; m.fillRect(e.x - 1, e.y - 1, 3, 3); }
+      const t = tgtEnt(); if (t && Math.floor(now / 300) % 2) { m.fillStyle = '#ff0'; m.fillRect(t.x / TS - 2, t.y / TS - 2, 5, 5); }
+      m.fillStyle = '#fff'; m.fillRect(hero.x / TS - 2, hero.y / TS - 2, 4, 4);
+    }
+  }
+
+  // ------------------------------------------------ 主繪製
+  function draw() {
+    if (!S || !MAP || !Art.td) return;
+    g.imageSmoothingEnabled = false;
+    if (S.battle) { drawBattle(); return; }
+    const camX = MAP.w * TS <= VW ? -(VW - MAP.w * TS) / 2 : Math.max(0, Math.min(MAP.w * TS - VW, hero.x - VW / 2));
+    const camY = MAP.h * TS <= VH ? -(VH - MAP.h * TS) / 2 : Math.max(0, Math.min(MAP.h * TS - VH, hero.y - VH / 2));
+    const cam = {x: Math.round(camX), y: Math.round(camY)};
+    g.fillStyle = '#000'; g.fillRect(0, 0, VW, VH);
+    const x0 = Math.max(0, Math.floor(cam.x / TS)), y0 = Math.max(0, Math.floor(cam.y / TS)), x1 = Math.min(MAP.w - 1, x0 + Math.ceil(VW / TS) + 1), y1 = Math.min(MAP.h - 1, y0 + Math.ceil(VH / TS) + 1);
+    for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) groundTile(tx, ty, cam);
+    const list = [];
+    const bio = MAP.biome;
+    for (const o of MAP.objects) {
+      const s = MAP.objScale[o.t] || 1, ax = (o.x + .5) * TS - cam.x, ay = (o.y + 1) * TS - cam.y;
+      if (ax < -200 || ax > VW + 200 || ay < -40 || ay > VH + 240) continue;
+      list.push({y: (o.y + 1) * TS, f: () => { let n = o.t; if (n === 'campfire0') n = 'campfire' + (Math.floor(now / 200) % 2); if (n === 'chest_c') { const c = ents.find(e => e.k === 'chest' && e.x === o.x && e.y === o.y); if (c && S.opened.includes(c.id)) n = 'chest_o'; } drawObj(bio, n, ax, ay, s); }});
+    }
+    for (const e of ents) {
+      const ax = e.px - cam.x, ay = e.py - cam.y;
+      if (ax < -100 || ax > VW + 100 || ay < -100 || ay > VH + 100) continue;
+      if (e.k === 'enter') list.push({y: (e.y + 1) * TS, f: () => { const zb = e.region || 'tiannan', ix = (e.x + .5) * TS - cam.x, iy = (e.y + 1) * TS - cam.y; drawObj(zb, e.icon, ix, iy, 1); label(e.name, ix, iy + 13, '#fff', 12); }});
+      else if (e.k === 'dock') list.push({y: (e.y + 1) * TS, f: () => { drawObj(e.region === 'luanxinghai' ? 'luanxinghai' : 'tiannan', 'dock', (e.x + .5) * TS - cam.x, (e.y + 1) * TS - cam.y, 1); label('渡口', (e.x + .5) * TS - cam.x, (e.y + 1) * TS - cam.y + 12, '#9df', 12); }});
+      else if (e.k === 'npc') list.push({y: e.py, f: () => drawNPC(e.npc, ax, ay, e.face || 'd', e.moving)});
+      else if (e.k === 'enemy' && !S.defeated.includes(e.id)) list.push({y: e.py, f: () => { const B = Art.man.beasts; drawBeast(e, ax, ay, 1, (e.dir || 1) < 0); label(e.el, ax, ay - 46 - (e.kind === 'bat' ? 26 : 0), ECOL[e.el], 13); if ((cool['f' + e.id] || 0) > now) { g.globalAlpha = .6; label('…', ax, ay - 60, '#fff', 14); g.globalAlpha = 1; } }});
+    }
+    if (MAP.kind === 'loc' && S.questNpc) { const q = questPos(), ax = q[0] - cam.x, ay = q[1] - cam.y, id = speakerSprite(S.questNpc); if (id) list.push({y: q[1], f: () => { drawNPC(id, ax, ay, hero.x < q[0] ? 'l' : 'r', false); label('!', ax, ay - 62 + Math.sin(now / 220) * 4, '#ffd24a', 30); label(S.questNpc, ax, ay + 14, '#ffe9a6', 12); }}); }
+    list.push({y: hero.y, f: () => drawHero(cam)});
+    list.sort((a, b) => a.y - b.y);
+    for (const it of list) it.f();
+    // 目標標記
+    const bob = Math.sin(now / 250) * 5;
+    if (MAP.kind === 'world') {
+      const t = tgtEnt();
+      if (t) {
+        const sx = t.x - cam.x, sy = t.y - cam.y;
+        if (sx > 24 && sx < VW - 24 && sy > 40 && sy < VH - 24) { if (!t.region) label('▼', sx, sy - 34 + bob, '#ffd24a', 28); else label('▼ ' + S.region_name, sx, sy, '#ffd24a', 20); }
+        else { const a = Math.atan2(sy - VH / 2, sx - VW / 2), ex = VW / 2 + Math.cos(a) * 400, ey = VH / 2 + Math.sin(a) * 220, ex2 = Math.max(30, Math.min(VW - 30, ex)), ey2 = Math.max(60, Math.min(VH - 50, ey)); g.save(); g.translate(ex2, ey2); g.rotate(a); label('➤', 0, 8, '#ffd24a', 34); g.restore(); label(Math.round(Math.hypot(t.x - hero.x, t.y - hero.y) / TS) + ' 格', ex2, ey2 + 30, '#ffd24a', 13); }
+      } else if (S.target && S.target.region && S.target.region !== S.region && S.target.region !== 'tianyuan') label('目標在「' + (S.world.find(w => w.id === S.target.region) || {name: ''}).name + '」，可到渡口搭船', VW / 2, 84, '#ffd24a', 15);
+    } else if (S.target && S.target.loc && S.target.loc !== S.cur_loc) label('（目標不在這裡）', VW / 2, 84, '#ffd24a', 14);
+  }
+  function loop(t) { const dt = Math.min(.05, (t - last) / 1000); last = t; try { update(dt); draw(); } catch (e) { err('執行錯誤：' + e.message + ' ' + (e.stack || '').split('\n')[1]); } requestAnimationFrame(loop); }
+
+  function openNew() {
+    const a = $('ask'); askOpen = true; a.style.display = 'block'; a._opts = [{}];
+    a.innerHTML = `<b style="font-size:17px">新遊戲・創建角色（會覆蓋存檔）</b><div style="margin:8px 0;text-align:left">名字：<input id=nn value="韓立" maxlength=8 style="font-size:15px"></div>
+    <div style="margin:6px 0;text-align:left">靈根：<select id=nr style="font-size:15px">${S.roots.map(r => `<option value="${r.id}" ${r.id === 'quad' ? 'selected' : ''}>${r.name}（${r.count}屬性・速度 ×${r.speed}）</option>`).join('')}</select></div>
+    <div id=ne style="margin:6px 0;text-align:left"></div><button id=nb1>開始</button><button id=nb2>原作模式（韓立・四靈根）</button><button id=nb3>取消</button>`;
+    const rootUI = () => { const r = S.roots.find(x => x.id === $('nr').value), list = r.elements || S.root_elements; $('ne').innerHTML = `屬性（選 ${r.count} 個）：` + list.map((e, i) => `<label style="margin-right:10px"><input type=checkbox class=ck value="${e}" ${i < r.count ? 'checked' : ''}> ${e}</label>`).join(''); };
+    $('nr').onchange = rootUI; rootUI();
+    const close = () => { a.style.display = 'none'; askOpen = false; };
+    $('nb3').onclick = close; $('nb2').onclick = () => { close(); post('act', {c: 'new'}); };
+    $('nb1').onclick = () => { const r = S.roots.find(x => x.id === $('nr').value), el = [...document.querySelectorAll('.ck:checked')].map(x => x.value); if (el.length !== r.count) { alert('請選擇剛好 ' + r.count + ' 個屬性'); return; } const nm = $('nn').value; close(); post('act', {c: 'new', name: nm, root: r.id, elems: el.join('')}); };
+  }
+
+  async function boot() {
+    await Art.init();
+    if (!Art.ok) { err('美術素材載入失敗（/art/）'); return; }
+    await Art.loadTD();
+    await load();
+    requestAnimationFrame(loop);
+  }
+  boot();
+  window.__td = {get S() { return S; }, get MAP() { return MAP; }, hero, get ents() { return ents; }, post, load, get bt() { return bt; }};
+  return {post, act, openNew, cmd: btCmd, btEnd, spellMenu: v => { bt.spellOpen = v; $('bt')._k = ''; btUI(); }};
+})();

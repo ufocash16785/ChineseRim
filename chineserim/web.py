@@ -77,7 +77,7 @@ class H(BaseHTTPRequestHandler):
 
     def _static(self, url):
         base = (pathlib.Path(__file__).parent / "static").resolve()
-        rel = "art.js" if url == "/static/art.js" else url.lstrip("/").split("?")[0]
+        rel = url.split("/static/")[1] if url.startswith("/static/") else url.lstrip("/").split("?")[0]
         f = (base / rel).resolve()
         if base not in f.parents or not f.is_file():
             self.send_error(404)
@@ -94,7 +94,7 @@ class H(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/state":
             self._send(json.dumps(session.snapshot(), ensure_ascii=False), "application/json")
-        elif self.path.startswith("/art/") or self.path == "/static/art.js":
+        elif self.path.startswith("/art/") or self.path in ("/static/art.js", "/static/td.js"):
             self._static(self.path)
         elif self.path.startswith("/mapdata"):
             mid = parse_qs(urlparse(self.path).query).get("id", ["world:renjie"])[0]

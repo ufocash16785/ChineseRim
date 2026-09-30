@@ -277,10 +277,18 @@ def build_world(data, world_id="renjie"):
     # 清出入口周圍空地
     for lid, (x, y) in entrance.items():
         for dx in range(-1, 2):
-            for dy in range(-1, 2):
+            for dy in range(-1, 3):
                 if ground.get(x + dx, y + dy) in ("t", "m", "R", ","):
                     ground.set(x + dx, y + dy, "g")
         ground.set(x, y, "d")
+
+    # 入口周圍幾格一律歸屬該地點所在區域（避免在門口來回跨區）
+    for lid, (x, y) in entrance.items():
+        rid = next(g["id"] for g in regions if any(l["id"] == lid for l in g["locations"]))
+        for dx in range(-4, 5):
+            for dy in range(-4, 6):
+                if 0 <= x + dx < W and 0 <= y + dy < H and land[y + dy][x + dx]:
+                    zone[y + dy][x + dx] = rid
 
     # ---- 道路 ----
     def cost(p):
@@ -343,7 +351,7 @@ def build_world(data, world_id="renjie"):
     # ---- 起點與連通性保證 ----
     start_loc = "qingniu" if "qingniu" in entrance else next(iter(entrance))
     sx, sy = entrance[start_loc]
-    spawn = (sx, sy + 1)
+    spawn = (sx, sy + 2)
     ground.set(*spawn, "r" if ground.get(*spawn) in ("t", "m", "R", ",", "~") else ground.get(*spawn))
 
     def solid_now():

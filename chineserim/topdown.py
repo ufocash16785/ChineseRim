@@ -29,7 +29,7 @@ class TopDownMixin:
         m = self.get_map("world:" + self._world_id_of(self.data_region_of(loc_id)))
         for e in m["entities"]:
             if e["k"] == "enter" and e["loc"] == loc_id:
-                return [e["x"] + .5, e["y"] + 1.5]
+                return [e["x"] + .5, e["y"] + 2.5]
         return list(m["spawn"])
 
     def data_region_of(self, loc_id):
@@ -39,6 +39,11 @@ class TopDownMixin:
                     return g["id"]
         raise KeyError(loc_id)
 
+    def _teleport(self, x, y):
+        """伺服器主動移動角色（進出地點、渡海、傳送、戰敗）；前端看到 tp 變動就重設位置。"""
+        self.pos = [x, y]
+        self.tp = getattr(self, "tp", 0) + 1
+
     def td_reset(self):
         """新遊戲／舊存檔：站在大地圖起點（或目前區域的第一個地點門口）。"""
         self.mode, self.cur_loc, self.defeated, self.train_n, self.step_acc, self.battle = "world", None, [], 0, 0, None
@@ -46,11 +51,11 @@ class TopDownMixin:
         self.map_id = "world:" + wid
         m = self.get_map(self.map_id)
         if self.region in ("tiannan",) or wid == "lingjie":
-            self.pos = [m["spawn"][0] + .5, m["spawn"][1] + .5]
+            self._teleport(m["spawn"][0] + .5, m["spawn"][1] + .5)
         else:
             first = self.data.regions[0]["regions"]
             g = next(g for g in first if g["id"] == self.region)
-            self.pos = self._entrance_pos(g["locations"][0]["id"])
+            self._teleport(*self._entrance_pos(g["locations"][0]["id"]))
 
     # ---- 動作 ----
     def _td(self, kind, **q):
@@ -87,7 +92,7 @@ class TopDownMixin:
         self.region = reg
         self.mode, self.cur_loc, self.map_id = "loc", loc, "loc:" + loc
         m = self.get_map(self.map_id)
-        self.pos = [m["spawn"][0] + .5, m["spawn"][1] + .5]
+        self._teleport(m["spawn"][0] + .5, m["spawn"][1] + .5)
         self.defeated, self.train_n = [], 0
         h.counters[f"visit:{loc}"] = h.counters.get(f"visit:{loc}", 0) + 1
         self.log.append(f"進入「{m['name']}」")
@@ -99,7 +104,7 @@ class TopDownMixin:
         loc = self.cur_loc
         self.mode, self.cur_loc = "world", None
         self.map_id = "world:" + self._world_id_of(self.region)
-        self.pos = self._entrance_pos(loc)
+        self._teleport(*self._entrance_pos(loc))
         self.defeated = []
         self.log.append("你離開了這裡，回到大地圖。")
 
@@ -134,7 +139,7 @@ class TopDownMixin:
             return
         self.region = to
         dx, dy = m["docks"][to]
-        self.pos = [dx + .5, dy + .5]
+        self._teleport(dx + .5, dy + .5)
         h = self.hero
         h.counters[f"arrive:{to}"] = h.counters.get(f"arrive:{to}", 0) + 1
         self.advance(FERRY_DAYS)
@@ -152,7 +157,7 @@ class TopDownMixin:
         self.mode, self.cur_loc = "world", None
         self.map_id = "world:lingjie"
         m = self.get_map(self.map_id)
-        self.pos = [m["spawn"][0] + .5, m["spawn"][1] + .5]
+        self._teleport(m["spawn"][0] + .5, m["spawn"][1] + .5)
         h.counters["arrive:tianyuan"] = h.counters.get("arrive:tianyuan", 0) + 1
         self.log.append("你穿過空間節點，來到了靈界。")
         self._after_td(arrive="tianyuan")
@@ -220,6 +225,9 @@ class TopDownMixin:
             if name:
                 self.log.append(f"「{e['name']}」聽說「{name}」那邊有人在找你呢。")
                 return
+        local = self.data.ambient.get("byLoc", {}).get(self.cur_loc)
+        if local and self.rng.random() < .55:
+            lines = local
         self.log.append(f"「{e['name']}」{self.rng.choice(lines)}")
 
     def _target_name(self, tgt):
@@ -303,7 +311,7 @@ class TopDownMixin:
                 h.hp = h.max_hp / 2
                 self.log.append(f"你被人救回，損失靈石 {lost}。")
                 m = self.get_map(self.map_id)
-                self.pos = [m["spawn"][0] + .5, m["spawn"][1] + .5]
+                self._teleport(m["spawn"][0] + .5, m["spawn"][1] + .5)
             elif over == "win":
                 self._after_td()
 

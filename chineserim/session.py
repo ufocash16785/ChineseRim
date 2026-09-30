@@ -54,7 +54,7 @@ class Session(TopDownMixin):
     # ---- 存檔 ----
     def to_dict(self):
         return {"version": SAVE_VERSION, "day": self.day, "region": self.region, "log": self.log[-30:], "hero": asdict(self.hero),
-                "td": {"mode": self.mode, "map_id": self.map_id, "pos": self.pos, "cur_loc": self.cur_loc, "defeated": self.defeated,
+                "td": {"mode": self.mode, "map_id": self.map_id, "pos": self.pos, "tp": getattr(self, "tp", 0), "cur_loc": self.cur_loc, "defeated": self.defeated,
                        "train_n": self.train_n, "step_acc": self.step_acc, "battle": self.battle}}
 
     def from_dict(self, d):
@@ -201,7 +201,7 @@ class Session(TopDownMixin):
             "realms": [x["name"] for x in self.data.realms[:6]],
             "elem": {"adv": ADV_MULT, "dis": DIS_MULT, "parent": PARENT, "pairs": PAIRS},
             "dialogue": dialogue.view(self.data, h),
-            "mode": self.mode, "map_id": self.map_id, "pos": self.pos, "cur_loc": self.cur_loc, "defeated": self.defeated,
+            "mode": self.mode, "map_id": self.map_id, "pos": self.pos, "tp": getattr(self, "tp", 0), "cur_loc": self.cur_loc, "defeated": self.defeated,
             "battle": battle.view(self.battle, h), "shop": self.shop_open and self.mode == "loc", "mp": round(h.mp), "max_mp": round(h.max_mp), "heal": h.count("heal"),
             "questNpc": dialogue.pending_npc(self.data, h, self.cur_loc) if self.mode == "loc" else None,
             "opened": [k.split(":", 3)[3] for k in h.flags if k.startswith(f"chest:{self.map_id}:")],

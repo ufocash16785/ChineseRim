@@ -13,6 +13,12 @@ const Art = (() => {
     if (!A.ok || A.img['scene_' + b] || !A.man.biomes[b]) return;
     try { A.img['scene_' + b] = await load('/art/scene_' + b + '.png'); } catch (e) { A.ok = false; }
   };
+  A.loadTD = async () => {
+    try {
+      for (const b of Object.keys(A.man.tiles)) { A.img['tiles_' + b] = await load('/art/tiles_' + b + '.png'); A.img['objects_' + b] = await load('/art/objects_' + b + '.png'); }
+      A.td = true;
+    } catch (e) { A.td = false; console.warn(e); }
+  };
   A.hasBiome = b => A.ok && !!A.img['scene_' + b];
   const rgb = h => [1, 3, 5].map(i => parseInt(h.substr(i, 2), 16));
   const mixc = (a, b, t) => `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(',')})`;

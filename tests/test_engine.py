@@ -553,7 +553,7 @@ class TopDownSessionTest(unittest.TestCase):
         self.assertEqual((s.mode, s.cur_loc), ("world", None))
         m = s.get_map("world:renjie")
         e = next(e for e in m["entities"] if e["id"] == "enter:qingniu")
-        self.assertAlmostEqual(s.pos[1], e["y"] + 1.5)          # 站在入口下方，不會立刻再觸發
+        self.assertAlmostEqual(s.pos[1], e["y"] + 2.5)          # 站在入口下方，不會立刻再觸發
 
     def test_npc_dialogue_needs_talking_but_narration_auto(self):
         s = self.s
@@ -687,3 +687,32 @@ class TopDownFullPlaythroughTest(unittest.TestCase):
         self.assertEqual(s.hero.quest["arc"], "arc6_lingjie")
         seen = {k[5:] for k in s.hero.flags if k.startswith("seen:")}
         self.assertEqual(set(s.data.dialogues) - seen, set())
+
+
+class TeleportCounterTest(unittest.TestCase):
+    def test_tp_increments_on_server_moves_only(self):
+        import pathlib, tempfile
+        from chineserim.session import Session
+        s = Session(pathlib.Path(tempfile.mkdtemp()) / "s.json", seed=1)
+        t0 = s.snapshot()["tp"]
+        s.act("pos", x="60.5", y="50.5", steps="10")                 # 玩家自己走路不算瞬移
+        self.assertEqual(s.snapshot()["tp"], t0)
+        s.act("enter", loc="qingniu")
+        t1 = s.snapshot()["tp"]
+        self.assertGreater(t1, t0)
+        s.act("leave")
+        t2 = s.snapshot()["tp"]
+        self.assertGreater(t2, t1)
+        s.act("ferry", to="luanxinghai")
+        self.assertGreater(s.snapshot()["tp"], t2)
+
+
+class FrontendTdSmokeTest(unittest.TestCase):
+    def test_td_js_parses(self):
+        import pathlib, shutil, subprocess
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("沒有 node")
+        f = pathlib.Path(__file__).parents[1] / "chineserim" / "static" / "td.js"
+        r = subprocess.run([node, "--check", str(f)], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
