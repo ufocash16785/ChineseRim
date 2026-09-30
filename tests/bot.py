@@ -89,6 +89,7 @@ def play_through(s, limit=3000, pick=None):
                     h.add("pill")
                 h.hp = h.max_hp
                 s.act("break")
+                fight_boss(s)
             else:
                 grind()
         elif t == "item":

@@ -1414,3 +1414,155 @@ class BossAndBagTest(unittest.TestCase):
             s.act("battle", cmd="flee")
         if s.battle and s.battle["over"] == "flee":
             self.assertFalse(h.flags.get("seen:d_yuzitong"))       # 逃跑後可重新挑戰
+
+
+class KarmaAndTreasureTest(unittest.TestCase):
+    def setUp(self):
+        import pathlib, tempfile
+        from chineserim.session import Session
+        self.s = Session(pathlib.Path(tempfile.mkdtemp()) / "s.json", seed=9)
+        self.s.act("new", diff="normal")
+        self.h = self.s.hero
+
+    def _wild(self):
+        return next(l["id"] for w in self.s.data.regions for g in w["regions"] for l in g["locations"]
+                    if l["type"] in ("荒野", "山林", "森林", "山脈") or (l["type"] not in ("城鎮", "宗門") and "profile" not in l and l["id"] in ("taiyue", "grass_sea")))
+
+    def _event_loc(self, kind):
+        """找一個會出現該類因果事件的（地點, 日）。"""
+        from chineserim import karma
+        locs = ["taiyue", "grass_sea", "kunwu"]
+        for loc in locs:
+            for day in range(0, 60, 3):
+                self.s.day = day
+                self.s.act("enter", loc=loc) if self.s.mode != "loc" or self.s.cur_loc != loc else None
+                if self.s.mode == "loc" and self.s.cur_loc == loc:
+                    ev = self.s.karma_now()
+                    if ev and ev["kind"] == kind:
+                        return loc, ev
+            if self.s.mode == "loc":
+                self.s.act("leave")
+        self.fail("沒有找到因果事件")
+
+    def test_karma_state(self):
+        from chineserim import karma
+        cfg = self.s.data.karma
+        self.assertEqual(karma.dao_state(self.h, cfg), "mid")
+        karma.add(self.h, "sha", 5)
+        self.assertEqual(karma.dao_state(self.h, cfg), "sha")
+        karma.add(self.h, "ren", 9)
+        self.assertEqual(karma.dao_state(self.h, cfg), "ren")
+        karma.add(self.h, "ren", -99)
+        self.assertEqual(karma.get(self.h, "ren"), 0)          # 不會變負數
+        self.assertEqual(self.s.snapshot()["karma"]["dao"], "殺伐")
+
+    def test_boss_kill_adds_sha_and_avenger_flow(self):
+        from chineserim import karma
+        self.h.realm = 2
+        self.s.rs.apply_stats(self.h)
+        self.s.start_boss_fight("yuzitong")
+        self.s.battle["enemies"][0]["hp"] = 1
+        self.s.act("battle", cmd="attack")
+        self.assertEqual(karma.get(self.h, "sha"), 2)
+        self.s.act("battle_end")
+        karma.add(self.h, "sha", 3)
+        loc, ev = self._event_loc("avenger")
+        self.assertEqual(self.s.snapshot()["karma_ev"]["kind"], "avenger")
+        sha0 = karma.get(self.h, "sha")
+        self.s.act("talk", ent="karma")
+        self.assertTrue(self.s.battle and self.s.battle["boss"])
+        self.s.battle["enemies"][0]["hp"] = 1
+        self.s.act("battle", cmd="attack")
+        self.assertEqual(karma.get(self.h, "sha"), sha0 - 2)   # 仇怨了結
+        self.assertIsNone(self.s.snapshot()["karma_ev"])       # 同一時段不再出現
+
+    def test_benefactor_gives_gift(self):
+        from chineserim import karma
+        karma.add(self.h, "ren", 4)
+        self._event_loc("benefactor")
+        ren0 = karma.get(self.h, "ren")
+        inv0 = sum(self.h.inventory.values())
+        self.s.act("talk", ent="karma")
+        self.assertGreater(sum(self.h.inventory.values()), inv0)
+        self.assertEqual(karma.get(self.h, "ren"), ren0 - 2)
+
+    def test_beggar_donation_adds_ren(self):
+        from chineserim import karma
+        self.h.add("lingshi", 500)
+        for w in self.s.data.regions:
+            for g in w["regions"]:
+                for l in g["locations"]:
+                    if True:
+                        m = self.s.get_map("loc:" + l["id"])
+                        if m["cat"] != "town":
+                            continue
+                        b = next((e for e in m["entities"] if e.get("role") == "beggar"), None)
+                        if b:
+                            self.s.act("enter", loc=l["id"])
+                            self.s.act("talk", ent=b["id"])
+                            self.assertEqual(karma.get(self.h, "ren"), 1)
+                            return
+        self.fail("沒有乞丐")
+
+    def test_xinmo_jie_before_break(self):
+        from chineserim import karma
+        self.h.realm = 2
+        self.s.rs.apply_stats(self.h)
+        self.h.level = self.s.rs.realm(self.h)["levelRange"][1]
+        karma.add(self.h, "sha", 6)
+        self.s.act("break")
+        self.assertTrue(self.s.battle and self.s.battle["boss"])
+        self.assertEqual(self.s.battle["enemies"][0]["name"], "嗜殺之影")      # 殺伐道心 → 嗜殺之影
+        self.assertEqual(self.h.realm, 2)                                     # 還沒破
+        self.h.hp, self.h.mp = self.h.max_hp, self.h.max_mp
+        self.s.battle["enemies"][0]["hp"] = 1
+        self.h.add("pill", 3)
+        self.s.act("battle", cmd="attack")
+        self.assertTrue(self.h.flags.get("xinmojie_pass"))
+        self.assertEqual(karma.get(self.h, "sha"), 3)                         # 斬去殺念
+
+    def test_xinmo_variants(self):
+        from chineserim import karma
+        self.assertEqual(karma.xinmo_spec(self.s.data, self.h)["name"], "本心之影")
+        karma.add(self.h, "ren", 5)
+        self.assertEqual(karma.xinmo_spec(self.s.data, self.h)["name"], "怯懦之影")
+
+    def test_refine_bond_and_battle_scaling(self):
+        h, s = self.h, self.s
+        h.add("fb_ding")
+        h.add("lingshi", 20000)
+        h.add("lingye", 10)
+        c0 = s.refine_cost("fb_ding")
+        self.assertEqual(c0["level"], 0)
+        for _ in range(3):
+            s.act("fb_refine", item="fb_ding")
+        self.assertEqual(h.counters["fbl:fb_ding"], 3)
+        self.assertLess(h.count("lingshi"), 20000)
+        for _ in range(5):
+            s.act("fb_refine", item="fb_ding")
+        self.assertEqual(h.counters["fbl:fb_ding"], 5)                        # 未本命：上限 5
+        s.act("fb_bond", item="fb_ding")
+        self.assertEqual(h.flags["bonded"], "fb_ding")
+        for _ in range(3):
+            s.act("fb_refine", item="fb_ding")
+        self.assertEqual(h.counters["fbl:fb_ding"], 7)                        # 本命：再多兩階
+        bag = next(b for b in s.snapshot()["bag"] if b["id"] == "fb_ding")
+        self.assertTrue(bag["bonded"] and bag["level"] == 7)
+
+    def test_treasure_level_boosts_damage_and_awaken(self):
+        h, s = self.h, self.s
+        h.add("fb_bell")
+        dmg = []
+        for lv in (0, 5):
+            h.counters["fbl:fb_bell"] = lv
+            h.hp, h.mp = h.max_hp, h.max_mp
+            s.start_boss_fight("yuzitong")
+            st = s.battle
+            st["enemies"][0]["atk"] = 0
+            hp0 = st["enemies"][0]["hp"]
+            s.act("battle", cmd="treasure", arg="fb_bell")
+            dmg.append(hp0 - st["enemies"][0]["hp"])
+            if lv == 5:
+                self.assertEqual(st["enemies"][0].get("stun", 0) + (1 if st["enemies"][0].get("stun_imm") else 0) > 0, True)
+            s.battle = None
+        self.assertGreater(dmg[1], dmg[0] * 1.3)

@@ -1,0 +1,35 @@
+{
+  "description": "因果與道心。sha＝殺業，ren＝善緣。殺業高會引來仇家尋仇；善緣高會有故人相助。破境（結丹以上）前要過心魔劫，心魔的樣貌由你的道心決定。",
+  "thresholds": { "avenger": 3, "benefactor": 2, "heavy": 3 },
+  "event_chance": { "avenger": 0.5, "benefactor": 0.45 },
+  "period_days": 3,
+  "avenger": {
+    "names": ["血債仇家", "尋仇散修", "受害者之兄", "黑衣刺客", "舊日苦主"],
+    "sprites": ["villain", "yuzitong", "wangchan"],
+    "hp_mult": 3.0, "atk_mult": 1.2, "el": ["金", "火", "水", "木", "土"],
+    "skills": [{ "name": "血仇一擊", "mult": 1.8, "every": 3 }],
+    "drops": "guardian_normal", "repay_sha": 2,
+    "greet": "「你還記得我嗎？你殺的人，是我的親人。」"
+  },
+  "benefactor": {
+    "names": ["受過恩的老者", "獲救的行商", "感激的散修", "曾被你救助的女修"],
+    "sprites": ["li", "merchant", "mo", "villager_f"],
+    "repay_ren": 2,
+    "gifts": [{ "item": "heal", "n": 3 }, { "item": "mpill", "n": 2 }, { "item": "fu_hu", "n": 1 }, { "item": "fu_qing", "n": 1 }, { "item": "lingshi", "n": 200 }],
+    "greet": "「恩人！當年若非你出手，我早已沒命。一點心意，請務必收下。」"
+  },
+  "xinmo": {
+    "sha": { "name": "嗜殺之影", "hp_mult": 4.0, "atk_mult": 1.45, "skills": [{ "name": "血怒", "mult": 2.2, "every": 3 }, { "name": "殺念", "mult": 1.5, "every": 2 }], "reward_bonus": 0.15, "on_win_sha": -3,
+                "intro": "鏡中的你雙目血紅，腳下是你殺過的每一個人。「你以為殺戮是為了什麼？」" },
+    "ren": { "name": "怯懦之影", "hp_mult": 4.6, "atk_mult": 1.0, "skills": [{ "name": "愧疚", "mult": 1.5, "every": 2 }, { "name": "動搖", "mult": 1.8, "every": 4 }], "reward_bonus": 0.15, "on_win_ren": -2,
+                "intro": "鏡中的你跪在地上，身旁全是你沒能救下的人。「仁慈，換來了什麼？」" },
+    "mid": { "name": "本心之影", "hp_mult": 3.6, "atk_mult": 1.15, "skills": [{ "name": "自問", "mult": 1.7, "every": 3 }], "reward_bonus": 0.2,
+             "intro": "鏡中的你面無表情，與你一模一樣。「你，究竟是誰？」" }
+  },
+  "beggar": { "cost": 30, "lines": ["「多謝仙師賞口飯吃……」", "「仙師好心有好報！」"] },
+  "refine": {
+    "max_level": 5, "bond_extra_levels": 2,
+    "cost_lingshi": [150, 300, 600, 1000, 1600, 2400, 3600], "lingye_from_level": 2,
+    "mult_per_level": 0.15, "bond_mult": 1.25, "bond_cd_cut": 1, "awaken_level": 3, "rebond_cost": 500
+  }
+}

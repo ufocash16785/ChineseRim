@@ -29,6 +29,10 @@ def attack_cost(ch):
     return max(1, round(ch.max_mp * ATTACK_MP_FRAC))
 
 
+def treasure_level(ch, iid):
+    return ch.counters.get("fbl:" + iid, 0)
+
+
 def owned_treasures(ch):
     out = []
     for iid, info in items.registry()["items"].items():
@@ -59,7 +63,7 @@ def start(ch, loc_id, specs, deep=False, diff=None, partner=None):
                        [f"遭遇 {'、'.join(s.get('name') or KINDS.get(s['kind'], '妖獸') for s in specs)}！"])
 
 
-def start_boss(ch, boss, loc_id, deep=False, diff=None, partner=None, boss_id="boss", retry=None):
+def start_boss(ch, boss, loc_id, deep=False, diff=None, partner=None, boss_id="boss", retry=None, refine_cfg=None):
     """主要對手戰。boss：bosses.json 的定義（已補上 name/el/kind 或 sprite）。"""
     diff = diff or {}
     scale = 1 + ch.realm
@@ -67,10 +71,11 @@ def start_boss(ch, boss, loc_id, deep=False, diff=None, partner=None, boss_id="b
     el = ch.elements[0] if boss["el"] == "@hero" and ch.elements else ("木" if boss["el"] == "@hero" else boss["el"])
     e = {"id": f"boss:{boss_id}", "kind": boss.get("kind", "bear"), "sprite": boss.get("sprite"), "name": boss["name"], "el": el, "hp": hp, "maxhp": hp,
          "atk": 9.0 * scale * boss["atk_mult"] * diff.get("enemy_atk", 1.0), "dead": False, "loot": boss.get("loot", 3.0), "boss": True, "boss_id": boss_id,
-         "skills": boss["skills"], "t": 0, "charging": False, "stun": 0, "stun_imm": 0, "rage": False, "drops": boss.get("drops"), "on_win": boss.get("on_win", [])}
-    st = _base_state(ch, loc_id, [e], deep, diff, partner, [f"強敵「{boss['name']}」攔住了去路！（可使用陣法、符錄、法寶）"])
+         "skills": boss["skills"], "t": 0, "charging": False, "stun": 0, "stun_imm": 0, "rage": False, "drops": boss.get("drops"), "on_win": boss.get("on_win", []), "karma": boss.get("karma", {}), "win_bonus": boss.get("win_bonus", {})}
+    st = _base_state(ch, loc_id, [e], deep, diff, partner, ([boss["intro"]] if boss.get("intro") else []) + [f"強敵「{boss['name']}」攔住了去路！（可使用陣法、符錄、法寶）"])
     st["boss"] = True
     st["retry"] = retry
+    st["refine_cfg"] = refine_cfg or {}
     return st
 
 
@@ -223,6 +228,8 @@ def _use_gear(st, ch, rng, bonus, cmd, arg, t):
         return False
     b = info["battle"]
     e = st["enemies"][t]
+    lv = bonded = 0
+    aw = {}
     if cmd == "treasure":
         if not loot.owned(ch, arg):
             st["log"].append(f"你沒有{info['name']}。")
@@ -235,7 +242,11 @@ def _use_gear(st, ch, rng, bonus, cmd, arg, t):
             st["log"].append("靈力不足，催動不了法寶！")
             return False
         ch.mp -= cost
-        st["cd"][arg] = b.get("cd", 3)
+        lv, bonded = treasure_level(ch, arg), ch.flags.get("bonded") == arg
+        rc = st.get("refine_cfg") or {}
+        st["cd"][arg] = max(1, b.get("cd", 3) - (rc.get("bond_cd_cut", 1) if bonded else 0))
+        if lv >= rc.get("awaken_level", 3):
+            aw = info.get("awaken", {})
     else:
         if ch.count(arg) <= 0:
             st["log"].append(f"儲物袋裡沒有{info['name']}了。")
@@ -243,19 +254,25 @@ def _use_gear(st, ch, rng, bonus, cmd, arg, t):
         ch.remove(arg)
     k = b["kind"]
     atk = hero_atk(ch, bonus)
+    rc = st.get("refine_cfg") or {}
+    lm = (1 + rc.get("mult_per_level", 0.15) * lv) * (rc.get("bond_mult", 1.25) if bonded else 1.0) if cmd == "treasure" else 1.0
+    if cmd == "treasure" and (lv or bonded):
+        st["log"].append(f"（{info['name']}·{lv}階{'·本命' if bonded else ''}）")
     if k == "damage":
-        mult = b.get("mult", 2.0) + b.get("grade_mult", 0) * ch.treasures.get("qingzhu_fengyunjian", 0)
+        mult = b.get("mult", 2.0) + b.get("grade_mult", 0) * ch.treasures.get("qingzhu_fengyunjian", 0) + aw.get("mult_add", 0)
         m = element_multiplier(b["el"], e["el"]) if b.get("el") else 1.0
-        _hit(st, t, atk * mult * m * rng.uniform(.92, 1.08), f"你祭出{info['name']}" + ("（剋制！）" if m > 1 else ""))
+        _hit(st, t, atk * mult * m * lm * rng.uniform(.92, 1.08), f"你祭出{info['name']}" + ("（剋制！）" if m > 1 else ""))
+        if aw.get("stun") and not e["dead"]:
+            _stun(st, t, aw["stun"])
     elif k == "bell":
-        _hit(st, t, atk * b["mult"] * rng.uniform(.92, 1.08), f"你搖動{info['name']}")
+        _hit(st, t, atk * b["mult"] * lm * rng.uniform(.92, 1.08), f"你搖動{info['name']}")
         if not e["dead"]:
-            _stun(st, t)
+            _stun(st, t, aw.get("stun", 1))
     elif k == "stun":
         st["log"].append(f"你甩出{info['name']}！")
         _stun(st, t, b.get("turns", 1))
     elif k == "shield":
-        st["shield"] += ch.max_hp * b["frac"]
+        st["shield"] += ch.max_hp * b["frac"] * lm
         st["log"].append(f"{info['name']}化作光罩護住全身（可抵擋 {round(st['shield'])} 傷害）")
     elif k == "mp":
         ch.mp = min(ch.max_mp, ch.mp + ch.max_mp * b["frac"])
@@ -263,9 +280,14 @@ def _use_gear(st, ch, rng, bonus, cmd, arg, t):
     elif k == "invuln":
         st["invuln"] = True
         st["log"].append(f"{info['name']}升起，擋在你的身前！")
+        if aw.get("shield"):
+            st["shield"] += ch.max_hp * aw["shield"] * lm
+            st["log"].append(f"覺醒之力化為護盾（{round(st['shield'])}）")
     elif k == "mirror":
-        st["mirror"] = 3
+        st["mirror"] = 3 + aw.get("mirror_extra", 0)
         st["mirror_hit"] = True
+        if aw.get("heal"):
+            ch.hp = min(ch.max_hp, ch.hp + ch.max_hp * aw["heal"])
         st["log"].append(f"{info['name']}照出了敵人的破綻——敵人攻擊力下降，你的下一擊將勢不可擋！")
     elif k == "formation":
         st["formation"] = {"id": b["id"], "turns": b["turns"]}

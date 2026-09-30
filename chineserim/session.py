@@ -4,7 +4,7 @@ import pathlib
 import random
 from dataclasses import asdict
 
-from . import battle, dialogue, difficulty, quests, treasures
+from . import battle, dialogue, difficulty, karma, quests, treasures
 from .character import Character
 from .data import ROOT, GameData
 from .elements import ADV_MULT, DIS_MULT, PAIRS, PARENT
@@ -187,8 +187,10 @@ class Session(TopDownMixin, SocialMixin):
             self.log.extend(msgs)
             self.advance(days)
         elif kind == "break":
-            ok = self.rs.attempt_breakthrough(h, "pill" if h.count("pill") else None)
-            self.log.append("突破成功！" if ok else "突破失敗或尚未到瓶頸（失敗損失一半 HP）")
+            self.try_break()
+            self._after()
+            self.save()
+            return
         elif kind == "refine":
             self.log.append("青竹蜂雲劍祭煉成功" if treasures.refine(self.rs, h, "qingzhu_fengyunjian") else "祭煉條件不足（築基以上＋靈石）")
         elif kind == "rest":
@@ -218,6 +220,10 @@ class Session(TopDownMixin, SocialMixin):
             out["elemDmg"][el] = out["elemDmg"].get(el, 0.0) + v
         return out
 
+    def karma_view(self):
+        ev = self.karma_now()
+        return {"kind": ev["kind"], "name": ev["name"], "sprite": ev["sprite"], "x": ev["x"], "y": ev["y"]} if ev else None
+
     def shady_view(self):
         if self.mode != "loc":
             return None
@@ -239,7 +245,7 @@ class Session(TopDownMixin, SocialMixin):
             "dialogue": dialogue.view(self.data, h),
             "difficulty": self.difficulty, "difficultyName": self.dcfg["name"], "configured": self.configured, "difficulties": {k: {"name": v["name"], "desc": v["desc"]} for k, v in difficulty.DIFFICULTY.items()},
             "mode": self.mode, "map_id": self.map_id, "pos": self.pos, "tp": getattr(self, "tp", 0), "cur_loc": self.cur_loc, "defeated": self.defeated,
-            "battle": battle.view(self.battle, h), "bag": self.bag_view(), "checkpoint": (self.checkpoint or {}).get("label"), "guardians": [k[9:] for k, v in h.flags.items() if k.startswith("guardian:") and v], "shop": self.shop_view(), "board": self.board_view(), "cand": self.cand_view(), "shady": self.shady_view(),
+            "battle": battle.view(self.battle, h), "bag": self.bag_view(), "karma": karma.view(h, self.data.karma), "karma_ev": self.karma_view(), "checkpoint": (self.checkpoint or {}).get("label"), "guardians": [k[9:] for k, v in h.flags.items() if k.startswith("guardian:") and v], "shop": self.shop_view(), "board": self.board_view(), "cand": self.cand_view(), "shady": self.shady_view(),
             "members": [{"id": m, "name": self.data.sects[m]["name"], "perk": self.perk_of(m)["name"], "desc": self.perk_of(m)["desc"]} for m in h.members],
             "partner": self.partner_spec(), "affinity": h.affinity, "mp": round(h.mp), "max_mp": round(h.max_mp), "heal": h.count("heal"), "mpills": h.count("mpill"), "herbs": h.count("herb"), "plots": self.plots_view(),
             "seeds": {k: dict(v, cost=round(v["cost"] * self.dcfg["price"])) for k, v in self.data.farming["seeds"].items()},

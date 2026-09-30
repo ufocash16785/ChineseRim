@@ -2,13 +2,13 @@
 import json
 from dataclasses import asdict
 
-from . import battle, dialogue, items, loot, mapgen, quests
+from . import battle, dialogue, items, karma, loot, mapgen, quests
 from .character import Character
 from .character import item_name
 from .explore import DEEP, min_realm
 
 _MAP_CACHE = {}          # 地圖只由資料決定，行程內共用（唯讀）
-TD_KINDS = {"sell", "appraise", "barter", "join", "board_close", "gift", "chat", "cand_close", "plant", "harvest", "boost", "craft", "shop_close", "enter", "leave", "talk", "region", "ferry", "pos", "battle_start", "battle", "battle_end", "buy", "chest", "portal", "use"}
+TD_KINDS = {"sell", "appraise", "barter", "join", "board_close", "gift", "chat", "cand_close", "plant", "harvest", "boost", "craft", "shop_close", "enter", "leave", "talk", "region", "ferry", "pos", "battle_start", "battle", "battle_end", "buy", "chest", "portal", "use", "fb_refine", "fb_bond"}
 STEPS_PER_DAY = 160
 FERRY_DAYS = 8
 
@@ -38,9 +38,14 @@ class TopDownMixin:
     # ---- 主要對手 ----
     def start_boss_fight(self, bid, did=None, spec=None):
         h = self.hero
+        if bid == "xinmo" and not spec:
+            spec = karma.xinmo_spec(self.data, h)
+        elif bid == "xinmojie":
+            spec = karma.xinmo_spec(self.data, h)
+            spec.update({"on_win": [{"flag": "xinmojie_pass"}], "drops": "guardian_normal", "win_bonus": {"chance": self.data.karma["xinmo"][karma.dao_state(h, self.data.karma)]["reward_bonus"]}})
         b = dict(spec or self.data.bosses["bosses"][bid])
         deep = self.mode == "loc" and self.get_map(self.map_id)["cat"] == "deep"
-        self.battle = battle.start_boss(h, b, self.cur_loc or "total", deep, self.dcfg, self.partner_spec(), boss_id=bid, retry=did)
+        self.battle = battle.start_boss(h, b, self.cur_loc or "total", deep, self.dcfg, self.partner_spec(), boss_id=bid, retry=did, refine_cfg=self.data.karma["refine"])
 
     def _maybe_boss(self):
         pb = self.pending_boss
@@ -60,11 +65,113 @@ class TopDownMixin:
         for iid, n in h.inventory.items():
             if n > 0:
                 out.append({"id": iid, "name": items.name(iid), "cat": items.cat(iid), "n": n, "desc": (reg["items"].get(iid) or {}).get("desc", ""), "use": (reg["items"].get(iid) or {}).get("use")})
-        if loot.owned(h, "fb_qingzhu"):
+        if loot.owned(h, "fb_qingzhu") and not any(x["id"] == "fb_qingzhu" for x in out):
             out.append({"id": "fb_qingzhu", "name": items.name("fb_qingzhu"), "cat": "法寶", "n": 1, "desc": reg["items"]["fb_qingzhu"]["desc"], "use": None})
+        for x in out:
+            if x["cat"] == "法寶":
+                c = self.refine_cost(x["id"])
+                x.update({"level": h.counters.get("fbl:" + x["id"], 0), "bonded": h.flags.get("bonded") == x["id"], "refine": c,
+                          "awaken": (reg["items"][x["id"]].get("awaken") or {}).get("text", "")})
         order = {c: i for i, c in enumerate(reg["cats"])}
         out.sort(key=lambda x: (order.get(x["cat"], 99), x["id"]))
         return out
+
+    # ---- 因果事件（仇家尋仇／故人報恩）----
+    karma_key = None
+
+    def karma_now(self):
+        if self.mode != "loc":
+            return None
+        from .explore import is_wild
+        m = self.get_map(self.map_id)
+        ev = karma.event_at(self.data, self.hero, self.cur_loc, self.day, m["cat"] in ("wild", "deep") or is_wild(m["type"]))
+        if not ev:
+            return None
+        spots = m.get("spots") or [m["npcSpot"]]
+        r = __import__("random").Random(f"kpos|{self.cur_loc}|{ev['key']}")
+        ev["x"], ev["y"] = r.choice(spots)
+        return ev
+
+    def _talk_karma(self):
+        ev = self.karma_now()
+        h = self.hero
+        if not ev:
+            return
+        cfg = self.data.karma[ev["kind"]]
+        self.log.append(f"「{ev['name']}」{cfg['greet']}")
+        if ev["kind"] == "benefactor":
+            gift = self.rng.choice(cfg["gifts"])
+            h.add(gift["item"], gift["n"])
+            self.log.append(f"報恩之禮已收入儲物袋：{item_name(gift['item'])}×{gift['n']}")
+            karma.add(h, "ren", -cfg["repay_ren"], self.log)
+            h.flags[ev["key"]] = True
+            return
+        g = self.data.karma["avenger"]
+        spec = {"name": ev["name"], "sprite": ev["sprite"], "el": ev["el"], "hp_mult": g["hp_mult"], "atk_mult": g["atk_mult"], "skills": g["skills"],
+                "drops": g["drops"], "on_win": [], "loot": 3.0, "karma": {}}
+        self.karma_key = ev["key"]
+        self.start_boss_fight("avenger", None, spec)
+
+    # ---- 心魔劫（結丹以上破境前必過）----
+    def _do_break(self, bonus=0.0):
+        h = self.hero
+        old = self.rs.chance_bonus
+        self.rs.chance_bonus += bonus
+        try:
+            ok = self.rs.attempt_breakthrough(h, "pill" if h.count("pill") else None)
+        finally:
+            self.rs.chance_bonus = old
+        self.log.append("心魔已破，道心澄明——突破成功！" if ok else "突破失敗或尚未到瓶頸（失敗損失一半 HP）")
+        return ok
+
+    def try_break(self):
+        h = self.hero
+        if h.realm >= 2 and self.rs.at_bottleneck(h) and not self.battle:
+            self.log.append("破境在即，心魔劫降臨——你必須先面對自己的內心！")
+            self.start_boss_fight("xinmojie")
+            return
+        self._do_break()
+
+    # ---- 本命法寶養成 ----
+    def refine_cost(self, iid):
+        cfg = self.data.karma["refine"]
+        lv = self.hero.counters.get("fbl:" + iid, 0)
+        bonded = self.hero.flags.get("bonded") == iid
+        cap = cfg["max_level"] + (cfg["bond_extra_levels"] if bonded else 0)
+        if lv >= cap:
+            return None
+        return {"lingshi": round(cfg["cost_lingshi"][lv] * self.dcfg["price"]), "lingye": 1 if lv + 1 >= cfg["lingye_from_level"] else 0, "level": lv, "cap": cap}
+
+    def _td_fb_refine(self, item="", **_):
+        h = self.hero
+        info = items.info(item)
+        if not info or info["cat"] != "法寶" or not loot.owned(h, item):
+            return
+        c = self.refine_cost(item)
+        if not c:
+            self.log.append(f"{info['name']}已祭煉到當前上限（設為本命法寶可再突破兩階）。")
+            return
+        if h.count("lingshi") < c["lingshi"] or h.count("lingye") < c["lingye"]:
+            self.log.append(f"材料不足：需要靈石 {c['lingshi']}" + (f"、靈液 {c['lingye']}" if c["lingye"] else ""))
+            return
+        h.remove("lingshi", c["lingshi"])
+        if c["lingye"]:
+            h.remove("lingye", c["lingye"])
+        h.counters["fbl:" + item] = c["level"] + 1
+        aw = self.data.karma["refine"]["awaken_level"]
+        self.log.append(f"祭煉成功！{info['name']}提升至 {c['level'] + 1} 階" + ("，覺醒了新的神通！" if c["level"] + 1 == aw else "。"))
+
+    def _td_fb_bond(self, item="", **_):
+        h = self.hero
+        info = items.info(item)
+        if not info or info["cat"] != "法寶" or not loot.owned(h, item) or h.flags.get("bonded") == item:
+            return
+        cost = 0 if not h.flags.get("bonded") else round(self.data.karma["refine"]["rebond_cost"] * self.dcfg["price"])
+        if not h.remove("lingshi", cost):
+            self.log.append(f"改換本命法寶需要靈石 {cost}。")
+            return
+        h.flags["bonded"] = item
+        self.log.append(f"你以精血祭煉，{info['name']}成為了你的本命法寶！（威力 ×1.25、冷卻 -1、可再突破兩階）")
 
     def _td_use(self, item="", **_):
         h = self.hero
@@ -256,6 +363,9 @@ class TopDownMixin:
             else:
                 self.log.append("對方朝你點了點頭，似乎沒有新的事情。")
             return
+        if ent == "karma":
+            self._talk_karma()
+            return
         if ent == "shady":
             sh = self.shady_now(self.cur_loc)
             if sh:
@@ -316,6 +426,14 @@ class TopDownMixin:
             self.advance(1)
             self.log.append(f"「{e['name']}」{self.rng.choice(lines)}（歇息一晚，氣血靈力全滿）")
             self._after_td()
+            return
+        if role == "beggar":
+            cost = round(self.data.karma["beggar"]["cost"] * self.dcfg["price"])
+            if h.remove("lingshi", cost):
+                self.log.append(f"「{e['name']}」{self.rng.choice(self.data.karma['beggar']['lines'])}（施捨靈石 {cost}）")
+                karma.add(h, "ren", 1, self.log)
+            else:
+                self.log.append(f"「{e['name']}」朝你伸出了手……可惜你身上的靈石不夠施捨。")
             return
         if role in ("shop", "pharmacy"):
             self.log.append(f"「{e['name']}」{self.rng.choice(lines)}")
@@ -529,6 +647,19 @@ class TopDownMixin:
                             drops += loot.roll_table(self.data, e["drops"], h, self.rng, self.dcfg["chest"])
                 else:
                     drops += loot.roll_minion(self.data, h, self.rng)
+                for e in st["enemies"]:
+                    for kk, nn in (e.get("karma") or {}).items():
+                        klog = []
+                        karma.add(h, kk, nn, klog)
+                        st["rewards"].extend(klog)
+                        self.log.extend(klog)
+                    if e.get("boss_id") == "avenger":
+                        klog = []
+                        karma.add(h, "sha", -self.data.karma["avenger"]["repay_sha"], klog)
+                        self.log.extend(klog)
+                        h.flags[self.karma_key] = True
+                    if e.get("boss_id") == "xinmojie":
+                        self._do_break((e.get("win_bonus") or {}).get("chance", 0.15))
                 msgs = loot.grant(h, drops)
                 st["rewards"].extend(msgs)
                 self.log.extend(msgs)

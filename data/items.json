@@ -1,26 +1,207 @@
 {
   "description": "物品總表（獨立引擎用）。儲物袋容量無限。cat：錢財／丹藥／材料／符錄／陣法／法寶。battle：只有『主要對手』戰鬥才能使用的戰鬥道具效果。法寶為永久道具（不消耗，靠冷卻）。",
-  "cats": ["錢財", "丹藥", "材料", "符錄", "陣法", "法寶"],
+  "cats": [
+    "錢財",
+    "丹藥",
+    "材料",
+    "符錄",
+    "陣法",
+    "法寶"
+  ],
   "items": {
-    "lingshi": { "name": "靈石", "cat": "錢財", "desc": "修仙界的通用貨幣。儲物袋中可放無限顆。" },
-    "heal": { "name": "回春丹", "cat": "丹藥", "desc": "回復 40% 氣血。", "use": "heal" },
-    "mpill": { "name": "聚氣丹", "cat": "丹藥", "desc": "回復 50% 靈力。靈力耗盡時仍可服用。", "use": "mpill" },
-    "pill": { "name": "突破丹", "cat": "丹藥", "desc": "境界瓶頸時服用，大幅提高突破成功率。" },
-    "herb": { "name": "靈草", "cat": "材料", "desc": "煉丹的基本材料。" },
-    "lingye": { "name": "靈液", "cat": "材料", "desc": "掌天瓶所凝，可催熟藥草、煉製突破丹。" },
-    "fu_lei": { "name": "雷符", "cat": "符錄", "desc": "引下天雷，造成 3.2 倍傷害（雷屬性）。", "battle": { "kind": "damage", "mult": 3.2, "el": "雷" } },
-    "fu_huo": { "name": "火符", "cat": "符錄", "desc": "烈焰灼燒，造成 2.6 倍傷害（火屬性）。", "battle": { "kind": "damage", "mult": 2.6, "el": "火" } },
-    "fu_ding": { "name": "定身符", "cat": "符錄", "desc": "定住目標一回合，使其無法行動。", "battle": { "kind": "stun", "turns": 1 } },
-    "fu_hu": { "name": "護身符", "cat": "符錄", "desc": "生成護盾，可抵擋相當於 50% 氣血上限的傷害。", "battle": { "kind": "shield", "frac": 0.5 } },
-    "fu_qing": { "name": "清心符", "cat": "符錄", "desc": "回復 40% 靈力。", "battle": { "kind": "mp", "frac": 0.4 } },
-    "zhen_ju": { "name": "聚靈陣旗", "cat": "陣法", "desc": "佈下聚靈陣：3 回合內每回合回復 8% 靈力。", "battle": { "kind": "formation", "id": "ju", "turns": 3 } },
-    "zhen_kun": { "name": "困敵陣旗", "cat": "陣法", "desc": "佈下困敵陣：3 回合內敵人傷害 -40%。", "battle": { "kind": "formation", "id": "kun", "turns": 3 } },
-    "zhen_sha": { "name": "殺陣陣旗", "cat": "陣法", "desc": "佈下殺陣：3 回合內每回合自動攻擊全體敵人。", "battle": { "kind": "formation", "id": "sha", "turns": 3 } },
-    "zhen_hu": { "name": "護體陣旗", "cat": "陣法", "desc": "佈下護體陣：3 回合內你受到的傷害 -35%。", "battle": { "kind": "formation", "id": "hu", "turns": 3 } },
-    "fb_shield": { "name": "玄天盾", "cat": "法寶", "desc": "擋下敵人下一輪的全部攻擊。冷卻 4 回合，耗靈力 8%。", "battle": { "kind": "invuln", "cd": 4, "mp": 0.08 } },
-    "fb_bell": { "name": "攝魂鈴", "cat": "法寶", "desc": "鈴聲攝魂，造成 1.5 倍傷害並使目標暈眩一回合。冷卻 5 回合，耗靈力 12%。", "battle": { "kind": "bell", "mult": 1.5, "cd": 5, "mp": 0.12 } },
-    "fb_mirror": { "name": "照妖鏡", "cat": "法寶", "desc": "照出破綻：敵人攻擊力 -20%（3 回合），且你下一擊傷害 ×2.2。冷卻 4 回合，耗靈力 10%。", "battle": { "kind": "mirror", "cd": 4, "mp": 0.10 } },
-    "fb_ding": { "name": "虛天鼎", "cat": "法寶", "desc": "鎮壓萬物，造成 4.5 倍傷害。冷卻 6 回合，耗靈力 25%。", "battle": { "kind": "damage", "mult": 4.5, "cd": 6, "mp": 0.25 } },
-    "fb_qingzhu": { "name": "青竹蜂雲劍", "cat": "法寶", "desc": "劍陣齊發，傷害隨祭煉階數提升（2.2＋0.5×階）。冷卻 3 回合，耗靈力 15%。", "battle": { "kind": "damage", "mult": 2.2, "grade_mult": 0.5, "cd": 3, "mp": 0.15 } }
+    "lingshi": {
+      "name": "靈石",
+      "cat": "錢財",
+      "desc": "修仙界的通用貨幣。儲物袋中可放無限顆。"
+    },
+    "heal": {
+      "name": "回春丹",
+      "cat": "丹藥",
+      "desc": "回復 40% 氣血。",
+      "use": "heal"
+    },
+    "mpill": {
+      "name": "聚氣丹",
+      "cat": "丹藥",
+      "desc": "回復 50% 靈力。靈力耗盡時仍可服用。",
+      "use": "mpill"
+    },
+    "pill": {
+      "name": "突破丹",
+      "cat": "丹藥",
+      "desc": "境界瓶頸時服用，大幅提高突破成功率。"
+    },
+    "herb": {
+      "name": "靈草",
+      "cat": "材料",
+      "desc": "煉丹的基本材料。"
+    },
+    "lingye": {
+      "name": "靈液",
+      "cat": "材料",
+      "desc": "掌天瓶所凝，可催熟藥草、煉製突破丹。"
+    },
+    "fu_lei": {
+      "name": "雷符",
+      "cat": "符錄",
+      "desc": "引下天雷，造成 3.2 倍傷害（雷屬性）。",
+      "battle": {
+        "kind": "damage",
+        "mult": 3.2,
+        "el": "雷"
+      }
+    },
+    "fu_huo": {
+      "name": "火符",
+      "cat": "符錄",
+      "desc": "烈焰灼燒，造成 2.6 倍傷害（火屬性）。",
+      "battle": {
+        "kind": "damage",
+        "mult": 2.6,
+        "el": "火"
+      }
+    },
+    "fu_ding": {
+      "name": "定身符",
+      "cat": "符錄",
+      "desc": "定住目標一回合，使其無法行動。",
+      "battle": {
+        "kind": "stun",
+        "turns": 1
+      }
+    },
+    "fu_hu": {
+      "name": "護身符",
+      "cat": "符錄",
+      "desc": "生成護盾，可抵擋相當於 50% 氣血上限的傷害。",
+      "battle": {
+        "kind": "shield",
+        "frac": 0.5
+      }
+    },
+    "fu_qing": {
+      "name": "清心符",
+      "cat": "符錄",
+      "desc": "回復 40% 靈力。",
+      "battle": {
+        "kind": "mp",
+        "frac": 0.4
+      }
+    },
+    "zhen_ju": {
+      "name": "聚靈陣旗",
+      "cat": "陣法",
+      "desc": "佈下聚靈陣：3 回合內每回合回復 8% 靈力。",
+      "battle": {
+        "kind": "formation",
+        "id": "ju",
+        "turns": 3
+      }
+    },
+    "zhen_kun": {
+      "name": "困敵陣旗",
+      "cat": "陣法",
+      "desc": "佈下困敵陣：3 回合內敵人傷害 -40%。",
+      "battle": {
+        "kind": "formation",
+        "id": "kun",
+        "turns": 3
+      }
+    },
+    "zhen_sha": {
+      "name": "殺陣陣旗",
+      "cat": "陣法",
+      "desc": "佈下殺陣：3 回合內每回合自動攻擊全體敵人。",
+      "battle": {
+        "kind": "formation",
+        "id": "sha",
+        "turns": 3
+      }
+    },
+    "zhen_hu": {
+      "name": "護體陣旗",
+      "cat": "陣法",
+      "desc": "佈下護體陣：3 回合內你受到的傷害 -35%。",
+      "battle": {
+        "kind": "formation",
+        "id": "hu",
+        "turns": 3
+      }
+    },
+    "fb_shield": {
+      "name": "玄天盾",
+      "cat": "法寶",
+      "desc": "擋下敵人下一輪的全部攻擊。冷卻 4 回合，耗靈力 8%。",
+      "battle": {
+        "kind": "invuln",
+        "cd": 4,
+        "mp": 0.08
+      },
+      "awaken": {
+        "shield": 0.3,
+        "text": "覺醒：擋下攻擊之餘，再生成相當於 30% 氣血上限的護盾。"
+      }
+    },
+    "fb_bell": {
+      "name": "攝魂鈴",
+      "cat": "法寶",
+      "desc": "鈴聲攝魂，造成 1.5 倍傷害並使目標暈眩一回合。冷卻 5 回合，耗靈力 12%。",
+      "battle": {
+        "kind": "bell",
+        "mult": 1.5,
+        "cd": 5,
+        "mp": 0.12
+      },
+      "awaken": {
+        "stun": 2,
+        "text": "覺醒：暈眩延長為兩回合。"
+      }
+    },
+    "fb_mirror": {
+      "name": "照妖鏡",
+      "cat": "法寶",
+      "desc": "照出破綻：敵人攻擊力 -20%（3 回合），且你下一擊傷害 ×2.2。冷卻 4 回合，耗靈力 10%。",
+      "battle": {
+        "kind": "mirror",
+        "cd": 4,
+        "mp": 0.1
+      },
+      "awaken": {
+        "mirror_extra": 2,
+        "heal": 0.1,
+        "text": "覺醒：破綻持續 +2 回合，並回復 10% 氣血。"
+      }
+    },
+    "fb_ding": {
+      "name": "虛天鼎",
+      "cat": "法寶",
+      "desc": "鎮壓萬物，造成 4.5 倍傷害。冷卻 6 回合，耗靈力 25%。",
+      "battle": {
+        "kind": "damage",
+        "mult": 4.5,
+        "cd": 6,
+        "mp": 0.25
+      },
+      "awaken": {
+        "stun": 1,
+        "text": "覺醒：鎮壓之力使目標暈眩一回合。"
+      }
+    },
+    "fb_qingzhu": {
+      "name": "青竹蜂雲劍",
+      "cat": "法寶",
+      "desc": "劍陣齊發，傷害隨祭煉階數提升（2.2＋0.5×階）。冷卻 3 回合，耗靈力 15%。",
+      "battle": {
+        "kind": "damage",
+        "mult": 2.2,
+        "grade_mult": 0.5,
+        "cd": 3,
+        "mp": 0.15
+      },
+      "awaken": {
+        "mult_add": 1.0,
+        "text": "覺醒：劍陣化為蜂雲，倍率 +1.0。"
+      }
+    }
   }
 }

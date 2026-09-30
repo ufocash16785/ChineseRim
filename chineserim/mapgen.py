@@ -656,6 +656,7 @@ class LocBuilder:
         self._place_board(cx - 6, H - 6)
         self.add_npc("villager", "村民", R.randrange(4, W - 4), mid - 1)
         self.add_npc("villager", "行商", R.randrange(4, W - 4), mid + 1)
+        self.add_npc("beggar", "乞丐", R.randrange(4, W - 4), mid + 3)
         self.add_npc("guard", "守衛", cx + 3, H - 4, wander=False)
 
     def _sect(self):
