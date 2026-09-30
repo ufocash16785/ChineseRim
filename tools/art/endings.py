@@ -116,6 +116,10 @@ def petals(im, rng, n, c, x0=0, x1=W, y0=0, y1=H):
 HERO = dict(robe="#2a2438", trim="#ffd35a", sash="#c8a030", hair="#e8e8f0", hairstyle="ponytail")
 
 
+DEFAULT_COMPANION = dict(robe="#fbe7a8", trim="#fff8e0", sash="#f08a4a", hair="#3a2a20", hairstyle="long", accessory="flower", female=True,
+                         eye="#a06a2a", shawl="#fff0c0", ornament="#ffb84a")
+
+
 def blood_lord():
     im, rng = Image.new("RGB", (W, H)), random.Random(11)
     grad(im, "#12030a", "#8a1c22")
@@ -290,7 +294,7 @@ def two_faces():
     return im
 
 
-def together():
+def together(comp=None):
     im, rng = Image.new("RGB", (W, H)), random.Random(61)
     grad(im, "#6a4a9a", "#ffd8a0", 0, 130)
     d = ImageDraw.Draw(im)
@@ -315,8 +319,7 @@ def together():
         for x in range(30 + i * 14, 210 + i * 6, 2):
             d.line([(x, y), (x, y + 5)], fill=col("#ffffff" if (x // 2 + i) % 3 else "#fff0f4"))
     hero = dict(robe="#f0f0f5", trim="#e0b84a", sash="#4a6ab8", hair="#2b2233", hairstyle="topknot")
-    comp = dict(robe="#fbe7a8", trim="#fff8e0", sash="#f08a4a", hair="#3a2a20", hairstyle="long", accessory="flower", female=True,
-                eye="#a06a2a", shawl="#fff0c0", ornament="#ffb84a", sword=False)
+    comp = dict(comp or DEFAULT_COMPANION, sword=False)
     sprite(im, comp, 132, 150, 2, pose=dict(bob=0, armFront=2, armBack=2, flutter=2))
     sprite(im, hero, 108, 150, 2, pose=dict(bob=0, armFront=2, armBack=2, flutter=1))
     d.line([(124, 122), (122, 122)], fill=col("#f6d3b0"), width=2)
@@ -359,11 +362,22 @@ ENDINGS = {"blood_lord": blood_lord, "kill_way": kill_way, "saint": saint, "bene
            "two_faces": two_faces, "together": together, "lone_sword": lone_sword}
 
 
+def companion_cfgs():
+    """每位道侶候選人一份「攜手同登」用的服飾設定（取自小人偶 NPC 設定）。"""
+    import json
+    from .build import NPCS
+    cands = json.loads((OUT.parents[2] / "data" / "companions.json").read_text(encoding="utf-8"))["candidates"]
+    return {cid: NPCS[c["sprite"]] for cid, c in cands.items() if c["sprite"] in NPCS}
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     for name, fn in ENDINGS.items():
         fn().save(OUT / f"ending_{name}.png")
-    print("結局插圖：", sorted(ENDINGS))
+    cfgs = companion_cfgs()
+    for cid, cfg in cfgs.items():
+        together(cfg).save(OUT / f"ending_together_{cid}.png")
+    print("結局插圖：", sorted(ENDINGS), "道侶版：", sorted(cfgs))
 
 
 if __name__ == "__main__":

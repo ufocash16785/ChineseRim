@@ -72,7 +72,10 @@ class EndingMixin:
             lines.append(ex["treasure"].format(name=s["treasure"].split("（")[0], lv=s["treasure"].split("（")[1].split(" ")[0]))
         if s["codex"]:
             lines.append(ex["codex"].format(n=s["codex"]))
-        return {"id": e["id"], "title": e["title"], "subtitle": e["subtitle"], "paras": e["paras"], "epilogue": lines, "stats": s, "seen": bool(h.flags.get("ending_seen")),
+        art = e["id"]
+        if e["id"] == "together" and h.companion in self.data.companions["candidates"]:
+            art = f"together_{h.companion}"                   # 依實際的道侶換插圖
+        return {"id": e["id"], "art": art, "title": e["title"], "subtitle": e["subtitle"], "paras": e["paras"], "epilogue": lines, "stats": s, "seen": bool(h.flags.get("ending_seen")),
                 "all": [{"id": x["id"], "title": x["title"], "got": x["id"] == e["id"]} for x in cfg["endings"]]}
 
     def _td_ending_close(self, **_):

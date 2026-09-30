@@ -2458,3 +2458,28 @@ class EndingArtTest(unittest.TestCase):
             self.assertGreater(len(r.read()), 500)
         finally:
             srv.shutdown()
+
+
+class TogetherEndingArtTest(unittest.TestCase):
+    def test_every_companion_has_own_illustration_and_view_picks_it(self):
+        import pathlib, tempfile
+        from chineserim.session import Session
+        art = pathlib.Path(__file__).resolve().parents[1] / "chineserim" / "static" / "art"
+        s = Session(pathlib.Path(tempfile.mkdtemp()) / "s.json", seed=30)
+        s.act("new", diff="normal")
+        for cid in s.data.companions["candidates"]:
+            self.assertTrue((art / f"ending_together_{cid}.png").exists(), cid)
+            s.hero.companion = cid
+            s.hero.flags["ending"] = {"id": "together", "stats": s._ending_stats()}
+            self.assertEqual(s.ending_view()["art"], f"together_{cid}")
+        s.hero.companion = ""
+        s.hero.flags["ending"] = {"id": "lone_sword", "stats": s._ending_stats()}
+        self.assertEqual(s.ending_view()["art"], "lone_sword")
+
+    def test_different_companions_render_differently(self):
+        from PIL import Image
+        import pathlib
+        art = pathlib.Path(__file__).resolve().parents[1] / "chineserim" / "static" / "art"
+        a = Image.open(art / "ending_together_nangong.png").tobytes()
+        b = Image.open(art / "ending_together_dongxuaner.png").tobytes()
+        self.assertNotEqual(a, b)

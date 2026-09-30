@@ -579,7 +579,7 @@ const TD = (() => {
     if (en && !en.seen && !endingOpen && endingSeenKey !== en.id) { endingOpen = true; walk = null; }
     if (en && endingOpen) endingSeenKey = en.id;
     const stt = en ? en.stats : null;
-    lst('ending', en && endingOpen ? `<div class=endbox><div class=endsub>${en.subtitle}</div><div class=endtitle>${en.title}</div><img class=endimg src="/art/ending_${en.id}.png" alt="${en.title}">` +
+    lst('ending', en && endingOpen ? `<div class=endbox><div class=endsub>${en.subtitle}</div><div class=endtitle>${en.title}</div><img class=endimg src="/art/ending_${en.art}.png" alt="${en.title}">` +
       en.paras.map((p, i) => `<p class=endp style="animation-delay:${2.6 + i * 1.6}s">${p}</p>`).join('') +
       `<div class=endep style="animation-delay:${2.6 + en.paras.length * 1.6}s">${en.epilogue.map(x => '<div>' + x + '</div>').join('')}` +
       `<div class=endstats>${[['歷時', stt.day + ' 日'], ['境界', stt.realm + ' Lv' + stt.level], ['道心', stt.dao + '（殺 ' + stt.sha + '／善 ' + stt.ren + '）'], ['擊敗強敵', stt.bosses], ['累計擊殺', stt.kills], ['煉丹', stt.alch + ' 次']].map(([a, b]) => `<span><small>${a}</small><b>${b}</b></span>`).join('')}</div>` +
