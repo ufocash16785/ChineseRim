@@ -28,6 +28,18 @@ class AlliesMixin:
         if pet["level"] >= c["max_level"]:
             pet["exp"] = 0
 
+    def pet_skill(self, pet):
+        """專屬技能（1 階＝進化後習得；2 階＝完全體強化）。回傳 {id,name,type,val,...} 或 None。"""
+        c = self.data.pets
+        stage = self.pet_stage(pet)
+        if stage < c["skill_unlock_stage"]:
+            return None
+        sk = dict(c["skills"][pet["kind"]])
+        sk["id"] = pet["kind"]
+        sk["val"] = sk["val"][min(1, stage - 1)]
+        sk["stage"] = stage
+        return sk
+
     def hatch_egg(self):
         h = self.hero
         if h.pet:
@@ -119,8 +131,11 @@ class AlliesMixin:
         h, c = self.hero, self.data.pets
         out = []
         if h.pet:
+            stage = self.pet_stage(h.pet)
+            sk = self.pet_skill(h.pet)
             out.append({"type": "pet", "name": self.pet_name(h.pet), "kind": h.pet["kind"], "el": h.pet["el"], "level": h.pet["level"],
-                        "atk": c["atk_base"] + c["atk_per_level"] * h.pet["level"], "hp": 1, "maxhp": 1, "absorb": 0})
+                        "atk": c["atk_base"] + c["atk_per_level"] * h.pet["level"], "hp": 1, "maxhp": 1, "absorb": 0,
+                        "skill": sk, "cd": 0, "cd_max": c["skill_cd"][min(1, max(0, stage - 1))] if sk else 0})
         if h.puppet:
             sp = c["puppets"][h.puppet["kind"]]
             out.append({"type": "puppet", "name": sp["name"], "sprite": sp["sprite"], "level": h.puppet["level"], "atk": sp["atk"] * (1 + 0.12 * (h.puppet["level"] - 1)),
@@ -135,12 +150,21 @@ class AlliesMixin:
         if won and h.pet:
             self.pet_gain_exp(1)
 
+    def _skill_view(self, pet):
+        c = self.data.pets
+        base = c["skills"][pet["kind"]]
+        sk = self.pet_skill(pet)
+        v = sk["val"] if sk else base["val"][0]
+        pct = round(v * 100) if base["type"] in ("howl", "shield", "drain", "web") else 0
+        return {"name": base["name"], "desc": base["desc"].format(pct=pct), "unlocked": bool(sk), "unlock_level": c["stage_levels"][c["skill_unlock_stage"] - 1],
+                "upgraded": bool(sk and sk["stage"] >= 2), "cd": c["skill_cd"][min(1, max(0, self.pet_stage(pet) - 1))] if sk else c["skill_cd"][0]}
+
     def allies_view(self):
         h, c = self.hero, self.data.pets
         pet = None
         if h.pet:
             pet = {"name": self.pet_name(h.pet), "kind": h.pet["kind"], "el": h.pet["el"], "level": h.pet["level"], "exp": h.pet["exp"], "need": self.pet_need(h.pet),
-                   "max": c["max_level"], "stage": self.pet_stage(h.pet), "eggs": h.count(c["egg"])}
+                   "max": c["max_level"], "stage": self.pet_stage(h.pet), "eggs": h.count(c["egg"]), "skill": self._skill_view(h.pet)}
         pup = None
         if h.puppet:
             sp = c["puppets"][h.puppet["kind"]]

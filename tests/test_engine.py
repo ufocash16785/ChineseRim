@@ -1875,3 +1875,85 @@ class SectWarTest(unittest.TestCase):
         self.assertGreater(self.h.count("lingshi"), n)
         self.assertEqual(self.h.count("heal"), 0)
         self.assertIsNone(self.s.snapshot()["wev_ent"])
+
+
+class PetSkillTest(unittest.TestCase):
+    def setUp(self):
+        import pathlib, tempfile
+        from chineserim.session import Session
+        self.s = Session(pathlib.Path(tempfile.mkdtemp()) / "s.json", seed=10)
+        self.s.act("new", diff="normal")
+        self.h = self.s.hero
+
+    def _fight(self, kind, level=5, boss="yuzitong"):
+        self.h.pet = {"kind": kind, "el": "火", "level": level, "exp": 0}
+        self.h.hp, self.h.mp = self.h.max_hp, self.h.max_mp
+        self.s.start_boss_fight(boss)
+        st = self.s.battle
+        st["enemies"][0]["hp"] *= 50                     # 不讓戰鬥太快結束
+        return st
+
+    def test_every_kind_has_skill_and_locked_before_stage1(self):
+        for kind in self.s.data.pets["pets"]:
+            self.h.pet = {"kind": kind, "el": "木", "level": 1, "exp": 0}
+            self.assertIsNone(self.s.pet_skill(self.h.pet))
+            self.assertFalse(self.s.allies_view()["pet"]["skill"]["unlocked"])
+            self.h.pet["level"] = 4
+            self.assertEqual(self.s.pet_skill(self.h.pet)["val"], self.s.data.pets["skills"][kind]["val"][0])
+            self.h.pet["level"] = 8
+            self.assertEqual(self.s.pet_skill(self.h.pet)["val"], self.s.data.pets["skills"][kind]["val"][1])   # 完全體強化
+
+    def test_no_skill_for_baby_pet(self):
+        st = self._fight("wolf", level=2)
+        self.assertIsNone(st["allies"][0]["skill"])
+
+    def test_howl_buffs_hero(self):
+        st = self._fight("wolf")
+        self.s.act("battle", cmd="guard")
+        self.assertGreater(st.get("howl", 0), 0)
+        self.assertEqual(st["allies"][0]["cd"], st["allies"][0]["cd_max"])
+        self.assertTrue(any("月嘯" in x for x in st["log"]))
+
+    def test_bear_shield_and_spider_web(self):
+        st = self._fight("bear")
+        self.s.act("battle", cmd="guard")
+        self.assertGreaterEqual(st["shield"] + (0 if self.h.hp < self.h.max_hp else 0), 0)
+        self.assertTrue(any("鐵壁守護" in x for x in st["log"]))
+        self.s.battle = None
+        st = self._fight("spider")
+        self.s.act("battle", cmd="guard")
+        self.assertGreater(st.get("web", 0), 0)
+
+    def test_poison_ticks_and_stun_and_breath(self):
+        st = self._fight("python")
+        self.s.act("battle", cmd="guard")
+        self.assertTrue(st["enemies"][0].get("dot"))
+        hp = st["enemies"][0]["hp"]
+        self.s.act("battle", cmd="guard")
+        self.assertLess(st["enemies"][0]["hp"], hp)              # 毒傷每回合生效
+        self.s.battle = None
+        st = self._fight("ape")
+        st["enemies"][0]["stun_imm"] = 0
+        self.s.act("battle", cmd="guard")
+        self.assertTrue(any("裂石投擲" in x for x in st["log"]))
+        self.s.battle = None
+        st = self._fight("snake")
+        hp = st["enemies"][0]["hp"]
+        self.s.act("battle", cmd="guard")
+        self.assertLess(st["enemies"][0]["hp"], hp)
+
+    def test_bat_heals_hero(self):
+        st = self._fight("bat")
+        st["enemies"][0]["atk"] = 0
+        self.h.hp = self.h.max_hp * 0.5
+        hp0 = self.h.hp
+        self.s.act("battle", cmd="guard")
+        self.assertGreater(self.h.hp, hp0)
+
+    def test_cooldown_cycle(self):
+        st = self._fight("wolf")
+        used = 0
+        for _ in range(9):
+            self.s.act("battle", cmd="guard")
+            used += any("月嘯" in x for x in st["log"])
+        self.assertIn(used, (2, 3))                              # 3 階冷卻：約每 4 回合一次

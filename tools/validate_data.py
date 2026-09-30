@@ -169,6 +169,13 @@ def main() -> int:
         for r in rows:
             if r["item"] not in item_ids:
                 errors.append(f"drops/{tname}: 未知物品 {r['item']}")
+    pets = load("pets")
+    for kind in pets["pets"]:
+        if kind not in pets["skills"]:
+            errors.append(f"pets/{kind}: 缺少專屬技能")
+    for kind, sk in pets["skills"].items():
+        if kind not in pets["pets"] or len(sk["val"]) != 2:
+            errors.append(f"pets/skills/{kind}: 設定不合法")
     ev = load("events")
     for t, tc in ev["types"].items():
         for k in ("drops", "table"):

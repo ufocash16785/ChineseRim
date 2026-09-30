@@ -130,6 +130,8 @@ def command(st, ch, realms, rng, cmd, arg=None, target=None, bonus=None):
         return True
     st["log"] = []
     st["guard"] = False
+    if st.get("howl", 0) > 0:
+        bonus = dict(bonus, allDmg=bonus.get("allDmg", 0) + st.get("howl_val", 0))
     # ---- 氣血耗盡：只剩元嬰出竅 ----
     if st.get("down"):
         if cmd != "soul":
@@ -299,6 +301,7 @@ def _use_gear(st, ch, rng, bonus, cmd, arg, t):
 
 
 def _formation_tick(st, ch, rng, bonus):
+    _dot_tick(st)
     f = st.get("formation")
     if not f:
         return
@@ -348,6 +351,8 @@ def _enemy_phase(st, ch, rng):
             d *= 0.6
         if f and f["id"] == "hu":
             d *= 0.65
+        if st.get("web", 0) > 0:
+            d *= 1 - st.get("web_val", 0)
         name = f"{e['name']}的「{skill['name']}」" if skill else e["name"]
         if inv:
             st["log"].append(f"{name}襲來，卻被法寶擋了下來！")
@@ -391,6 +396,9 @@ def _end_round(st, ch):
         st["cd"][k] = max(0, st["cd"][k] - 1)
     if st.get("mirror", 0) > 0:
         st["mirror"] -= 1
+    for k in ("howl", "web"):
+        if st.get(k, 0) > 0:
+            st[k] -= 1
     for e in st["enemies"]:
         if e.get("stun_imm", 0) > 0 and e.get("stun", 0) == 0:
             e["stun_imm"] -= 1
@@ -412,12 +420,69 @@ def _soul(st, ch):
     return True
 
 
+def _pet_skill(st, ch, a, rng):
+    """靈寵專屬技能。回傳 True 表示這回合用掉了技能。"""
+    sk = a.get("skill")
+    if not sk:
+        return False
+    if a["cd"] > 0:
+        a["cd"] -= 1
+        return False
+    al = alive(st)
+    t = min(al, key=lambda i: st["enemies"][i]["hp"])
+    e = st["enemies"][t]
+    base = hero_atk(ch, {}) * a["atk"] * rng.uniform(.9, 1.1)
+    v, ty, nm = sk["val"], sk["type"], sk["name"]
+    pre = f"{a['name']}施展「{nm}」"
+    if ty == "howl":
+        st["howl"], st["howl_val"] = sk["turns"], v
+        st["log"].append(f"{pre}，你的傷害 +{round(v * 100)}%（{sk['turns']} 回合）！")
+    elif ty == "shield":
+        st["shield"] += ch.max_hp * v
+        st["log"].append(f"{pre}，替你擋下傷害（護盾 {round(st['shield'])}）")
+    elif ty == "poison":
+        e["dot"] = {"turns": sk["turns"], "dmg": base * v}
+        st["log"].append(f"{pre}，{e['name']}中毒了！")
+    elif ty == "stun":
+        _hit(st, t, base * v, pre)
+        if not e["dead"]:
+            _stun(st, t, 1)
+    elif ty == "drain":
+        _hit(st, t, base * sk.get("dmg", 1.2), pre)
+        heal = ch.max_hp * v
+        ch.hp = min(ch.max_hp, ch.hp + heal)
+        st["log"].append(f"吸取生機，你回復了 {round(heal)} 點氣血")
+    elif ty == "web":
+        st["web"], st["web_val"] = sk["turns"], v
+        st["log"].append(f"{pre}，敵人被絲網纏住，傷害 -{round(v * 100)}%（{sk['turns']} 回合）！")
+    elif ty == "breath":
+        for i in list(al):
+            m = element_multiplier(a["el"], st["enemies"][i]["el"]) if a.get("el") else 1.0
+            _hit(st, i, base * v * m, pre)
+    a["cd"] = a["cd_max"]
+    st["aact"].append({"type": "pet", "target": t, "skill": ty})
+    return True
+
+
+def _dot_tick(st):
+    for i in alive(st):
+        e = st["enemies"][i]
+        d = e.get("dot")
+        if d:
+            _hit(st, i, d["dmg"], f"{e['name']}毒發")
+            d["turns"] -= 1
+            if d["turns"] <= 0:
+                e.pop("dot")
+
+
 def _allies_act(st, ch, rng):
     """靈寵與傀儡自動出手。"""
     st["aact"] = []
     for a in st.get("allies", []):
         al = alive(st)
         if not al or a["hp"] <= 0:
+            continue
+        if a["type"] == "pet" and _pet_skill(st, ch, a, rng):
             continue
         t = min(al, key=lambda i: st["enemies"][i]["hp"])
         e = st["enemies"][t]
@@ -477,5 +542,5 @@ def view(st, ch):
             "down": st.get("down", False), "exhausted": ch.mp <= 0, "shield": round(st.get("shield", 0)), "formation": st.get("formation"),
             "cd": st.get("cd", {}), "mirror": st.get("mirror", 0), "attackCost": attack_cost(ch),
             "enemies": [{k: e.get(k) for k in ("id", "kind", "name", "el", "hp", "maxhp", "dead", "sprite", "boss", "charging", "stun")} for e in st["enemies"]],
-            "partner": st.get("partner"), "pact": st.get("pact"), "allies": [{k: a.get(k) for k in ("type", "name", "kind", "el", "sprite", "hp", "maxhp", "level")} for a in st.get("allies", [])], "aact": st.get("aact", []), "spellCost": spell_cost(ch), "diff": st.get("diff", {}).get("name", ""),
+            "partner": st.get("partner"), "pact": st.get("pact"), "allies": [dict({k: a.get(k) for k in ("type", "name", "kind", "el", "sprite", "hp", "maxhp", "level", "cd")}, skill=(a.get("skill") or {}).get("name")) for a in st.get("allies", [])], "aact": st.get("aact", []), "spellCost": spell_cost(ch), "diff": st.get("diff", {}).get("name", ""),
             "killed": st["killed"], "rewards": st["rewards"]}

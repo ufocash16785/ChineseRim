@@ -79,5 +79,79 @@
   "repair_per_level": 80,
   "puppet_hp_frac": 0.6,
   "puppet_hp_per_level": 0.25,
-  "absorb_damage_frac": 0.6
+  "absorb_damage_frac": 0.6,
+  "skill_unlock_stage": 1,
+  "skill_cd": [
+    3,
+    2
+  ],
+  "skills": {
+    "wolf": {
+      "name": "月嘯",
+      "type": "howl",
+      "val": [
+        0.2,
+        0.35
+      ],
+      "turns": 2,
+      "desc": "仰天長嘯，你的傷害 +{pct}%，持續 2 回合。"
+    },
+    "bear": {
+      "name": "鐵壁守護",
+      "type": "shield",
+      "val": [
+        0.2,
+        0.35
+      ],
+      "desc": "替你擋下傷害：生成相當於 {pct}% 氣血上限的護盾。"
+    },
+    "python": {
+      "name": "腐蝕毒霧",
+      "type": "poison",
+      "val": [
+        0.5,
+        0.8
+      ],
+      "turns": 3,
+      "desc": "噴出毒霧，目標每回合受到毒傷（共 3 回合）。"
+    },
+    "ape": {
+      "name": "裂石投擲",
+      "type": "stun",
+      "val": [
+        2.2,
+        3.2
+      ],
+      "desc": "抱起巨石猛砸，造成重擊並使目標暈眩一回合。"
+    },
+    "bat": {
+      "name": "血色吸噬",
+      "type": "drain",
+      "val": [
+        0.06,
+        0.12
+      ],
+      "dmg": 1.3,
+      "desc": "啃咬敵人並吸血，替你回復 {pct}% 氣血。"
+    },
+    "spider": {
+      "name": "千絲羅網",
+      "type": "web",
+      "val": [
+        0.2,
+        0.3
+      ],
+      "turns": 3,
+      "desc": "吐絲纏住敵人，敵人傷害 -{pct}%，持續 3 回合。"
+    },
+    "snake": {
+      "name": "焚天焰息",
+      "type": "breath",
+      "val": [
+        1.6,
+        2.4
+      ],
+      "desc": "噴出烈焰，對全體敵人造成火焰傷害。"
+    }
+  }
 }
