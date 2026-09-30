@@ -9,7 +9,12 @@ def _quest_at(ch):
 from .character import item_name
 
 
-def find_trigger(data, ch, loc=None, arrive=None):
+def starts_with_npc(d):
+    return d["nodes"]["start"]["speaker"] != "旁白"
+
+
+def find_trigger(data, ch, loc=None, arrive=None, only=None):
+    """only: None＝全部；"narration"＝只旁白開場；"npc"＝只 NPC 開場（需要和 NPC 對話才觸發）。"""
     """回傳第一個符合條件且尚未看過的對話 id。"""
     completed = set(ch.quest.get("completed", []))
     quest_ids = None
@@ -17,6 +22,10 @@ def find_trigger(data, ch, loc=None, arrive=None):
         if ch.flags.get("seen:" + did):
             continue
         t = d["trigger"]
+        if only == "narration" and starts_with_npc(d):
+            continue
+        if only == "npc" and not starts_with_npc(d):
+            continue
         if "onQuestDone" in t:
             if loc is None and arrive is None and t["onQuestDone"] in completed:
                 return did
@@ -130,3 +139,11 @@ def gating_hint(data, ch, quest_id, obj):
                 return f"劇情：前往「{rn.get(t['arrive'], t['arrive'])}」"
             return f"劇情：前往「{names.get(t['loc'], t['loc'])}」"
     return ""
+
+
+def pending_npc(data, ch, loc):
+    """目前該地點有沒有「要找 NPC 說話」的劇情？回傳說話者名字或 None。"""
+    if not ch.quest or ch.quest.get("done"):
+        return None
+    did = find_trigger(data, ch, loc, None, only="npc")
+    return data.dialogues[did]["nodes"]["start"]["speaker"] if did else None

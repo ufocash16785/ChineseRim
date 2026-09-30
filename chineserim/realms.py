@@ -27,7 +27,8 @@ class RealmSystem:
         if st:
             bonus = 1 + sum(self.data.gongfa.get(g, {}).get("combat", {}).get("maxHp", 0) for g in ch.gongfa)
             ch.max_hp = ch.hp = st["hp"] * bonus
-            ch.mp, ch.stamina = st["mp"], st["stamina"]
+            ch.mp = ch.max_mp = st["mp"]
+            ch.stamina = st["stamina"]
 
     def set_realm(self, ch, realm_id, sub=0):
         old = ch.realm

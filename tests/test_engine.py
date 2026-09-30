@@ -386,3 +386,304 @@ class ArtAssetsTest(unittest.TestCase):
         f = pathlib.Path(__file__).parents[1] / "chineserim" / "static" / "art.js"
         r = subprocess.run([node, "--check", str(f)], capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stderr)
+
+
+class MapGenTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        from chineserim import mapgen
+        cls.mg, cls.d = mapgen, GameData()
+
+    def test_deterministic(self):
+        a = self.mg.build_world(self.d)
+        b = self.mg.build_world(self.d)
+        self.assertEqual(a["ground"], b["ground"])
+        self.assertEqual(self.mg.build_location(self.d, "caixia")["ground"], self.mg.build_location(self.d, "caixia")["ground"])
+
+    def _reach(self, m, start):
+        s = [[int(c) for c in r] for r in m["solid"]]
+        return self.mg.bfs(s, m["w"], m["h"], tuple(int(v) for v in start))
+
+    def test_world_entrances_reachable(self):
+        for wid, needs_ferry in (("renjie", True), ("lingjie", False)):
+            m = self.mg.build_world(self.d, wid)
+            reach = self._reach(m, m["spawn"])
+            if needs_ferry:
+                # 亂星海要靠渡口：從對岸渡口出發也必須能走到所有島上的地點
+                reach |= self._reach(m, [m["docks"]["luanxinghai"][0], m["docks"]["luanxinghai"][1]])
+            for e in m["entities"]:
+                if e["k"] == "enter":
+                    self.assertTrue((e["x"], e["y"] + 1) in reach, f"{wid}:{e['id']} 不可達")
+                elif e["k"] == "dock":
+                    self.assertIn((e["x"], e["y"]), reach)
+
+    def test_every_location_has_a_map(self):
+        seen = 0
+        for w in self.d.regions:
+            for g in w["regions"]:
+                for l in g["locations"]:
+                    m = self.mg.build_location(self.d, l["id"])
+                    reach = self._reach(m, [m["spawn"][0], m["spawn"][1]])
+                    self.assertTrue(all(tuple(c) in reach for c in m["exit"]), f"{l['id']} 出口不可達")
+                    self.assertIn(tuple(m["npcSpot"]), reach, l["id"])
+                    if m["cat"] in ("wild", "deep"):
+                        self.assertGreaterEqual(sum(1 for e in m["entities"] if e["k"] == "enemy"), 4, l["id"])
+                    for e in m["entities"]:
+                        if e["k"] == "enemy":
+                            self.assertIn((e["x"], e["y"]), reach)
+                    seen += 1
+        self.assertEqual(seen, 42)
+
+    def test_jixi_has_portal(self):
+        m = self.mg.build_location(self.d, "jixi")
+        self.assertTrue(any(e["k"] == "portal" for e in m["entities"]))
+
+
+class BattleTest(unittest.TestCase):
+    def setUp(self):
+        from chineserim import battle
+        self.b = battle
+        self.rs = RealmSystem(GameData(), random.Random(1))
+        self.c = Character("t", elements=["金", "木", "水", "火"])
+        self.rs.set_realm(self.c, "mortal")
+        self.c.add("heal", 2)
+        self.rng = random.Random(3)
+
+    def _fight(self, specs, deep=False, policy=None):
+        st = self.b.start(self.c, "taiyue", specs, deep)
+        for _ in range(80):
+            cmd = policy(st) if policy else ("attack", None)
+            if self.b.command(st, self.c, self.rs, self.rng, cmd[0], cmd[1], None, {}):
+                break
+        return st
+
+    def test_win_gives_rewards_and_kill_counters(self):
+        st = self._fight([{"kind": "wolf", "el": "土"}])
+        self.assertEqual(st["over"], "win")
+        self.assertEqual(self.c.counters["kill:taiyue"], 1)
+        self.assertGreater(self.c.count("lingshi"), 0)
+        self.assertGreater(self.c.level, 1)
+
+    def test_spell_costs_mp_and_needs_it(self):
+        st = self.b.start(self.c, "x", [{"kind": "wolf", "el": "木"}])
+        self.c.mp = 0
+        self.b.command(st, self.c, self.rs, self.rng, "spell", 0)
+        self.assertIn("靈力不足", st["log"][0])
+        self.assertEqual(st["turn"], 1)             # 沒有消耗回合
+        self.c.mp = self.c.max_mp
+        before = self.c.mp
+        self.b.command(st, self.c, self.rs, self.rng, "spell", 0)
+        self.assertLess(self.c.mp, before)
+
+    def test_element_advantage(self):
+        st = self.b.start(self.c, "x", [{"kind": "wolf", "el": "土"}, {"kind": "wolf", "el": "金"}])
+        rng = random.Random(1)
+        self.b.command(st, self.c, self.rs, rng, "spell", 1, 0)      # 木剋土
+        self.assertTrue(any("剋制" in l for l in st["log"]))
+
+    def test_heal_and_guard_and_flee(self):
+        st = self.b.start(self.c, "x", [{"kind": "bear", "el": "水"}])
+        self.c.hp = 10
+        self.b.command(st, self.c, self.rs, self.rng, "item")
+        self.assertGreater(self.c.hp, 30)
+        self.assertEqual(self.c.count("heal"), 1)
+        for _ in range(40):
+            if self.b.command(st, self.c, self.rs, self.rng, "flee"):
+                break
+            self.c.hp = self.c.max_hp
+        self.assertIn(st["over"], ("flee", None))
+
+    def test_lose_when_hp_zero(self):
+        st = self.b.start(self.c, "x", [{"kind": "bear", "el": "水"}] * 3)
+        self.c.hp = 1
+        self.b.command(st, self.c, self.rs, self.rng, "guard")
+        self.assertEqual(st["over"], "lose")
+
+    def test_deep_battles_max_two(self):
+        st = self.b.start(self.c, "x", [{"kind": "bat", "el": "木"}] * 3, deep=True)
+        self.assertEqual(len(st["enemies"]), 2)
+
+    def test_balanced_for_typical_play(self):
+        """自動打法在各境界對『一般野外 1 隻』應穩定獲勝。"""
+        for realm in range(6):
+            wins = 0
+            for seed in range(40):
+                rng = random.Random(seed)
+                rs = RealmSystem(GameData(), rng)
+                c = Character("t", elements=["金", "木", "水", "火"])
+                c.realm = realm
+                rs.apply_stats(c)
+                c.level = rs.data.realms[realm]["levelRange"][0]
+                c.add("heal", 3)
+                st = self.b.start(c, "x", [{"kind": rng.choice(list(self.b.KINDS)), "el": rng.choice("金木水火土")}])
+                for _ in range(60):
+                    if c.hp < .4 * c.max_hp and c.count("heal"):
+                        cmd = ("item", None)
+                    elif c.mp >= self.b.spell_cost(c):
+                        cmd = ("spell", rng.randrange(4))
+                    else:
+                        cmd = ("attack", None)
+                    if self.b.command(st, c, rs, rng, cmd[0], cmd[1], None, {}):
+                        break
+                wins += st["over"] == "win"
+            self.assertGreaterEqual(wins, 36, f"realm {realm}")
+
+
+class TopDownSessionTest(unittest.TestCase):
+    def setUp(self):
+        import tempfile, pathlib
+        from chineserim.session import Session
+        self.Session = Session
+        self.path = pathlib.Path(tempfile.mkdtemp()) / "s.json"
+        self.s = Session(self.path, seed=2)
+
+    def test_starts_on_world_map_near_qingniu(self):
+        s = self.s
+        self.assertEqual((s.mode, s.map_id), ("world", "world:renjie"))
+        m = s.get_map(s.map_id)
+        e = next(e for e in m["entities"] if e["id"] == "enter:qingniu")
+        self.assertLess(abs(s.pos[0] - e["x"]) + abs(s.pos[1] - e["y"]), 4)
+
+    def test_enter_leave_roundtrip_and_counters(self):
+        s = self.s
+        s.act("enter", loc="qingniu")
+        self.assertEqual((s.mode, s.cur_loc, s.map_id), ("loc", "qingniu", "loc:qingniu"))
+        self.assertEqual(s.hero.counters["visit:qingniu"], 1)
+        s.act("leave")
+        self.assertEqual((s.mode, s.cur_loc), ("world", None))
+        m = s.get_map("world:renjie")
+        e = next(e for e in m["entities"] if e["id"] == "enter:qingniu")
+        self.assertAlmostEqual(s.pos[1], e["y"] + 1.5)          # 站在入口下方，不會立刻再觸發
+
+    def test_npc_dialogue_needs_talking_but_narration_auto(self):
+        s = self.s
+        s.act("enter", loc="qingniu")                            # d_farewell：母親開場 → 要對話才觸發
+        self.assertFalse(s.hero.dialogue)
+        self.assertEqual(s.snapshot()["questNpc"], "母親")
+        s.act("talk", ent="quest")
+        self.assertEqual(s.hero.dialogue["id"], "d_farewell")
+        s.act("choose", i=0)
+        s.act("choose", i="")
+        self.assertIsNone(s.snapshot()["questNpc"])
+        s.act("leave")
+        s.act("enter", loc="huangfeng")                          # 只是進入：旁白劇情才會自動觸發
+        self.assertFalse(s.hero.dialogue)
+
+    def test_blocked_during_battle_and_battle_flow(self):
+        s = self.s
+        s.act("enter", loc="taiyue")
+        m = s.get_map(s.map_id)
+        ids = [e["id"] for e in m["entities"] if e["k"] == "enemy"][:1]
+        s.act("battle_start", ids=",".join(ids))
+        self.assertIsNotNone(s.battle)
+        s.act("leave")                                            # 戰鬥中不能離開
+        self.assertEqual(s.mode, "loc")
+        for _ in range(60):
+            if s.battle["over"]:
+                break
+            s.act("battle", cmd="attack")
+        s.act("battle_end")
+        self.assertIsNone(s.battle)
+        if s.hero.counters.get("kill:taiyue"):
+            self.assertIn(ids[0], s.defeated)
+
+    def test_deep_gate_and_defeat_penalty(self):
+        s = self.s
+        s.act("enter", loc="kunwu")                               # 境界不足
+        self.assertEqual(s.mode, "world")
+        s.hero.realm = 2
+        s.rs.apply_stats(s.hero)
+        s.act("enter", loc="taiyue")
+        e = next(e for e in s.get_map(s.map_id)["entities"] if e["k"] == "enemy")
+        s.act("battle_start", ids=e["id"])
+        s.hero.hp = 1
+        s.act("battle", cmd="guard")
+        while s.battle and not s.battle["over"]:
+            s.hero.hp = 1
+            s.act("battle", cmd="guard")
+        if s.battle["over"] == "lose":
+            self.assertGreaterEqual(s.hero.hp, s.hero.max_hp / 2)
+
+    def test_chest_once_and_shop_and_inn(self):
+        s = self.s
+        s.act("enter", loc="taiyue")
+        m = s.get_map(s.map_id)
+        chest = next(e for e in m["entities"] if e["k"] == "chest")
+        n = s.hero.count("lingshi")
+        s.act("talk", ent=chest["id"])
+        n2 = s.hero.count("lingshi")
+        self.assertGreater(n2, n)
+        s.act("talk", ent=chest["id"])
+        self.assertEqual(s.hero.count("lingshi"), n2)              # 只能開一次
+        s.act("leave")
+        s.act("enter", loc="jiazhou")
+        m = s.get_map(s.map_id)
+        shop = next(e for e in m["entities"] if e.get("role") == "shop")
+        inn = next(e for e in m["entities"] if e.get("role") == "inn")
+        s.act("talk", ent=shop["id"])
+        self.assertTrue(s.snapshot()["shop"])
+        before = s.hero.count("heal")
+        s.act("buy", item="heal")
+        self.assertEqual(s.hero.count("heal"), before + 1)
+        s.hero.hp, d0 = 5, s.day
+        s.act("talk", ent=inn["id"])
+        self.assertEqual(s.hero.hp, s.hero.max_hp)
+        self.assertEqual(s.day, d0 + 1)
+
+    def test_region_crossing_and_ferry(self):
+        s = self.s
+        s.act("region", to="mulan")
+        self.assertEqual(s.region, "mulan")
+        self.assertEqual(s.hero.counters["arrive:mulan"], 1)
+        s.act("region", to="tiannan")
+        s.act("ferry", to="luanxinghai")
+        self.assertEqual(s.region, "luanxinghai")
+        m = s.get_map("world:renjie")
+        dx, dy = m["docks"]["luanxinghai"]
+        self.assertEqual(s.pos, [dx + .5, dy + .5])
+        s.act("region", to="tianyuan")                             # 靈界需飛升
+        self.assertEqual(s.region, "luanxinghai")
+
+    def test_portal_needs_deity_realm(self):
+        s = self.s
+        s.act("enter", loc="jixi")
+        s.act("portal")
+        self.assertEqual(s.region, "tiannan")
+        s.hero.realm = 5
+        s.act("portal")
+        self.assertEqual((s.region, s.map_id, s.mode), ("tianyuan", "world:lingjie", "world"))
+
+    def test_steps_advance_days_and_save_roundtrip(self):
+        s = self.s
+        s.act("pos", x="10.5", y="20.5", steps="330")
+        self.assertEqual(s.day, 2)
+        s.act("enter", loc="qingniu")
+        s2 = self.Session(self.path, seed=9)
+        self.assertTrue(s2.load())
+        self.assertEqual((s2.mode, s2.cur_loc, s2.map_id, s2.day), ("loc", "qingniu", "loc:qingniu", 2))
+
+    def test_old_save_without_map_position(self):
+        import json
+        d = self.s.to_dict()
+        d.pop("td")
+        d["hero"].pop("max_mp")
+        d["region"] = "dajin"
+        self.path.write_text(json.dumps(d), encoding="utf-8")
+        s2 = self.Session(self.path)
+        self.assertTrue(s2.load())
+        self.assertEqual((s2.mode, s2.region), ("world", "dajin"))
+        m = s2.get_map(s2.map_id)
+        self.assertTrue(0 < s2.pos[0] < m["w"])
+
+
+class TopDownFullPlaythroughTest(unittest.TestCase):
+    def test_bot_finishes_whole_story_via_map_actions(self):
+        import pathlib, tempfile
+        from chineserim.session import Session
+        from tests.bot_td import play_through_td
+        s = Session(pathlib.Path(tempfile.mkdtemp()) / "s.json", seed=7)
+        steps = play_through_td(s)
+        self.assertTrue(s.hero.quest["done"], f"卡住：{s.hero.quest}（{steps} 步）")
+        self.assertEqual(s.hero.quest["arc"], "arc6_lingjie")
+        seen = {k[5:] for k in s.hero.flags if k.startswith("seen:")}
+        self.assertEqual(set(s.data.dialogues) - seen, set())

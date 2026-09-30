@@ -6,7 +6,7 @@ import sys
 
 from PIL import Image
 
-from . import beasts, humans, scenery
+from . import beasts, humans, scenery, tiles
 from .canvas import hexc
 
 OUT = pathlib.Path(__file__).resolve().parents[2] / "chineserim" / "static" / "art"
@@ -58,6 +58,9 @@ def human_sheet(cfg, fly=True, rows=None):
     out = []
     for name, poses in anims:
         out.append((name, [humans.draw_human(p, ps).image() for ps in poses]))
+    for name, poses in humans.frames_dir(p):          # 俯視地圖用：正面 / 背面
+        if rows is None or name in rows:
+            out.append((name, [humans.draw_human_dir(p, ps).image() for ps in poses]))
     return out
 
 
@@ -104,10 +107,12 @@ def main():
 
     # NPC
     ids = list(NPCS)
-    sheets = [human_sheet(dict(NPCS[i], sword=False), fly=False, rows=("idle", "walk")) for i in ids]
+    NPC_ROWS = ("idle", "walk", "idle_d", "walk_d", "idle_u", "walk_u")
+    sheets = [human_sheet(dict(NPCS[i], sword=False), fly=False, rows=NPC_ROWS) for i in ids]
     im, starts = stack(sheets, humans.FW, humans.FH, 4)
     im.save(OUT / "npcs.png")
     manifest["npcs"] = {i: {"row": s} for i, s in zip(ids, starts)}
+    manifest["npcAnims"] = {n: {"row": r, "n": len(f)} for r, (n, f) in enumerate(sheets[0])}
     manifest["speakers"] = SPEAKERS
 
     # 妖獸
@@ -134,6 +139,44 @@ def main():
         atlas, rects = pack_atlas(sp)
         atlas.save(OUT / f"scene_{b}.png")
         manifest["biomes"][b] = {"rects": rects, "sky": P["sky"]}
+    # 俯視地圖：地磚與物件
+    manifest["tiles"], manifest["objects"] = {}, {}
+    for b, P in scenery.BIOMES.items():
+        tl = []
+        for v in range(4): tl.append((f"grass{v}", tiles.grass(b, v)))
+        for v in range(2): tl.append((f"dirt{v}", tiles.dirt(b, v)))
+        for v in range(2): tl.append((f"path{v}", tiles.path(b, v)))
+        for v in range(2): tl.append((f"sand{v}", tiles.sand(b, v)))
+        for f in range(4): tl.append((f"water{f}", tiles.water(b, f)))
+        for f in range(4): tl.append((f"sea{f}", tiles.water(b, f, True)))
+        for n, fn in (("wood0", tiles.wood), ("court0", tiles.court), ("cave0", tiles.cave_floor), ("cavewall0", tiles.cave_wall), ("hedge0", tiles.hedge)):
+            tl.append((n, fn(b, 0)))
+        for v in range(3): tl.append((f"mountain{v}", tiles.mountain(b, v)))
+        for v in range(3): tl.append((f"forest{v}", tiles.forest(b, v)))
+        tl.append(("bridgeH", tiles.bridge(b, False))); tl.append(("bridgeV", tiles.bridge(b, True)))
+        for m in range(16): tl.append((f"shore{m}", tiles.shore(b, m)))
+        cols = 16
+        atlas = Image.new("RGBA", (cols * 32, ((len(tl) + cols - 1) // cols) * 32), (0, 0, 0, 0))
+        pos = {}
+        for i, (n, cv) in enumerate(tl):
+            x, y = (i % cols) * 32, (i // cols) * 32
+            atlas.paste(cv.image(shade=False, outline=False), (x, y))
+            pos[n] = [x, y]
+        atlas.save(OUT / f"tiles_{b}.png")
+        manifest["tiles"][b] = pos
+        ob = [("house0", scenery.house(b, 0)), ("house1", scenery.house(b, 1)), ("pagoda", scenery.pagoda(b)), ("gate", scenery.sect_gate(b)),
+              ("cave", scenery.cave(b)), ("tree", scenery.tree_round(b)), ("pine", scenery.pine(b)), ("bamboo", scenery.bamboo(b)),
+              ("rock", scenery.rock(b)), ("lantern", scenery.lantern(b)), ("well", tiles.well(b)), ("stall", tiles.stall(b)),
+              ("chest_c", tiles.chest(b, False)), ("chest_o", tiles.chest(b, True)), ("statue", tiles.statue(b)), ("sign", tiles.sign(b)),
+              ("banner", tiles.banner(b)), ("tent", tiles.tent(b)), ("campfire0", tiles.campfire(b, 0)), ("campfire1", tiles.campfire(b, 1)),
+              ("dock", tiles.dock(b)), ("crystal", tiles.crystal(b)), ("altar", tiles.altar(b)), ("tomb", tiles.tomb(b)),
+              ("dummy", tiles.dummy(b)), ("bush", tiles.bush(b)), ("flowers", tiles.flowers(b)), ("boulder", tiles.boulder(b)),
+              ("icon_town", tiles.icon_town(b)), ("icon_sect", tiles.icon_sect(b)), ("icon_cave", tiles.icon_cave(b)),
+              ("icon_battle", tiles.icon_battle(b)), ("icon_camp", tiles.icon_camp(b)), ("icon_port", tiles.icon_port(b)),
+              ("icon_ruin", tiles.icon_ruin(b)), ("icon_portal", tiles.icon_portal(b))]
+        atlas, rects = pack_atlas([(n, cv.image()) for n, cv in ob], 512)
+        atlas.save(OUT / f"objects_{b}.png")
+        manifest["objects"][b] = rects
     fx = [(f"slash{t}", scenery.slash_frame(t).image(shade=False, outline=False)) for t in range(3)]
     fx += [(f"spark{t}", scenery.spark_frame(t).image(shade=False, outline=False)) for t in range(3)]
     for el, (m, d, l, a) in beasts.ELEMENT_PALETTES.items():

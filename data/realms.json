@@ -78,7 +78,7 @@
         "perkPointsPerSub": 1
       },
       "stats": {
-        "hp": 120,
+        "hp": 180,
         "mp": 150,
         "stamina": 120
       }
@@ -119,7 +119,7 @@
         "canFly": "glide"
       },
       "stats": {
-        "hp": 200,
+        "hp": 260,
         "mp": 350,
         "stamina": 180
       }

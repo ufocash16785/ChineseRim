@@ -185,3 +185,131 @@ def frames(p: Pal, fly=True):
         out.append(("fly", [dict(bob=0, fly=True, armFront=1, armBack=3, flutter=1, lean=1),
                             dict(bob=1, fly=True, armFront=1, armBack=3, flutter=2, lean=1)]))
     return out
+
+
+# ======================= 正面 / 背面（俯視地圖用）=======================
+def draw_human_dir(p: Pal, pose: dict):
+    """正面（往下走）或背面（往上走）。pose: view='front'|'back', bob, step(-1,0,1), flutter。"""
+    c = Canvas(FW, FH)
+    view = pose.get("view", "front")
+    bob = pose.get("bob", 0)
+    step = pose.get("step", 0)            # 1：右腳在前；-1：左腳在前；0：併腳
+    cx = 20
+    hy = 16 + bob
+    hs = p.hairstyle
+    top, bot = 24 + bob, 40 + bob
+    back = view == "back"
+
+    # 長髮（背面時蓋在身體上，所以先畫身體）
+    # ---- 長袍 ----
+    for y in range(top, bot):
+        t = (y - top) / (bot - top)
+        w = 6 + int(t * 3.2)
+        c.rect(cx - w, y, cx + w - 1, y, p.robe if t < .85 else p.robe2, "robe")
+    c.rect(cx - 9, bot - 2, cx + 8, bot - 1, p.trim, "trim")
+    if not back:
+        c.rect(cx - 5, top, cx + 4, top + 1, p.trim, "trim")
+        c.line(cx - 3, top + 1, cx, top + 6, p.trim, "trim")
+        c.line(cx + 2, top + 1, cx - 1, top + 6, p.trim, "trim")
+    else:
+        c.rect(cx - 5, top, cx + 4, top + 1, p.trim, "trim")
+    c.rect(cx - 7, top + 8, cx + 6, top + 9, p.sash, "sash")
+    if back:
+        c.rect(cx - 2, top + 9, cx + 1, top + 14, p.sash, "sash")        # 背後蝴蝶結垂帶
+    else:
+        c.rect(cx + 1, top + 9, cx + 3, top + 13, p.sash, "sash")
+
+    # ---- 腿 / 靴 ----
+    for side in (-1, 1):
+        lift = -2 if step == side else 0            # 抬腳
+        fwd = 1 if step == -side else 0
+        x = cx + (side * 3) - 2
+        y0 = bot - 1
+        c.rect(x, y0, x + 3, BASE - 2 + lift * 0, p.robe2, "robe")
+        c.rect(x - 1, BASE - 3 + lift + fwd, x + 4, BASE + lift + fwd, p.boots, "boots")
+
+    # ---- 手臂（垂在兩側，走路時前後擺）----
+    for side in (-1, 1):
+        sw = step * side * 2
+        sx = cx + side * 8
+        c.line(sx, top + 4, sx + side, top + 12 + sw, p.robe, "robe", 3)
+        c.line(sx + 1, top + 4, sx + side + 1, top + 12 + sw, p.robe, "robe", 3)
+        c.rect(sx + side - 1, top + 12 + sw, sx + side + 1, top + 14 + sw, p.trim, "trim")
+        c.rect(sx + side - 1, top + 15 + sw, sx + side + 1, top + 16 + sw, p.skin, "skin")
+
+    # ---- 背劍 ----
+    if p.sword:
+        if back:
+            c.line(cx - 8, top + 12, cx + 8, top - 2, hexc("#dff4ff"), "blade", 1)
+            c.rect(cx + 7, top - 4, cx + 9, top - 1, hexc("#8a5a2b"), "hilt")
+        else:
+            c.rect(cx + 6, top - 3, cx + 8, top, hexc("#8a5a2b"), "hilt")
+
+    # ---- 頭 ----
+    if back:
+        c.ellipse(cx, hy, 10, 9, p.hair, "hair")
+        c.rect(cx - 10, hy - 2, cx + 9, hy + 6, p.hair, "hair")
+        c.rect(cx - 5, hy + 6, cx + 4, hy + 8, p.skin, "skin")            # 後頸
+    else:
+        c.ellipse(cx, hy, 10, 9, p.skin, "skin")
+        c.ellipse(cx, hy - 5, 10, 5, p.hair, "hair")
+        c.rect(cx - 10, hy - 5, cx - 8, hy + 2, p.hair, "hair")
+        c.rect(cx + 8, hy - 5, cx + 9, hy + 2, p.hair, "hair")
+        for i, bx in enumerate(range(cx - 8, cx + 9, 3)):
+            c.rect(bx, hy - 3, bx + 1, hy - (0 if i % 2 == 0 else 1), p.hair, "hair")
+    # 髮型細節
+    if hs == "topknot":
+        c.ellipse(cx, hy - 12, 3, 3, p.hair, "hair")
+        c.rect(cx - 1, hy - 10, cx + 1, hy - 9, p.trim, "trim")
+    elif hs == "ponytail":
+        if back:
+            c.line(cx, hy + 3, cx + 1, hy + 18, p.hair, "hair", 4)
+            c.rect(cx - 2, hy + 1, cx + 3, hy + 2, p.trim, "trim")
+        else:
+            c.rect(cx - 3, hy - 10, cx + 2, hy - 9, p.trim, "trim")
+    elif hs == "long":
+        if back:
+            c.rect(cx - 9, hy + 2, cx + 8, hy + 24, p.hair, "hair")
+        else:
+            c.rect(cx - 11, hy - 2, cx - 8, hy + 20, p.hair, "hair")
+            c.rect(cx + 8, hy - 2, cx + 11, hy + 20, p.hair, "hair")
+        if p.accessory == "pin":
+            c.rect(cx + 4, hy - 11, cx + 5, hy - 6, hexc("#ffd35a"), "trim")
+            c.put(cx + 4, hy - 12, hexc("#ff7a9a"), "trim")
+            c.rect(cx - 3, hy - 9, cx + 1, hy - 8, hexc("#ff7a9a"), "trim")
+    elif hs == "elder":
+        c.ellipse(cx, hy - 13, 3, 3, p.hair, "hair")
+        if back:
+            c.rect(cx - 9, hy + 2, cx + 8, hy + 8, p.hair, "hair")
+    elif hs == "short" and back:
+        pass
+    if p.hat:
+        c.ellipse(cx, hy - 8, 12, 3, hexc(p.hat), "trim")
+        c.rect(cx - 6, hy - 13, cx + 5, hy - 8, hexc(p.hat), "trim")
+    # 臉
+    if not back:
+        ey = hy + 1
+        if pose.get("blink"):
+            for ex in (cx - 5, cx + 3):
+                c.rect(ex, ey + 2, ex + 2, ey + 2, HAIR_DARK, "eye")
+        else:
+            for ex in (cx - 5, cx + 3):
+                c.rect(ex, ey - 1, ex + 2, ey + 3, HAIR_DARK, "eye")
+                c.rect(ex, ey - 1, ex + 1, ey, (255, 255, 255), "eye")
+        c.put(cx - 7, ey + 4, hexc("#f2a0a0"), "skin")
+        c.put(cx + 7, ey + 4, hexc("#f2a0a0"), "skin")
+        c.rect(cx - 1, ey + 6, cx + 1, ey + 6, hexc("#b0605a"), "eye")
+        if p.beard:
+            c.poly([(cx - 7, ey + 5), (cx + 7, ey + 5), (cx + 5, ey + 14), (cx, ey + 17), (cx - 5, ey + 14)], p.beard, "beard")
+            c.rect(cx - 1, ey + 6, cx + 1, ey + 6, hexc("#b0605a"), "eye")
+    return c
+
+
+def frames_dir(p: Pal):
+    """回傳 [(anim, [pose...])]：idle_d/walk_d/idle_u/walk_u 各方向。"""
+    out = []
+    for view, tag in (("front", "d"), ("back", "u")):
+        out.append((f"idle_{tag}", [dict(view=view, bob=0), dict(view=view, bob=1), dict(view=view, bob=0, blink=True), dict(view=view, bob=1)]))
+        out.append((f"walk_{tag}", [dict(view=view, bob=0, step=1), dict(view=view, bob=1, step=0),
+                                    dict(view=view, bob=0, step=-1), dict(view=view, bob=1, step=0)]))
+    return out

@@ -4,18 +4,19 @@ import pathlib
 import random
 from dataclasses import asdict
 
-from . import dialogue, quests, treasures
+from . import battle, dialogue, quests, treasures
 from .character import Character
 from .data import ROOT, GameData
 from .elements import ADV_MULT, DIS_MULT, PAIRS, PARENT
 from .explore import DEEP, WorldMap, is_wild, kill_reward, min_realm, visit
 from .realms import RealmSystem
+from .topdown import TD_KINDS, TopDownMixin
 
 SAVE_VERSION = 1
 DEFAULT_SAVE = ROOT / "saves" / "save.json"
 
 
-class Session:
+class Session(TopDownMixin):
     def __init__(self, save_path=DEFAULT_SAVE, seed=None):
         self.data = GameData()
         self.rng = random.Random(seed)
@@ -44,20 +45,38 @@ class Session:
         self.rs.set_realm(self.hero, "mortal")
         self.hero.add("lingshi", 500)
         self.day, self.region = 0, "tiannan"
-        self.log = ["你是青牛鎮少年韓立。點區域旅行、點地點探索；先去看看家鄉青牛鎮吧。"]
+        self.hero.add("heal", 3)
+        self.log = ["你是青牛鎮少年韓立。走上地圖上的地點圖示就能進入；先去看看家鄉青牛鎮吧。"]
         quests.ensure(self.hero, self.data)
+        self.shop_open = False
+        self.td_reset()
 
     # ---- 存檔 ----
     def to_dict(self):
-        return {"version": SAVE_VERSION, "day": self.day, "region": self.region, "log": self.log[-30:], "hero": asdict(self.hero)}
+        return {"version": SAVE_VERSION, "day": self.day, "region": self.region, "log": self.log[-30:], "hero": asdict(self.hero),
+                "td": {"mode": self.mode, "map_id": self.map_id, "pos": self.pos, "cur_loc": self.cur_loc, "defeated": self.defeated,
+                       "train_n": self.train_n, "step_acc": self.step_acc, "battle": self.battle}}
 
     def from_dict(self, d):
         if d.get("version") != SAVE_VERSION:
             raise ValueError(f"不支援的存檔版本 {d.get('version')}")
-        self.hero = Character(**d["hero"])
+        hd = dict(d["hero"])
+        hd.setdefault("max_mp", hd.get("mp", 20))
+        self.hero = Character(**hd)
         self.day, self.region, self.log = d["day"], d["region"], d["log"]
         if self.region not in self.world.regions:
             raise ValueError("存檔區域不存在")
+        self.shop_open = False
+        td = d.get("td")
+        if td and td["map_id"].split(":")[0] in ("world", "loc"):
+            try:
+                self.get_map(td["map_id"])
+                self.mode, self.map_id, self.pos, self.cur_loc = td["mode"], td["map_id"], td["pos"], td["cur_loc"]
+                self.defeated, self.train_n, self.step_acc, self.battle = td["defeated"], td["train_n"], td["step_acc"], td["battle"]
+                return
+            except (KeyError, StopIteration):
+                pass
+        self.td_reset()          # 舊版存檔（沒有地圖位置）
 
     def save(self):
         if not self.save_path:
@@ -111,8 +130,14 @@ class Session:
                 self._after()
                 self.save()
             return
-        if h.dialogue and kind != "new":
-            return          # 對話進行中，先做完對話
+        if h.dialogue and kind not in ("new", "battle_end"):
+            return          # 對話進行中，先做完對話（戰鬥結算畫面可關閉）
+        if kind in TD_KINDS:
+            self._td(kind, **q)
+            if kind != "pos":
+                self.log.extend([])
+            self.save()
+            return
         if q.get("hp") not in (None, ""):
             h.hp = max(1.0, min(h.max_hp, float(q["hp"])))    # 卷軸前端即時戰鬥的血量
         arrived = ok = None
@@ -176,6 +201,10 @@ class Session:
             "realms": [x["name"] for x in self.data.realms[:6]],
             "elem": {"adv": ADV_MULT, "dis": DIS_MULT, "parent": PARENT, "pairs": PAIRS},
             "dialogue": dialogue.view(self.data, h),
+            "mode": self.mode, "map_id": self.map_id, "pos": self.pos, "cur_loc": self.cur_loc, "defeated": self.defeated,
+            "battle": battle.view(self.battle, h), "shop": self.shop_open and self.mode == "loc", "mp": round(h.mp), "max_mp": round(h.max_mp), "heal": h.count("heal"),
+            "questNpc": dialogue.pending_npc(self.data, h, self.cur_loc) if self.mode == "loc" else None,
+            "opened": [k.split(":", 3)[3] for k in h.flags if k.startswith(f"chest:{self.map_id}:")],
             "region": self.region, "region_name": reg["name"], "gongfa": [{"id": g, "name": self.data.gongfa[g]["name"]} for g in h.gongfa if g in self.data.gongfa],
             "combat": self.combat_bonus(),
             "roots": self.data.spirit_roots["types"], "root_type": h.root_type, "root_elements": self.data.spirit_roots["elements"],

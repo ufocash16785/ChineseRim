@@ -96,10 +96,18 @@ class H(BaseHTTPRequestHandler):
             self._send(json.dumps(session.snapshot(), ensure_ascii=False), "application/json")
         elif self.path.startswith("/art/") or self.path == "/static/art.js":
             self._static(self.path)
+        elif self.path.startswith("/mapdata"):
+            mid = parse_qs(urlparse(self.path).query).get("id", ["world:renjie"])[0]
+            try:
+                self._send(json.dumps(session.get_map(mid), ensure_ascii=False), "application/json")
+            except (KeyError, ValueError):
+                self.send_error(404)
         elif self.path.startswith("/map"):
             self._send(PAGE, "text/html")
-        else:
+        elif self.path.startswith("/side"):
             self._send((pathlib.Path(__file__).parent / "static" / "side.html").read_text(encoding="utf-8"), "text/html")
+        else:
+            self._send((pathlib.Path(__file__).parent / "static" / "topdown.html").read_text(encoding="utf-8"), "text/html")
 
     def do_POST(self):
         u = urlparse(self.path)

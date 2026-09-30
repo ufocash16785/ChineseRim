@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
 
-ITEM_NAMES = {"lingshi": "靈石", "pill": "突破丹", "lingye": "靈液"}
+ITEM_NAMES = {"lingshi": "靈石", "pill": "突破丹", "lingye": "靈液", "heal": "回春丹"}
 
 
 def item_name(i):
@@ -19,6 +19,7 @@ class Character:
     level: int = 1
     hp: float = 100
     mp: float = 20
+    max_mp: float = 20
     stamina: float = 120
     max_hp: float = 100
     inventory: dict = field(default_factory=dict)   # 物品 id -> 數量（含 lingshi）
