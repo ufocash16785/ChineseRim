@@ -1650,8 +1650,11 @@ class PetAndPuppetTest(unittest.TestCase):
         s.act("use", item="pet_egg")
         self.assertTrue(h.pet)
         self.assertEqual(h.count("pet_egg"), 1)
-        s.act("use", item="pet_egg")                               # 已有靈寵：不會消耗
-        self.assertEqual(h.count("pet_egg"), 1)
+        s.act("use", item="pet_egg")                               # 已有出戰靈寵：新的進留守欄
+        self.assertEqual(h.count("pet_egg"), 0)
+        self.assertEqual(len(h.pet_bench), 1)
+        s.act("pet_release", i="0")
+        self.assertEqual(h.pet_bench, [])
         h.add("herb", 400)
         for _ in range(130):
             s.act("pet_feed")
@@ -2186,3 +2189,111 @@ class PuppetSkillAndModTest(unittest.TestCase):
         s2 = Session(self.s.save_path)
         s2.load()
         self.assertEqual(s2.hero.puppet["mods"], ["armor"])
+
+
+class LoadoutTest(unittest.TestCase):
+    def setUp(self):
+        import pathlib, tempfile
+        from chineserim.session import Session
+        self.s = Session(pathlib.Path(tempfile.mkdtemp()) / "s.json", seed=18)
+        self.s.act("new", diff="normal")
+        self.h = self.s.hero
+        self.h.realm = 4
+        self.s.rs.apply_stats(self.h)
+        self.h.hp, self.h.mp = self.h.max_hp, self.h.max_mp
+        self.h.add("lingshi", 50000)
+
+    def test_pet_roster_capacity_and_swap(self):
+        h, s = self.h, self.s
+        h.add("pet_egg", 6)
+        for _ in range(4):
+            s.act("use", item="pet_egg")
+        self.assertTrue(h.pet)
+        self.assertEqual(len(h.pet_bench), 3)
+        s.act("use", item="pet_egg")                           # 滿了：蛋不消耗
+        self.assertEqual(h.count("pet_egg"), 2)
+        first, second = dict(h.pet), dict(h.pet_bench[1])
+        s.act("pet_equip", i="1")
+        self.assertEqual(h.pet, second)
+        self.assertEqual(h.pet_bench[1], first)                # 原本出戰的回到同一槽
+        s.act("pet_stow")                                      # 留守欄已滿：不能再收
+        self.assertTrue(h.pet)
+        s.act("pet_release", i="0")
+        s.act("pet_stow")
+        self.assertFalse(h.pet)
+        self.assertEqual(len(s.snapshot()["comp"]["pet_bench"]), 3)
+        s.act("pet_equip", i="0")
+        self.assertTrue(h.pet)
+
+    def test_only_deployed_ones_fight(self):
+        h, s = self.h, self.s
+        h.pet = {"kind": "wolf", "el": "火", "level": 5, "exp": 0}
+        s.act("puppet_build", ptype="wood")
+        s.act("pet_stow")
+        s.start_boss_fight("yuzitong")
+        self.assertEqual([a["type"] for a in s.battle["allies"]], ["puppet"])
+        s.battle = None
+        s.act("puppet_stow")
+        s.start_boss_fight("yuzitong")
+        self.assertEqual(s.battle["allies"], [])
+        s.battle = None
+        s.act("pet_equip", i="0")
+        s.act("puppet_equip", i="0")
+        s.start_boss_fight("yuzitong")
+        self.assertEqual({a["type"] for a in s.battle["allies"]}, {"pet", "puppet"})
+
+    def test_puppet_bench_ops_and_scrap(self):
+        h, s = self.h, self.s
+        s.act("puppet_build", ptype="wood")
+        s.act("puppet_build", ptype="iron")
+        s.act("puppet_build", ptype="spirit")
+        self.assertEqual(h.puppet["kind"], "wood")
+        self.assertEqual([p["kind"] for p in h.puppet_bench], ["iron", "spirit"])
+        n = h.count("lingshi")
+        s.act("puppet_build", ptype="wood")                    # 庫滿：不扣錢
+        self.assertEqual(h.count("lingshi"), n)
+        s.act("puppet_upgrade", i="0")                         # 對留守的傀儡升階
+        self.assertEqual(h.puppet_bench[0]["level"], 2)
+        s.act("puppet_mod", mod="armor", i="0")
+        self.assertEqual(h.puppet_bench[0]["mods"], ["armor"])
+        s.act("puppet_equip", i="0")
+        self.assertEqual(h.puppet["kind"], "iron")
+        self.assertEqual(h.puppet_bench[0]["kind"], "wood")
+        m = h.count("lingshi")
+        s.act("puppet_scrap", i="1")
+        self.assertEqual(len(h.puppet_bench), 1)
+        self.assertGreater(h.count("lingshi"), m)              # 拆解回收靈石
+
+    def test_stance_modifies_allies(self):
+        h, s = self.h, self.s
+        h.pet = {"kind": "wolf", "el": "火", "level": 5, "exp": 0}
+        s.act("puppet_build", ptype="iron")
+        out = {}
+        for mode in ("balanced", "offense", "guard"):
+            s.act("stance", mode=mode)
+            a = {x["type"]: x for x in s.allies_spec()}
+            out[mode] = (a["pet"]["atk"], a["puppet"]["absorb"])
+        self.assertGreater(out["offense"][0], out["balanced"][0])
+        self.assertLess(out["guard"][0], out["balanced"][0])
+        self.assertLess(out["offense"][1], out["balanced"][1])
+        self.assertGreater(out["guard"][1], out["balanced"][1])
+        s.act("stance", mode="bogus")
+        self.assertEqual(s.stance(), "guard")
+
+    def test_bench_pets_grow_slowly_and_persist(self):
+        from chineserim.session import Session
+        h, s = self.h, self.s
+        h.pet = {"kind": "wolf", "el": "火", "level": 1, "exp": 0}
+        h.pet_bench = [{"kind": "bear", "el": "土", "level": 1, "exp": 0}]
+        for _ in range(2):
+            s.start_boss_fight("yuzitong")
+            s.battle["enemies"][0]["hp"] = 1
+            s.act("battle", cmd="attack")
+            s.act("battle_end")
+        self.assertGreaterEqual(h.pet["exp"] + (h.pet["level"] - 1) * 10, 2)
+        self.assertEqual(h.pet_bench[0]["exp"] + (h.pet_bench[0]["level"] - 1) * 10, 1)     # 每 2 場 +1
+        s.act("stance", mode="offense")
+        s2 = Session(s.save_path)
+        s2.load()
+        self.assertEqual(s2.hero.pet_bench[0]["kind"], "bear")
+        self.assertEqual(s2.stance(), "offense")

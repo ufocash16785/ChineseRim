@@ -254,5 +254,31 @@
       "level": 4,
       "desc": "傀儡破損時自爆，對全體敵人造成 4 倍傷害（每場一次）。"
     }
+  },
+  "pet_bench_cap": 3,
+  "puppet_bench_cap": 2,
+  "bench_exp_every": 2,
+  "stances": {
+    "balanced": {
+      "name": "均衡",
+      "desc": "攻守兼顧，不加不減。",
+      "atk": 1.0,
+      "absorb": 1.0,
+      "frac": 1.0
+    },
+    "offense": {
+      "name": "進攻",
+      "desc": "夥伴傷害 +25%，但傀儡擋招機率大減（×0.6）。",
+      "atk": 1.25,
+      "absorb": 0.6,
+      "frac": 1.0
+    },
+    "guard": {
+      "name": "守護",
+      "desc": "夥伴傷害 -20%，傀儡擋招機率 +40%，且承受傷害 -15%。",
+      "atk": 0.8,
+      "absorb": 1.4,
+      "frac": 0.85
+    }
   }
 }

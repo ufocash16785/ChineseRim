@@ -52,4 +52,6 @@ class Character:
     affinity: dict = field(default_factory=dict)     # 候選人 id -> 好感度
     pet: dict = field(default_factory=dict)          # 靈寵 {"kind","el","level","exp"}
     puppet: dict = field(default_factory=dict)       # 傀儡 {"kind","level","hp"}
+    pet_bench: list = field(default_factory=list)    # 留守的靈寵
+    puppet_bench: list = field(default_factory=list) # 留守的傀儡
     bought: dict = field(default_factory=dict)       # "loc:item:day" -> 今日已購數量
