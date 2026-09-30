@@ -217,7 +217,7 @@ const TD = (() => {
     const out = [];
     if (MAP.kind !== 'loc') return out;
     for (const e of ents) {
-      if (e.k === 'npc') out.push({id: e.id, x: e.px, y: e.py, text: e.role === 'pharmacy' || e.role === 'shop' ? `到${e.name}的鋪子看看` : `與${e.name}交談`});
+      if (e.k === 'npc') out.push({id: e.id, x: e.px, y: e.py, text: e.role === 'beggar' ? '施捨乞丐（積善緣）' : e.role === 'pharmacy' || e.role === 'shop' ? `到${e.name}的鋪子看看` : `與${e.name}交談`});
       else if (e.k === 'candidate') out.push({id: e.id, x: e.px, y: e.py, text: `與${e.name}交談` + ((S.affinity[e.cid] || 0) > 0 ? ` ♥${S.affinity[e.cid]}` : '')});
       else if (e.k === 'board') out.push({id: e.id, x: (e.x + 1) * TS, y: (e.y + 1.4) * TS, text: '查看布告欄'});
       else if (e.k === 'chest' && !S.opened.includes(e.id)) out.push({id: e.id, x: (e.x + .5) * TS, y: (e.y + .9) * TS, text: '打開寶箱'});
@@ -231,6 +231,7 @@ const TD = (() => {
       else if (e.k === 'bed') out.push({id: e.id, x: (e.x + .5) * TS, y: (e.y + .9) * TS, text: '在此歇息（恢復氣血靈力）'});
       else if (e.k === 'furnace') out.push({id: e.id, kind: 'furnace', x: (e.x + .5) * TS, y: (e.y + 1.4) * TS, text: '使用煉丹爐'});
     }
+    if (S.karma_ev) out.push({id: 'karma', x: (S.karma_ev.x + .5) * TS, y: (S.karma_ev.y + .9) * TS, text: S.karma_ev.kind === 'avenger' ? `面對仇家「${S.karma_ev.name}」` : `與故人「${S.karma_ev.name}」相見`});
     if (S.shady) out.push({id: 'shady', x: (S.shady.x + .5) * TS, y: (S.shady.y + .9) * TS, text: '與神秘商人交易'});
     if (S.questNpc) { const q = questPos(); out.push({id: 'quest', x: q[0], y: q[1], text: `與${S.questNpc}交談`}); }
     return out;
@@ -520,7 +521,7 @@ const TD = (() => {
     $('top').innerHTML = `<b>${S.name}</b><span>${S.realm}·${S.sub}</span><span>Lv ${S.level}/${S.cap}${S.bottleneck ? ' <b style=color:#e6a>【瓶頸→按突破】</b>' : ''}</span>
       <span>氣血 <span class=bar><i style="width:${100 * S.hp / S.max_hp}%;background:#c44"></i></span> ${S.hp}/${S.max_hp}</span>
       <span>靈力 <span class=bar><i style="width:${100 * S.mp / S.max_mp}%;background:#48c"></i></span> ${S.mp}/${S.max_mp}</span>
-      <span>靈石 ${S.lingshi}　突破丹 ${S.pills}　回春丹 ${S.heal}　聚氣丹 ${S.mpills}　靈草 ${S.herbs}　靈液 ${S.lingye}</span><span>功法：${S.gongfa.length ? S.gongfa.map(x => x.name).join('、') : '無'}</span><span>第 ${S.day} 日・${S.region_name}</span><span style="color:#aaa">難度：${S.difficultyName}</span>${S.members.length ? '<span title="' + S.members.map(m => m.name + '：' + m.desc).join('\n') + '">門派：' + S.members.map(m => m.name).join('、') + '</span>' : ''}${S.partner ? '<span style="color:#ffb0cc">♥ 道侶：' + S.partner.name + '</span>' : ''}`;
+      <span>靈石 ${S.lingshi}　突破丹 ${S.pills}　回春丹 ${S.heal}　聚氣丹 ${S.mpills}　靈草 ${S.herbs}　靈液 ${S.lingye}</span><span>功法：${S.gongfa.length ? S.gongfa.map(x => x.name).join('、') : '無'}</span><span>第 ${S.day} 日・${S.region_name}</span><span style="color:#aaa">難度：${S.difficultyName}</span><span title="殺業高會引來仇家；善緣高會有故人相助；破境前的心魔由道心決定">道心：<b style="color:${S.karma.state === 'sha' ? '#ff7a7a' : S.karma.state === 'ren' ? '#7dff9a' : '#ddd'}">${S.karma.dao}</b>（殺 ${S.karma.sha}／善 ${S.karma.ren}）</span>${S.members.length ? '<span title="' + S.members.map(m => m.name + '：' + m.desc).join('\n') + '">門派：' + S.members.map(m => m.name).join('、') + '</span>' : ''}${S.partner ? '<span style="color:#ffb0cc">♥ 道侶：' + S.partner.name + '</span>' : ''}`;
     const d = S.dialogue, dl = $('dlg');
     const dk = JSON.stringify(d);
     if (dk !== dl._k) {
@@ -540,7 +541,7 @@ const TD = (() => {
       (sh.kind === 'shady' ? `<div style="margin-top:6px">${sh.appraised ? `<div style="color:#ffd97a;font-size:13px">🔍 ${sh.appraised}</div>` : `<button onclick="TD.post('appraise')">🔍 請人鑑定這批貨（${sh.appraise_cost} 靈石）</button>`}</div>` : '') +
       '<button style="margin-top:6px" onclick="TD.post(\'shop_close\')">離開</button>' : '');
     const bgs = S.bag || [];
-    lst('bag', bagOpen ? '<b>🎒 儲物袋</b> <small style="color:#9d9">容量：無限</small>' + ['錢財', '丹藥', '材料', '符錄', '陣法', '法寶'].map(c => { const l = bgs.filter(x => x.cat === c); return l.length ? `<div style="margin-top:8px;color:#e6b45a;font-size:13px">— ${c} —</div>` + l.map(x => `<div class=row2><span title="${x.desc}">${x.name} <b>×${x.n}</b><small style="color:#999"> ${x.desc}</small></span>${x.use ? `<button onclick="TD.post('use',{item:'${x.id}'})">使用</button>` : ''}</div>`).join('') : ''; }).join('') + `<div style="margin-top:8px;font-size:12px;color:#aaa">符錄、陣法、法寶只能在主要對手戰中使用。儲存點：${S.checkpoint || '無'}</div><button style="margin-top:6px" onclick="TD.bag()">關閉（B）</button>` : '');
+    lst('bag', bagOpen ? '<b>🎒 儲物袋</b> <small style="color:#9d9">容量：無限</small>' + ['錢財', '丹藥', '材料', '符錄', '陣法', '法寶'].map(c => { const l = bgs.filter(x => x.cat === c); return l.length ? `<div style="margin-top:8px;color:#e6b45a;font-size:13px">— ${c} —</div>` + l.map(x => x.cat === '法寶' ? `<div class=row2 style="flex-wrap:wrap"><span title="${x.desc}"><b>${x.name}</b> ${x.level}階${x.bonded ? ' <b style="color:#ffd24a">★本命</b>' : ''}<small style="color:#999"> ${x.desc}</small>${x.awaken ? `<br><small style="color:${x.level >= 3 ? '#9fe' : '#777'}">${x.awaken}${x.level >= 3 ? '（已覺醒）' : '（3 階覺醒）'}</small>` : ''}</span><span>${x.refine ? `<button onclick="TD.post('fb_refine',{item:'${x.id}'})">祭煉（${x.refine.lingshi} 靈石${x.refine.lingye ? '＋靈液' : ''}）</button>` : '<small>已達上限</small>'}${x.bonded ? '' : `<button onclick="TD.post('fb_bond',{item:'${x.id}'})">設為本命</button>`}</span></div>` : `<div class=row2><span title="${x.desc}">${x.name} <b>×${x.n}</b><small style="color:#999"> ${x.desc}</small></span>${x.use ? `<button onclick="TD.post('use',{item:'${x.id}'})">使用</button>` : ''}</div>`).join('') : ''; }).join('') + `<div style="margin-top:8px;font-size:12px;color:#aaa">符錄、陣法、法寶只能在主要對手戰中使用。儲存點：${S.checkpoint || '無'}</div><button style="margin-top:6px" onclick="TD.bag()">關閉（B）</button>` : '');
     const bd = S.board;
     lst('board', bd ? `<b>📜 布告欄</b><div style="font-size:15px;margin:6px 0;color:#ffe9a6">${bd.title}</div>` +
       bd.offers.map(o => `<div class=offer><span>${o.give_txt} ⇒ <b>${o.get_txt}</b>${o.done ? '（已完成）' : ''}</span><button ${o.ok ? '' : 'disabled'} onclick="TD.post('barter',{idx:${o.id}})">交換</button></div>`).join('') +
@@ -603,6 +604,7 @@ const TD = (() => {
       else if (e.k === 'well') list.push({y: (e.y + 1) * TS + 1, f: () => label('💾', (e.x + .5) * TS - cam.x, e.y * TS - cam.y - 22 + Math.sin(now / 400) * 2, '#9df', 16)});
       else if (e.k === 'enemy' && !S.defeated.includes(e.id)) list.push({y: e.py, f: () => { const B = Art.man.beasts; drawBeast(e, ax, ay, 1, (e.dir || 1) < 0); label(e.el, ax, ay - 46 - (e.kind === 'bat' ? 26 : 0), ECOL[e.el], 13); if ((cool['f' + e.id] || 0) > now) { g.globalAlpha = .6; label('…', ax, ay - 60, '#fff', 14); g.globalAlpha = 1; } }});
     }
+    if (MAP.kind === 'loc' && S.karma_ev) { const k = S.karma_ev, ax = (k.x + .5) * TS - cam.x, ay = (k.y + .9) * TS - cam.y, av = k.kind === 'avenger'; list.push({y: (k.y + .9) * TS, f: () => { drawNPC(k.sprite, ax, ay, hero.x < (k.x + .5) * TS ? 'r' : 'l', false); label(av ? '仇' : '恩', ax, ay - 62 + Math.sin(now / 240) * 3, av ? '#ff5a5a' : '#7dff9a', 26); label(k.name, ax, ay + 14, av ? '#ff9a9a' : '#b8ffc8', 12); }}); }
     if (MAP.kind === 'loc' && S.questNpc) { const q = questPos(), ax = q[0] - cam.x, ay = q[1] - cam.y, id = speakerSprite(S.questNpc); if (id) list.push({y: q[1], f: () => { drawNPC(id, ax, ay, hero.x < q[0] ? 'l' : 'r', false); label('!', ax, ay - 62 + Math.sin(now / 220) * 4, '#ffd24a', 30); label(S.questNpc, ax, ay + 14, '#ffe9a6', 12); }}); }
     list.push({y: hero.y, f: () => drawHero(cam)});
     list.sort((a, b) => a.y - b.y);
