@@ -12,6 +12,15 @@ canvas#c{display:block;width:100%;background:#000;image-rendering:pixelated}
 #mini{position:absolute;left:8px;top:8px;border:2px solid #b8893a;border-radius:4px;image-rendering:pixelated;background:#000;display:none}
 #banner{position:absolute;left:0;right:0;top:34%;text-align:center;font-size:34px;font-weight:bold;letter-spacing:6px;color:#ffe9a6;text-shadow:0 2px 6px #000,0 0 14px #000;pointer-events:none;opacity:0;transition:opacity .5s}
 #bar2{max-width:960px;margin:6px auto;padding:0 8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#ending{left:0;right:0;top:0;bottom:0;border:0;border-radius:0;background:radial-gradient(ellipse at center,#1a1a2eee,#05050aff);overflow:auto;z-index:30;text-align:center}
+.endbox{max-width:640px;margin:0 auto;padding:36px 20px}
+.endsub{color:#8a8ab0;letter-spacing:6px;font-size:14px;opacity:0;animation:fadein 1.5s .2s forwards}
+.endtitle{font-size:44px;font-weight:bold;letter-spacing:10px;color:#ffe9a6;text-shadow:0 0 18px #c8892a;margin:8px 0 22px;opacity:0;animation:fadein 2s .4s forwards}
+.endp{font-size:16px;line-height:1.9;color:#ddd;text-align:left;margin:12px 0;opacity:0;animation:fadein 1.6s forwards}
+.endep{margin-top:20px;font-size:15px;color:#ffd97a;line-height:1.8;opacity:0;animation:fadein 1.6s forwards}
+.endstats{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:14px 0}.endstats span{background:#ffffff10;border-radius:6px;padding:5px 10px;font-size:13px}.endstats small{display:block;color:#999;font-size:11px}
+.endall{font-size:13px;margin-top:8px}
+@keyframes fadein{to{opacity:1}}
 button{padding:6px 12px;font-size:14px;cursor:pointer}
 .panel button{background:#2b3140;color:#eee;border:1px solid #7a6a3a;border-radius:4px}.panel button:hover{background:#3a4258}.panel button:disabled{opacity:.4;cursor:default}a{color:#9bd}
 .panel{display:none;position:absolute;background:#1d222aee;border:2px solid #b8893a;border-radius:8px;padding:12px 18px;z-index:9}
@@ -32,8 +41,8 @@ canvas.pt{float:left;width:104px;height:135px;image-rendering:pixelated;margin:-
 <div id=stage><canvas id=c width=960 height=540></canvas><canvas id=mini width=150 height=150></canvas>
 <div id=toast></div><div id=prompt></div><div id=quest></div><div id=banner></div>
 <div id=help>WASD/方向鍵 移動　Shift 奔跑　E/空白 互動　B 儲物袋　滑鼠點地面/物件自動走過去　走進地圖上的地點圖示即可進入</div>
-<div id=dlg class=panel></div><div id=ask class=panel></div><div id=shop class=panel></div><div id=board class=panel></div><div id=cand class=panel></div><div id=bag class=panel></div><div id=alch class=panel></div><div id=comp class=panel></div><div id=war class=panel></div><div id=codex class=panel></div><div id=bt class=panel></div></div>
-<div id=bar2><button onclick="TD.bag()">🎒 儲物袋 (B)</button><button onclick="TD.comp()">🐾 夥伴 (P)</button><button onclick="TD.codex()">📖 圖錄 (G)</button><button onclick="TD.act('break')">突破</button><button onclick="TD.act('refine')">祭煉青竹蜂雲劍</button><button onclick="TD.act('rest')">閉關7日</button>
+<div id=dlg class=panel></div><div id=ask class=panel></div><div id=shop class=panel></div><div id=board class=panel></div><div id=cand class=panel></div><div id=bag class=panel></div><div id=alch class=panel></div><div id=comp class=panel></div><div id=war class=panel></div><div id=codex class=panel></div><div id=ending class=panel></div><div id=bt class=panel></div></div>
+<div id=bar2><button onclick="TD.bag()">🎒 儲物袋 (B)</button><button onclick="TD.comp()">🐾 夥伴 (P)</button><button onclick="TD.codex()">📖 圖錄 (G)</button><button id=endbtn style="display:none" onclick="TD.endShow()">🏁 結局</button><button onclick="TD.act('break')">突破</button><button onclick="TD.act('refine')">祭煉青竹蜂雲劍</button><button onclick="TD.act('rest')">閉關7日</button>
 <button onclick="TD.openNew()">新遊戲</button><a href="/side">舊版卷軸</a><small>自動存檔</small></div>
 <div id=logp></div>
 <script src="/static/art.js"></script><script src="/static/td.js"></script>

@@ -182,6 +182,15 @@ def main() -> int:
     for kind in load("pets")["pets"]:
         if kind not in cxd["pet_tips"]:
             errors.append(f"codex/pet_tips: 缺少 {kind}")
+    en = load("endings")
+    ids = [e["id"] for e in en["endings"]]
+    if len(ids) != len(set(ids)):
+        errors.append("endings: id 重複")
+    if en["endings"][-1]["when"]:
+        errors.append("endings: 最後一個必須是保底（when 為空）")
+    for e in en["endings"]:
+        if len(e["paras"]) < 3:
+            errors.append(f"endings/{e['id']}: 段落太少")
     pets = load("pets")
     for kind in pets["pets"]:
         if kind not in pets["skills"]:

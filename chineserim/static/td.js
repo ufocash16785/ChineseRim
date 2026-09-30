@@ -10,7 +10,7 @@ const TD = (() => {
   const keys = {};
   let trail = [], ents = [], solid = [], shoreMask = null, busy = false, now = 0, last = performance.now();
   let askOpen = false, cool = {}, exitCool = 0, regionPending = false, syncT = 0, dist = 0, lastPos = null;
-  let codexOpen = false, codexTab = 'beast', compOpen = false, bagOpen = false, walk = null, lastCam = {x: 0, y: 0}, stuckT = 0;
+  let endingOpen = false, endingSeenKey = '', codexOpen = false, codexTab = 'beast', compOpen = false, bagOpen = false, walk = null, lastCam = {x: 0, y: 0}, stuckT = 0;
   let lastTp = null, toastT = 0, lastLog = '', bannerT = 0, lastRegion = null, minimapBase = null, uiKey = '';
   let bt = {target: 0, anim: [], hero: null, prev: null, fx: [], shake: {}, heroAnim: null, over: false};
   const rnd = (a, b = 0) => { let h = (a * 73856093) ^ (b * 19349663); h = (h ^ (h >>> 13)) >>> 0; return (h % 1000) / 1000; };
@@ -135,7 +135,7 @@ const TD = (() => {
     if (bannerT > 0) { bannerT -= dt * 1000; if (bannerT <= 0) $('banner').style.opacity = 0; }
     hero.inv -= dt; exitCool -= dt;
     if (!S || !MAP) return;
-    const frozen = busy || S.dialogue || S.battle || askOpen || S.shop || S.board || S.cand || bagOpen || compOpen || S.alch || S.war || codexOpen;
+    const frozen = busy || S.dialogue || S.battle || askOpen || S.shop || S.board || S.cand || bagOpen || compOpen || S.alch || S.war || codexOpen || endingOpen;
     if (frozen) walk = null;
     if (!frozen) {
       let dx = (down('d', 'arrowright') ? 1 : 0) - (down('a', 'arrowleft') ? 1 : 0), dy = (down('s', 'arrowdown') ? 1 : 0) - (down('w', 'arrowup') ? 1 : 0);
@@ -536,6 +536,7 @@ const TD = (() => {
     const nl = (S.news || []).filter(n => !n.resolved);
     $('quest').innerHTML += nl.length ? '<div style="margin-top:6px;border-top:1px solid #654;padding-top:4px"><b style="color:#ffd24a">📰 傳聞</b>' + nl.map(n => `<div style="font-size:12px;color:#ddd">${n.text}<small style="color:#999">（剩 ${n.left} 日）</small></div>`).join('') + '</div>' : '';
     $('quest').style.display = S.battle ? 'none' : 'block';
+    $('endbtn').style.display = S.ending ? 'inline-block' : 'none';
     $('top').innerHTML = `<b>${S.name}</b><span>${S.realm}·${S.sub}</span><span>Lv ${S.level}/${S.cap}${S.bottleneck ? ' <b style=color:#e6a>【瓶頸→按突破】</b>' : ''}</span>
       <span>氣血 <span class=bar><i style="width:${100 * S.hp / S.max_hp}%;background:#c44"></i></span> ${S.hp}/${S.max_hp}</span>
       <span>靈力 <span class=bar><i style="width:${100 * S.mp / S.max_mp}%;background:#48c"></i></span> ${S.mp}/${S.max_mp}</span>
@@ -574,6 +575,16 @@ const TD = (() => {
       }
     }
     lst('codex', codexOpen && cx ? '<b>📖 圖錄</b> <small style="color:#999">（G 開關）</small><div style="margin:6px 0">' + cxTabs + '</div>' + cxBody + '<button style="margin-top:8px" onclick="TD.codex()">關閉（G）</button>' : '');
+    const en = S.ending;
+    if (en && !en.seen && !endingOpen && endingSeenKey !== en.id) { endingOpen = true; walk = null; }
+    if (en && endingOpen) endingSeenKey = en.id;
+    const stt = en ? en.stats : null;
+    lst('ending', en && endingOpen ? `<div class=endbox><div class=endsub>${en.subtitle}</div><div class=endtitle>${en.title}</div>` +
+      en.paras.map((p, i) => `<p class=endp style="animation-delay:${1.2 + i * 1.6}s">${p}</p>`).join('') +
+      `<div class=endep style="animation-delay:${1.2 + en.paras.length * 1.6}s">${en.epilogue.map(x => '<div>' + x + '</div>').join('')}` +
+      `<div class=endstats>${[['歷時', stt.day + ' 日'], ['境界', stt.realm + ' Lv' + stt.level], ['道心', stt.dao + '（殺 ' + stt.sha + '／善 ' + stt.ren + '）'], ['擊敗強敵', stt.bosses], ['累計擊殺', stt.kills], ['煉丹', stt.alch + ' 次']].map(([a, b]) => `<span><small>${a}</small><b>${b}</b></span>`).join('')}</div>` +
+      `<div class=endall>已達成：${en.all.map(x => x.got ? `<b style="color:#ffd24a">「${x.title}」</b>` : `<span style="color:#666">？？？</span>`).join(' ')}　<small style="color:#888">（共 ${en.all.length} 種結局）</small></div>` +
+      `<div style="margin-top:10px"><button onclick="TD.endClose(false)">繼續遊玩（自由探索）</button><button onclick="TD.endClose(true)">開始新的一輪</button></div></div></div>` : '');
     const wr = S.war;
     lst('war', wr ? `<b style="color:#ff8a6a">⚔ ${wr.title}</b><div style="font-size:14px;margin:6px 0">${wr.text}</div><div style="font-size:12px;color:#aaa;margin-bottom:6px">${wr.member ? '你是「' + wr.sect + '」的弟子。' : ''}選擇你的立場：</div>` +
       wr.options.map(o => `<div style="margin:6px 0"><button ${o.ok ? '' : 'disabled'} onclick="TD.post('war_side',{side:'${o.k}'})"><b>${o.title}</b></button><div style="font-size:12px;color:#bbb">${o.desc}</div></div>`).join('') : '');
@@ -720,5 +731,5 @@ const TD = (() => {
   }
   boot();
   window.__td = {get S() { return S; }, get MAP() { return MAP; }, hero, get ents() { return ents; }, post, load, get bt() { return bt; }};
-  return {post, act, openNew, cmd: btCmd, btEnd, bag: toggleBag, comp: toggleComp, stance: mode => { if (!busy && S.battle && !S.battle.over) post('battle', {cmd: 'stance', arg: mode}); }, codex: toggleCodex, menu: v => { bt.menu = v; $('bt')._k = ''; btUI(); }, spellMenu: v => { bt.menu = v ? 'spell' : null; $('bt')._k = ''; btUI(); }};
+  return {post, act, openNew, cmd: btCmd, btEnd, bag: toggleBag, comp: toggleComp, endClose: async again => { endingOpen = false; if (!S.ending.seen) await post('ending_close'); panels(); if (again) openNew(); }, endShow: () => { if (S.ending) { endingOpen = true; panels(); } }, stance: mode => { if (!busy && S.battle && !S.battle.over) post('battle', {cmd: 'stance', arg: mode}); }, codex: toggleCodex, menu: v => { bt.menu = v; $('bt')._k = ''; btUI(); }, spellMenu: v => { bt.menu = v ? 'spell' : null; $('bt')._k = ''; btUI(); }};
 })();

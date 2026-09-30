@@ -2356,3 +2356,71 @@ class BattleStanceSwitchTest(unittest.TestCase):
         st = self._start()
         self.s.act("battle", cmd="stance", arg="offense")
         self.assertNotEqual(st.get("stance"), "offense")
+
+
+class EndingTest(unittest.TestCase):
+    def setUp(self):
+        import pathlib, tempfile
+        from chineserim.session import Session
+        self.tmp = pathlib.Path(tempfile.mkdtemp())
+        self.s = Session(self.tmp / "s.json", seed=22)
+        self.s.act("new", diff="normal")
+        self.h = self.s.hero
+
+    def _pick(self, sha=0, ren=0, companion=""):
+        from chineserim import endings, karma
+        self.h.counters["karma:sha"], self.h.counters["karma:ren"] = sha, ren
+        self.h.companion = companion
+        return endings.pick_ending(self.h, self.s.data)["id"]
+
+    def test_pick_by_dao_and_companion(self):
+        self.assertEqual(self._pick(sha=15), "blood_lord")
+        self.assertEqual(self._pick(sha=6), "kill_way")
+        self.assertEqual(self._pick(ren=15), "saint")
+        self.assertEqual(self._pick(ren=6), "benevolent")
+        self.assertEqual(self._pick(sha=9, ren=9), "two_faces")
+        self.assertEqual(self._pick(sha=1, ren=1, companion="dongxuaner"), "together")
+        self.assertEqual(self._pick(sha=1, ren=1), "lone_sword")
+        self.assertEqual(self._pick(sha=20, ren=0, companion="dongxuaner"), "blood_lord")     # 道心優先於道侶
+
+    def test_all_endings_have_content(self):
+        for e in self.s.data.endings["endings"]:
+            self.assertGreaterEqual(len(e["paras"]), 3)
+            self.assertTrue(e["title"] and e["epilogue"])
+        self.assertEqual(len({e["id"] for e in self.s.data.endings["endings"]}), len(self.s.data.endings["endings"]))
+        self.assertEqual(self.s.data.endings["endings"][-1]["when"], {})            # 最後一個是保底
+
+    def test_no_ending_before_finishing(self):
+        self.assertIsNone(self.s.snapshot()["ending"])
+
+    def test_full_playthrough_triggers_ending_once_and_persists(self):
+        from chineserim.session import Session
+        from tests.bot_td import play_through_td
+        from chineserim import karma
+        karma.add(self.h, "ren", 7)
+        play_through_td(self.s)
+        v = self.s.snapshot()["ending"]
+        self.assertIsNotNone(v)
+        self.assertFalse(v["seen"])
+        self.assertIn(v["id"], {e["id"] for e in self.s.data.endings["endings"]})
+        self.assertGreater(v["stats"]["day"], 0)
+        self.assertTrue(v["epilogue"])
+        first = v["id"]
+        karma.add(self.h, "sha", 30)                    # 之後再殺也不會改寫結局
+        self.assertEqual(self.s.snapshot()["ending"]["id"], first)
+        s2 = Session(self.s.save_path)
+        s2.load()
+        self.assertEqual(s2.snapshot()["ending"]["id"], first)
+        self.s.act("ending_close")
+        self.assertTrue(self.s.snapshot()["ending"]["seen"])
+        self.assertIn(first, ("saint", "benevolent", "kill_way", "blood_lord", "two_faces", "together", "lone_sword"))
+
+    def test_stats_reflect_journey(self):
+        self.h.companion = ""
+        self.h.pet = {"kind": "wolf", "el": "火", "level": 6, "exp": 0}
+        self.h.flags["bonded"] = "fb_bell"
+        self.h.flags["war_side:x:defend"] = True
+        st = self.s._ending_stats()
+        self.assertIn("靈狼", st["pet"] or "")
+        self.assertEqual(st["wars_defend"], 1)
+        self.assertIn("攝魂鈴", st["treasure"])
