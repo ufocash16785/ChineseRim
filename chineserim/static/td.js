@@ -135,7 +135,7 @@ const TD = (() => {
     if (bannerT > 0) { bannerT -= dt * 1000; if (bannerT <= 0) $('banner').style.opacity = 0; }
     hero.inv -= dt; exitCool -= dt;
     if (!S || !MAP) return;
-    const frozen = busy || S.dialogue || S.battle || askOpen || S.shop || S.board || S.cand || bagOpen || compOpen || S.alch;
+    const frozen = busy || S.dialogue || S.battle || askOpen || S.shop || S.board || S.cand || bagOpen || compOpen || S.alch || S.war;
     if (frozen) walk = null;
     if (!frozen) {
       let dx = (down('d', 'arrowright') ? 1 : 0) - (down('a', 'arrowleft') ? 1 : 0), dy = (down('s', 'arrowdown') ? 1 : 0) - (down('w', 'arrowup') ? 1 : 0);
@@ -232,7 +232,7 @@ const TD = (() => {
       else if (e.k === 'furnace') out.push({id: e.id, kind: 'furnace', x: (e.x + .5) * TS, y: (e.y + 1.4) * TS, text: '使用煉丹爐'});
     }
     if (S.karma_ev) out.push({id: 'karma', x: (S.karma_ev.x + .5) * TS, y: (S.karma_ev.y + .9) * TS, text: S.karma_ev.kind === 'avenger' ? `面對仇家「${S.karma_ev.name}」` : `與故人「${S.karma_ev.name}」相見`});
-    if (S.wev_ent) { const w = S.wev_ent; out.push({id: 'wev', x: (w.x + .5) * TS, y: (w.y + .9) * TS, text: ({raid: '迎戰', refugee: '資助', fall: '查看墜落的異寶'}[w.type] || '互動') + (w.type === 'fall' ? '' : `「${w.name}」`)}); }
+    if (S.wev_ent) { const w = S.wev_ent; out.push({id: 'wev', x: (w.x + .5) * TS, y: (w.y + .9) * TS, text: ({raid: '迎戰', refugee: '資助', fall: '查看墜落的異寶', war: '商議戰局'}[w.type] || '互動') + (w.type === 'fall' ? '' : `「${w.name}」`)}); }
     if (S.shady) out.push({id: 'shady', x: (S.shady.x + .5) * TS, y: (S.shady.y + .9) * TS, text: '與神秘商人交易'});
     if (S.questNpc) { const q = questPos(); out.push({id: 'quest', x: q[0], y: q[1], text: `與${S.questNpc}交談`}); }
     return out;
@@ -550,6 +550,9 @@ const TD = (() => {
       (sh.sells.length ? '<div style="margin-top:6px;font-size:13px;color:#aaa">— 收購 —</div>' + sh.sells.map(i => `<div class=row2><span>${i.name}×${i.have}　${i.price} 靈石</span><button onclick="TD.post('sell',{item:'${i.id}'})">賣一個</button></div>`).join('') : '') +
       (sh.kind === 'shady' ? `<div style="margin-top:6px">${sh.appraised ? `<div style="color:#ffd97a;font-size:13px">🔍 ${sh.appraised}</div>` : `<button onclick="TD.post('appraise')">🔍 請人鑑定這批貨（${sh.appraise_cost} 靈石）</button>`}</div>` : '') +
       '<button style="margin-top:6px" onclick="TD.post(\'shop_close\')">離開</button>' : '');
+    const wr = S.war;
+    lst('war', wr ? `<b style="color:#ff8a6a">⚔ ${wr.title}</b><div style="font-size:14px;margin:6px 0">${wr.text}</div><div style="font-size:12px;color:#aaa;margin-bottom:6px">${wr.member ? '你是「' + wr.sect + '」的弟子。' : ''}選擇你的立場：</div>` +
+      wr.options.map(o => `<div style="margin:6px 0"><button ${o.ok ? '' : 'disabled'} onclick="TD.post('war_side',{side:'${o.k}'})"><b>${o.title}</b></button><div style="font-size:12px;color:#bbb">${o.desc}</div></div>`).join('') : '');
     const cp = S.comp;
     lst('comp', compOpen && cp ? '<b>🐾 夥伴</b>' + '<div style="margin-top:8px;color:#e6b45a;font-size:13px">— 靈寵 —</div>' + (cp.pet ? `<div class=row2><span><b>${cp.pet.name}</b>（${cp.pet.el}）Lv${cp.pet.level}/${cp.pet.max}　${cp.pet.stage >= 2 ? '★完全體' : cp.pet.stage === 1 ? '進化型' : '幼體'}<br><small style="color:#999">經驗 ${cp.pet.exp}/${cp.pet.need}　戰鬥時自動出手、每天有機會帶回靈草</small></span><span><button ${cp.herbs && cp.pet.level < cp.pet.max ? '' : 'disabled'} onclick="TD.post('pet_feed')">餵靈草 (${cp.herbs})</button><button onclick="TD.post('pet_release')">放生</button></span></div>` : `<div style="font-size:13px;color:#aaa">還沒有靈寵。靈獸蛋可從強敵身上取得，或到丹藥鋪購買。</div>${cp.eggs ? `<button onclick="TD.post('use',{item:'pet_egg'})">孵化靈獸蛋 ×${cp.eggs}</button>` : ''}`) +
       '<div style="margin-top:10px;color:#e6b45a;font-size:13px">— 傀儡 —</div>' + (cp.puppet ? `<div class=row2 style="flex-wrap:wrap"><span><b>${cp.puppet.name}</b> ${cp.puppet.level} 階${cp.puppet.broken ? ' <b style="color:#f88">破損</b>' : ''}<br><small style="color:#999">耐久 ${cp.puppet.hp}/${cp.puppet.maxhp}　攻擊 ×${cp.puppet.atk}　擋招 ${Math.round(cp.puppet.absorb * 100)}%</small></span><span>${cp.puppet.repair ? `<button onclick="TD.post('puppet_repair')">修理（${cp.puppet.repair}）</button>` : ''}${cp.puppet.upgrade ? `<button onclick="TD.post('puppet_upgrade')">升階（${cp.puppet.upgrade}）</button>` : '<small>最高階</small>'}</span></div>` : '') +

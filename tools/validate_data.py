@@ -177,6 +177,13 @@ def main() -> int:
         for x in tc.get("gifts", []):
             if x["item"] not in item_ids:
                 errors.append(f"events/{t}: 未知物品 {x['item']}")
+    w = ev["types"]["war"]
+    for side in ("defend", "attack"):
+        if w[side]["drops"] not in drops["tables"]:
+            errors.append(f"events/war/{side}: 掉落表不存在")
+    for k in w["trade"]["need"]:
+        if k not in item_ids:
+            errors.append(f"events/war/trade: 未知物品 {k}")
     for kk in ("avenger", "benefactor"):
         for x in load("karma")[kk].get("gifts", []):
             if x["item"] not in item_ids:

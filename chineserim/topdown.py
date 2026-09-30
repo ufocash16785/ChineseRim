@@ -8,7 +8,7 @@ from .character import item_name
 from .explore import DEEP, min_realm
 
 _MAP_CACHE = {}          # 地圖只由資料決定，行程內共用（唯讀）
-TD_KINDS = {"sell", "appraise", "barter", "join", "board_close", "gift", "chat", "cand_close", "plant", "harvest", "boost", "craft", "shop_close", "enter", "leave", "talk", "region", "ferry", "pos", "battle_start", "battle", "battle_end", "buy", "chest", "portal", "use", "fb_refine", "fb_bond", "alch_start", "alch_act", "alch_close", "pet_feed", "pet_release", "puppet_build", "puppet_upgrade", "puppet_repair"}
+TD_KINDS = {"sell", "appraise", "barter", "join", "board_close", "gift", "chat", "cand_close", "plant", "harvest", "boost", "craft", "shop_close", "enter", "leave", "talk", "region", "ferry", "pos", "battle_start", "battle", "battle_end", "buy", "chest", "portal", "use", "fb_refine", "fb_bond", "alch_start", "alch_act", "alch_close", "pet_feed", "pet_release", "puppet_build", "puppet_upgrade", "puppet_repair", "war_side"}
 STEPS_PER_DAY = 160
 FERRY_DAYS = 8
 
@@ -663,6 +663,12 @@ class TopDownMixin:
                         karma.add(h, kk, nn, klog)
                         st["rewards"].extend(klog)
                         self.log.extend(klog)
+                    if e.get("rep"):
+                        self.apply_rep(e["rep"])
+                    if e.get("gold"):
+                        g = round(e["gold"] * (1 + h.realm) * self.dcfg["gold"])
+                        h.add("lingshi", g)
+                        self.log.append(f"戰後清點，你從戰場上撿得靈石 {g}。")
                     if e.get("boss_id") == "avenger":
                         klog = []
                         karma.add(h, "sha", -self.data.karma["avenger"]["repay_sha"], klog)

@@ -1786,3 +1786,92 @@ class WorldEventTest(unittest.TestCase):
         self.assertEqual(self.s.wev_mod("nonexistent", "loot"), 1.0)
         e3 = self._find("festival")
         self.assertEqual(self.s.wev_mod(e3["loc"], "price"), 0.8)
+
+
+class SectWarTest(unittest.TestCase):
+    def setUp(self):
+        import pathlib, tempfile
+        from chineserim.session import Session
+        self.s = Session(pathlib.Path(tempfile.mkdtemp()) / "s.json", seed=12)
+        self.s.act("new", diff="normal")
+        self.h = self.s.hero
+        self.h.realm = 3
+        self.s.rs.apply_stats(self.h)
+        self.h.hp, self.h.mp = self.h.max_hp, self.h.max_mp
+
+    def _war(self, pick=None):
+        for w in range(0, 120):
+            for reg in self.s.world.regions:
+                for e in self.s.events_in(reg, w):
+                    if e["type"] == "war" and (pick is None or pick(e)):
+                        self.s.region, self.s.day = reg, w * self.s.data.events["window_days"]
+                        if self.s.mode == "loc":
+                            self.s.act("leave")
+                        self.s.act("enter", loc=e["loc"])
+                        return e
+        self.fail("沒有宗門戰爭")
+
+    def _win(self):
+        self.s.battle["enemies"][0]["hp"] = 1
+        self.h.hp, self.h.mp = self.h.max_hp, self.h.max_mp
+        self.s.act("battle", cmd="attack")
+        self.assertEqual(self.s.battle["over"], "win")
+
+    def test_choice_panel_and_ignore(self):
+        e = self._war()
+        self.assertGreater(self.s.wev_mod(e["loc"], "price"), 1.0)
+        self.s.act("talk", ent="wev")
+        v = self.s.snapshot()["war"]
+        self.assertEqual({o["k"] for o in v["options"]}, {"defend", "attack", "trade", "ignore"})
+        self.s.act("war_side", side="ignore")
+        self.assertIsNone(self.s.snapshot()["war"])
+        self.assertIsNotNone(self.s.snapshot()["wev_ent"])          # 沒表態：戰事還在
+
+    def test_defend_gives_ren_and_rep(self):
+        from chineserim import karma
+        e = self._war(lambda e: self.s.sect_of_loc(e["loc"]))
+        sid = self.s.sect_of_loc(e["loc"])
+        self.s.act("talk", ent="wev")
+        self.s.act("war_side", side="defend")
+        self.assertTrue(self.s.battle["boss"])
+        self.assertIn("統領", self.s.battle["enemies"][0]["name"])
+        self._win()
+        self.assertEqual(karma.get(self.h, "ren"), 2)
+        self.assertEqual(self.h.sects.get(sid), 1)
+        self.assertIsNone(self.s.snapshot()["wev_ent"])
+        self.assertTrue(any(k.startswith("war_side:") and k.endswith(":defend") for k in self.h.flags))
+
+    def test_attack_gives_sha_and_lowers_rep_but_not_for_members(self):
+        from chineserim import karma
+        e = self._war(lambda e: self.s.sect_of_loc(e["loc"]))
+        sid = self.s.sect_of_loc(e["loc"])
+        self.h.members.append(sid)
+        self.s.act("talk", ent="wev")
+        self.assertFalse(next(o for o in self.s.snapshot()["war"]["options"] if o["k"] == "attack")["ok"])
+        self.s.act("war_side", side="attack")
+        self.assertIsNone(self.s.battle)                            # 本門弟子不能攻打自家
+        self.h.members.remove(sid)
+        self.s.act("talk", ent="wev")
+        lings = self.h.count("lingshi")
+        self.s.act("war_side", side="attack")
+        self.assertEqual(self.s.battle["enemies"][0]["name"], "護山長老")
+        self._win()
+        self.assertEqual(karma.get(self.h, "sha"), 2)
+        self.assertEqual(self.h.sects.get(sid), -2)
+        self.assertGreater(self.h.count("lingshi"), lings)
+
+    def test_trade_sells_supplies(self):
+        self._war()
+        self.s.act("talk", ent="wev")
+        self.h.inventory["heal"] = 0
+        self.s.act("war_side", side="trade")                        # 物資不足
+        self.assertIsNone(self.s.battle)
+        self.assertIsNotNone(self.s.snapshot()["wev_ent"])
+        self.h.add("heal", 3)
+        self.h.add("mpill", 2)
+        n = self.h.count("lingshi")
+        self.s.act("talk", ent="wev")
+        self.s.act("war_side", side="trade")
+        self.assertGreater(self.h.count("lingshi"), n)
+        self.assertEqual(self.h.count("heal"), 0)
+        self.assertIsNone(self.s.snapshot()["wev_ent"])

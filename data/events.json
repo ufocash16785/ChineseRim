@@ -107,6 +107,88 @@
       "title": "秘境異動",
       "text": "「{loc}」的禁制鬆動，寶箱與守護者的獎勵都更豐厚了！",
       "chest": 2.0
+    },
+    "war": {
+      "cat": "sect",
+      "weight": 3,
+      "kind": "entity",
+      "title": "宗門戰爭",
+      "text": "「{loc}」正遭到「{foe}」進攻，戰事吃緊！山門外殺聲震天。",
+      "names": [
+        "戰事官",
+        "守山執事"
+      ],
+      "sprites": [
+        "disciple",
+        "li",
+        "lifeiyu"
+      ],
+      "label": "戰",
+      "price": 1.15,
+      "foes": [
+        "魔道聯軍",
+        "越國邊境悍匪",
+        "妖獸大軍",
+        "敵對宗門聯盟",
+        "血色禁地殘黨"
+      ],
+      "greet": "「來得正好！山門將破，是助我們守山，還是……另有打算？」",
+      "defend": {
+        "foe_hp": 3.2,
+        "foe_atk": 1.2,
+        "skills": [
+          {
+            "name": "破陣衝殺",
+            "mult": 1.8,
+            "every": 3
+          }
+        ],
+        "drops": "guardian_rich",
+        "ren": 2,
+        "rep": 1,
+        "sprites": [
+          "villain",
+          "mozu",
+          "wangchan"
+        ],
+        "title": "助守方",
+        "desc": "與守軍並肩，擊退來犯的敵軍統領。（善緣 +2、宗門聲望 +1、戰利品）"
+      },
+      "attack": {
+        "foe_hp": 3.6,
+        "foe_atk": 1.25,
+        "skills": [
+          {
+            "name": "護山大陣",
+            "mult": 1.9,
+            "every": 3
+          },
+          {
+            "name": "長老一喝",
+            "mult": 1.5,
+            "every": 2
+          }
+        ],
+        "drops": "guardian_rich",
+        "sha": 2,
+        "rep": -2,
+        "gold": 300,
+        "title": "助攻方",
+        "desc": "倒戈相助進攻的一方，擊敗守山長老。（殺業 +2、該宗聲望 -2、額外靈石；本門弟子不可）"
+      },
+      "trade": {
+        "need": {
+          "heal": 3,
+          "mpill": 2
+        },
+        "gold_per_realm": 250,
+        "title": "兩頭賣物資",
+        "desc": "戰時物資緊俏：賣出 3 顆回春丹與 2 顆聚氣丹，換得高價。（不站任何一邊）"
+      },
+      "ignore": {
+        "title": "袖手旁觀",
+        "desc": "不插手，看看局勢如何發展。"
+      }
     }
   }
 }

@@ -71,7 +71,7 @@ def start_boss(ch, boss, loc_id, deep=False, diff=None, partner=None, boss_id="b
     el = ch.elements[0] if boss["el"] == "@hero" and ch.elements else ("木" if boss["el"] == "@hero" else boss["el"])
     e = {"id": f"boss:{boss_id}", "kind": boss.get("kind", "bear"), "sprite": boss.get("sprite"), "name": boss["name"], "el": el, "hp": hp, "maxhp": hp,
          "atk": 9.0 * scale * boss["atk_mult"] * diff.get("enemy_atk", 1.0), "dead": False, "loot": boss.get("loot", 3.0), "boss": True, "boss_id": boss_id,
-         "skills": boss["skills"], "t": 0, "charging": False, "stun": 0, "stun_imm": 0, "rage": False, "drops": boss.get("drops"), "on_win": boss.get("on_win", []), "karma": boss.get("karma", {}), "win_bonus": boss.get("win_bonus", {})}
+         "skills": boss["skills"], "t": 0, "charging": False, "stun": 0, "stun_imm": 0, "rage": False, "drops": boss.get("drops"), "on_win": boss.get("on_win", []), "karma": boss.get("karma", {}), "rep": boss.get("rep"), "gold": boss.get("gold", 0), "win_bonus": boss.get("win_bonus", {})}
     st = _base_state(ch, loc_id, [e], deep, diff, partner, ([boss["intro"]] if boss.get("intro") else []) + [f"強敵「{boss['name']}」攔住了去路！（可使用陣法、符錄、法寶）"], allies)
     st["boss"] = True
     st["retry"] = retry
