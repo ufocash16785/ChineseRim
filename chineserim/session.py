@@ -46,7 +46,7 @@ class Session(TopDownMixin, SocialMixin, AlchemyMixin, AlliesMixin, EventsMixin,
                 raise ValueError("靈根屬性不符")
             return Character((name or default[0])[:12], elements=elems, root_type=t["id"], speed=t["speed"])
         except (KeyError, ValueError):
-            return Character(*default[:1], elements=default[2], root_type=default[1])
+            return Character((name or default[0])[:12], elements=default[2], root_type=default[1])
 
     @property
     def dcfg(self):
@@ -56,17 +56,20 @@ class Session(TopDownMixin, SocialMixin, AlchemyMixin, AlliesMixin, EventsMixin,
         self.difficulty = name if name in difficulty.DIFFICULTY else difficulty.DEFAULT
         self.rs.chance_bonus = self.dcfg["breakthrough"] + (self.perk_totals()["breakthrough"] if getattr(self, "hero", None) else 0)
 
-    def new_game(self, name=None, root=None, elems=None, diff=None, configured=True):
+    def new_game(self, name=None, root=None, elems=None, diff=None, configured=True, campaign=None):
         self.log = []
         self.set_difficulty(diff)
         self.configured = configured
-        self.hero = self.create_hero(name, root, elems)
+        camp = campaign if campaign in self.data.campaigns else "fanren"
+        cc = self.data.campaigns[camp]
+        self.hero = self.create_hero(name or cc["hero"]["name"], root, elems)
+        self.hero.campaign = camp
         self.rs.set_realm(self.hero, "mortal")
         self.hero.add("lingshi", self.dcfg["start_lingshi"])
         self.hero.add("mpill", self.dcfg["start_mpill"]) if self.dcfg["start_mpill"] else None
-        self.day, self.region = 0, "tiannan"
+        self.day, self.region = 0, cc["start_region"]
         self.hero.add("heal", self.dcfg["start_heal"])
-        self.log = ["你是青牛鎮少年韓立。走上地圖上的地點圖示就能進入；先去看看家鄉青牛鎮吧。"]
+        self.log = [cc["intro"]]
         quests.ensure(self.hero, self.data)
         self.ui = {}
         self.pending_boss = None
@@ -207,7 +210,7 @@ class Session(TopDownMixin, SocialMixin, AlchemyMixin, AlliesMixin, EventsMixin,
             self.advance(7)
             self.log.append("閉關 7 日，傷勢痊癒")
         elif kind == "new":
-            self.new_game(q.get("name"), q.get("root"), list(q["elems"]) if q.get("elems") else None, q.get("diff"))
+            self.new_game(q.get("name"), q.get("root"), list(q["elems"]) if q.get("elems") else None, q.get("diff"), campaign=q.get("campaign"))
             self.save()
             return
         self._after(q.get("loc") if kind == "visit" else None, arrived if kind == "travel" and ok else None)
@@ -263,7 +266,7 @@ class Session(TopDownMixin, SocialMixin, AlchemyMixin, AlliesMixin, EventsMixin,
             "dialogue": dialogue.view(self.data, h),
             "difficulty": self.difficulty, "difficultyName": self.dcfg["name"], "configured": self.configured, "difficulties": {k: {"name": v["name"], "desc": v["desc"]} for k, v in difficulty.DIFFICULTY.items()},
             "mode": self.mode, "map_id": self.map_id, "pos": self.pos, "tp": getattr(self, "tp", 0), "cur_loc": self.cur_loc, "defeated": self.defeated,
-            "battle": self._battle_view(), "bag": self.bag_view(), "ending": self.ending_view(), "codex": self.codex_view(), "news": self.news_view(), "war": self.war_view(), "wev_ent": self.wev_entity(), "comp": self.allies_view(), "alch": self.alch_view(), "alch_n": h.counters.get("alch:n", 0), "karma": karma.view(h, self.data.karma), "karma_ev": self.karma_view(), "checkpoint": (self.checkpoint or {}).get("label"), "guardians": [k[9:] for k, v in h.flags.items() if k.startswith("guardian:") and v], "shop": self.shop_view(), "board": self.board_view(), "cand": self.cand_view(), "shady": self.shady_view(),
+            "battle": self._battle_view(), "bag": self.bag_view(), "campaign": h.campaign, "campaigns": {k: {"name": v["name"], "desc": v["desc"], "hero": v["hero"]["name"]} for k, v in self.data.campaigns.items()}, "ending": self.ending_view(), "codex": self.codex_view(), "news": self.news_view(), "war": self.war_view(), "wev_ent": self.wev_entity(), "comp": self.allies_view(), "alch": self.alch_view(), "alch_n": h.counters.get("alch:n", 0), "karma": karma.view(h, self.data.karma), "karma_ev": self.karma_view(), "checkpoint": (self.checkpoint or {}).get("label"), "guardians": [k[9:] for k, v in h.flags.items() if k.startswith("guardian:") and v], "shop": self.shop_view(), "board": self.board_view(), "cand": self.cand_view(), "shady": self.shady_view(),
             "members": [{"id": m, "name": self.data.sects[m]["name"], "perk": self.perk_of(m)["name"], "desc": self.perk_of(m)["desc"]} for m in h.members],
             "partner": self.partner_spec(), "affinity": h.affinity, "mp": round(h.mp), "max_mp": round(h.max_mp), "heal": h.count("heal"), "mpills": h.count("mpill"), "herbs": h.count("herb"), "plots": self.plots_view(),
             "seeds": {k: dict(v, cost=round(v["cost"] * self.dcfg["price"])) for k, v in self.data.farming["seeds"].items()},

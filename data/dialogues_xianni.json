@@ -1,0 +1,566 @@
+{
+  "description": "仙逆篇對話。",
+  "dialogues": {
+    "d_xn_arrive": {
+      "trigger": {
+        "loc": "hengyue_pai",
+        "quest": "XN_Q00_ZaYi",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "恆岳山門高聳，石階兩側刻著看不懂的符紋。你把破舊的包袱背緊了些——資質平庸的人，在這裡只配做雜役。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "旁白",
+          "text": "管事丟給你一把掃帚：「藥園缺人，去那邊幫工。」"
+        }
+      }
+    },
+    "d_xn_yaoyuan": {
+      "trigger": {
+        "loc": "hengyue_yaoyuan",
+        "quest": "XN_Q00_ZaYi",
+        "obj": 1
+      },
+      "nodes": {
+        "start": {
+          "speaker": "司徒南",
+          "text": "新來的？我叫司徒南，也是雜役。這藥園的活兒不重，就是要看人臉色。",
+          "choices": [
+            {
+              "text": "「我不怕看人臉色，我想學本事。」",
+              "next": "a",
+              "effects": [
+                {
+                  "flag": "xn_met_situnan"
+                },
+                {
+                  "level": 1
+                }
+              ]
+            },
+            {
+              "text": "「多謝提點，我會小心。」",
+              "next": "b",
+              "effects": [
+                {
+                  "flag": "xn_met_situnan"
+                }
+              ]
+            }
+          ]
+        },
+        "a": {
+          "speaker": "司徒南",
+          "text": "（笑）有志氣。不過在這裡，志氣是最不值錢的東西。"
+        },
+        "b": {
+          "speaker": "司徒南",
+          "text": "放心，我罩你。你看著就不像會惹事的人。"
+        }
+      }
+    },
+    "d_xn_bead": {
+      "trigger": {
+        "loc": "hengyue_cave",
+        "quest": "XN_Q01_Cave",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "後山古洞裡瀰漫著陳舊的靈氣。你沿著異響摸進最深處，在一堆碎石下，發現一顆黯淡無光的珠子。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "旁白",
+          "text": "珠子入手冰涼，忽然微微一顫，彷彿有什麼東西，在裡面睜開了眼。",
+          "effects": [
+            {
+              "item": "nitianzhu",
+              "n": 1
+            },
+            {
+              "flag": "xn_bead"
+            }
+          ]
+        }
+      }
+    },
+    "d_xn_beadvoice": {
+      "trigger": {
+        "loc": "hengyue_pai",
+        "quest": "XN_Q02_Bead",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "夜深人靜，你盤膝而坐，握著那顆珠子。一個蒼老的聲音，直接在你心底響起。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "珠中之聲",
+          "text": "小子，你資質太差，走正道，一輩子也不過如此。想活，想強，就得學會一件事——",
+          "next": "n2"
+        },
+        "n2": {
+          "speaker": "珠中之聲",
+          "text": "逆天。受傷越重，怒意越盛；被逼到絕路，這珠子便肯借你一口逆轉之氣。記住，這是你唯一的底牌。",
+          "choices": [
+            {
+              "text": "「我明白了。」",
+              "next": "end",
+              "effects": [
+                {
+                  "flag": "xn_bead_talk"
+                }
+              ]
+            },
+            {
+              "text": "「我不想與天為敵……但我更不想認命。」",
+              "next": "end",
+              "effects": [
+                {
+                  "flag": "xn_bead_talk"
+                },
+                {
+                  "karma": {
+                    "ren": 1
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "end": {
+          "speaker": "旁白",
+          "text": "（提示：戰鬥中承受傷害會蓄積「逆天」之力，蓄滿後可釋放反擊；蓄積三層以上時，還能在致命一擊下逆轉死局一次。）"
+        }
+      }
+    },
+    "d_xn_raid": {
+      "trigger": {
+        "loc": "hengyue_pai",
+        "quest": "XN_Q03_Raid",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "一聲巨響，山門崩裂。黑衣修士踏血而入，恆岳派的弟子們四散奔逃。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "黑衣修士",
+          "text": "（冷笑）恆岳派今日除名。有人說，你們這兒藏著不該有的東西。",
+          "next": "n2"
+        },
+        "n2": {
+          "speaker": "旁白",
+          "text": "你握緊懷中的珠子——他要找的，多半就是它。沒有退路了。",
+          "effects": [
+            {
+              "boss": "xn_heiyi"
+            }
+          ]
+        }
+      }
+    },
+    "d_xn_capital": {
+      "trigger": {
+        "loc": "zhao_capital",
+        "quest": "XN_Q03_Raid",
+        "obj": 1
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "你一路逃到趙國都城，身後的恆岳山已成火海。城門口，一名天運宗的引路人正在招攬散修。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "旁白",
+          "text": "「想活命，就去天運宗吧。」——你沒有別的選擇。",
+          "effects": [
+            {
+              "flag": "xn_go_tianyun"
+            }
+          ]
+        }
+      }
+    },
+    "d_xn_epi1": {
+      "trigger": {
+        "onQuestDone": "XN_Q03_Raid"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "恆岳派的煙火漸漸遠去。你回頭望了一眼，把眼淚咽回肚裡。這筆帳，遲早要討回來。"
+        }
+      }
+    },
+    "d_xn_arrive_tianyun": {
+      "trigger": {
+        "arrive": "tianyun",
+        "quest": "XN_Q10_Join",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "天運宗域，山連著山，雲壓著雲。這裡的修士比趙國多了十倍，每個人看你的眼神，都像在稱斤論兩。"
+        }
+      }
+    },
+    "d_xn_join": {
+      "trigger": {
+        "loc": "tianyun_zong",
+        "quest": "XN_Q10_Join",
+        "obj": 1
+      },
+      "nodes": {
+        "start": {
+          "speaker": "天運子",
+          "text": "（打量你）資質下等，卻走了這麼遠……有意思。天運宗不缺天才，但缺不認命的人。",
+          "choices": [
+            {
+              "text": "「我願入宗，從最底層做起。」",
+              "next": "a",
+              "effects": [
+                {
+                  "flag": "xn_joined"
+                }
+              ]
+            },
+            {
+              "text": "「我入宗，只為尋一條活路。」",
+              "next": "b",
+              "effects": [
+                {
+                  "flag": "xn_joined"
+                },
+                {
+                  "karma": {
+                    "sha": 1
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "a": {
+          "speaker": "天運子",
+          "text": "好。外門雜役房，你去報到。"
+        },
+        "b": {
+          "speaker": "天運子",
+          "text": "（意味深長）活路，是靠自己走出來的。去吧。"
+        }
+      }
+    },
+    "d_xn_match": {
+      "trigger": {
+        "loc": "tianyun_zong",
+        "quest": "XN_Q11_Match",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "宗門大比的擂台上，薛戰負手而立。這位天運宗公認的天才，連正眼都懶得看你。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "薛戰",
+          "text": "下等資質也敢上台？我給你三招機會。",
+          "effects": [
+            {
+              "boss": "xn_rival"
+            }
+          ]
+        }
+      }
+    },
+    "d_xn_muwan": {
+      "trigger": {
+        "loc": "yunmeng_ze",
+        "quest": "XN_Q12_Muwan",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "李慕婉",
+          "text": "你果然來了。這雲夢澤的霧，很像我小時候待過的地方。",
+          "choices": [
+            {
+              "text": "「你說要見我，我便來了。」",
+              "next": "a",
+              "effects": [
+                {
+                  "affinity": "limuwan",
+                  "n": 20
+                },
+                {
+                  "flag": "xn_muwan"
+                }
+              ]
+            },
+            {
+              "text": "「只是路過。」（嘴上這麼說，卻在原地站了很久）",
+              "next": "b",
+              "effects": [
+                {
+                  "affinity": "limuwan",
+                  "n": 10
+                },
+                {
+                  "flag": "xn_muwan"
+                }
+              ]
+            }
+          ]
+        },
+        "a": {
+          "speaker": "李慕婉",
+          "text": "（輕輕一笑）那，以後也要這樣。"
+        },
+        "b": {
+          "speaker": "李慕婉",
+          "text": "（望著遠方）嗯，路過，也好。"
+        }
+      }
+    },
+    "d_xn_wuxing": {
+      "trigger": {
+        "loc": "wuxing_dong",
+        "quest": "XN_Q13_Wuxing",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "五行洞的石壁上，金木水火土五色光芒流轉。洞的深處，一具巨大的傀儡緩緩睜開了雙眼。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "五行守衛",
+          "text": "擅入者，殺。",
+          "effects": [
+            {
+              "boss": "xn_wuxing"
+            }
+          ]
+        }
+      }
+    },
+    "d_xn_epi2": {
+      "trigger": {
+        "onQuestDone": "XN_Q13_Wuxing"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "結丹在望。你站在五行洞口，看著遠處雲海翻湧。李慕婉的身影，在雲中若隱若現。"
+        }
+      }
+    },
+    "d_xn_blood": {
+      "trigger": {
+        "loc": "xueguang_jin",
+        "quest": "XN_Q20_Blood",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "血光禁地，遍地殘骸，空氣裡瀰漫著甜膩的血腥。逆天珠在你懷中發燙，像在興奮，又像在警告。"
+        }
+      }
+    },
+    "d_xn_heart": {
+      "trigger": {
+        "loc": "xueguang_jin",
+        "quest": "XN_Q21_Heart",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "禁地深處，血池映出你的臉——然後，那張臉朝你笑了。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "旁白",
+          "text": "一路走來，你做過的每個決定，都化成了另一個「你」，睜開了眼。",
+          "effects": [
+            {
+              "boss": "xinmo"
+            }
+          ]
+        }
+      }
+    },
+    "d_xn_tiandao": {
+      "trigger": {
+        "loc": "tianni_dian",
+        "quest": "XN_Q22_Nitian",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "逆天殿中央，一道白金色的人影靜靜佇立，沒有五官，沒有溫度。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "天道化身",
+          "text": "逆者，止步。此路無人能過。",
+          "next": "n2"
+        },
+        "n2": {
+          "speaker": "珠中之聲",
+          "text": "小子，到這一步了。別怕——我等這一天，等了很久。",
+          "effects": [
+            {
+              "boss": "xn_tiandao"
+            }
+          ]
+        }
+      }
+    },
+    "d_xn_epilogue": {
+      "trigger": {
+        "onQuestDone": "XN_Q22_Nitian"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "天道化身潰散的那一刻，逆天珠發出前所未有的光。你終於明白，「逆天」二字，從來不是勝負，而是——你不肯低頭。"
+        }
+      }
+    },
+    "cmp_limuwan_intro": {
+      "trigger": {
+        "cmp": "limuwan",
+        "stage": "intro"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "天運宗的迴廊盡頭，一名白衣少女靜靜倚著欄杆，望著遠處的雲海。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "李慕婉",
+          "text": "你就是那個從趙國逃來的王林？我聽說過你。"
+        }
+      }
+    },
+    "cmp_limuwan_event": {
+      "trigger": {
+        "cmp": "limuwan",
+        "stage": "event"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "那夜下著細雨，你們同在屋簷下避雨。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "李慕婉",
+          "text": "有時我覺得，這個世界對我們都不太溫柔。",
+          "choices": [
+            {
+              "text": "把外衣披在她肩上",
+              "next": "a",
+              "effects": [
+                {
+                  "affinity": "limuwan",
+                  "n": 20
+                },
+                {
+                  "flag": "event:limuwan"
+                }
+              ]
+            },
+            {
+              "text": "陪她站著，聽雨",
+              "next": "b",
+              "effects": [
+                {
+                  "affinity": "limuwan",
+                  "n": 15
+                },
+                {
+                  "flag": "event:limuwan"
+                }
+              ]
+            }
+          ]
+        },
+        "a": {
+          "speaker": "李慕婉",
+          "text": "（她低下頭，輕聲）……你這人，真是。"
+        },
+        "b": {
+          "speaker": "李慕婉",
+          "text": "（她笑了笑）這樣，就很好。"
+        }
+      }
+    },
+    "cmp_limuwan_propose": {
+      "trigger": {
+        "cmp": "limuwan",
+        "stage": "propose"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "雲夢澤的月色下，她轉過身，眼裡映著你的影子。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "李慕婉",
+          "text": "王林，不管你要逆的是誰的天，我都想站在你身邊。",
+          "choices": [
+            {
+              "text": "「好，這條路，我們一起走。」",
+              "next": "yes",
+              "effects": [
+                {
+                  "companion": "limuwan"
+                },
+                {
+                  "flag": "partner:limuwan"
+                }
+              ]
+            },
+            {
+              "text": "「再等我一等，我還沒有資格。」",
+              "next": "no",
+              "effects": [
+                {
+                  "flag": "decline:limuwan"
+                }
+              ]
+            }
+          ]
+        },
+        "yes": {
+          "speaker": "李慕婉",
+          "text": "（她笑了，眼角有淚）我等你這句話，很久了。"
+        },
+        "no": {
+          "speaker": "李慕婉",
+          "text": "（她點點頭）我等你。"
+        }
+      }
+    }
+  }
+}

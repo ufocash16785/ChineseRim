@@ -1,0 +1,182 @@
+{
+  "description": "仙逆篇任務條件。",
+  "arcs": {
+    "xn1_hengyue": {
+      "XN_Q00_ZaYi": {
+        "objectives": [
+          {
+            "type": "visit",
+            "loc": "hengyue_pai"
+          },
+          {
+            "type": "visit",
+            "loc": "hengyue_yaoyuan"
+          }
+        ],
+        "reward": {
+          "lingshi": 50
+        }
+      },
+      "XN_Q01_Cave": {
+        "objectives": [
+          {
+            "type": "visit",
+            "loc": "hengyue_cave"
+          },
+          {
+            "type": "kill",
+            "loc": "hengyue_cave",
+            "n": 3
+          }
+        ],
+        "reward": {
+          "lingshi": 80,
+          "level": 2
+        }
+      },
+      "XN_Q02_Bead": {
+        "objectives": [
+          {
+            "type": "flag",
+            "flag": "xn_bead_talk"
+          },
+          {
+            "type": "realm",
+            "n": 1
+          }
+        ],
+        "reward": {
+          "pill": 1,
+          "lingshi": 100
+        }
+      },
+      "XN_Q03_Raid": {
+        "objectives": [
+          {
+            "type": "flag",
+            "flag": "beat:xn_heiyi"
+          },
+          {
+            "type": "visit",
+            "loc": "zhao_capital"
+          }
+        ],
+        "reward": {
+          "lingshi": 200
+        }
+      }
+    },
+    "xn2_tianyun": {
+      "XN_Q10_Join": {
+        "objectives": [
+          {
+            "type": "arrive",
+            "loc": "tianyun"
+          },
+          {
+            "type": "visit",
+            "loc": "tianyun_zong"
+          }
+        ],
+        "reward": {
+          "lingshi": 150
+        }
+      },
+      "XN_Q11_Match": {
+        "objectives": [
+          {
+            "type": "flag",
+            "flag": "beat:xn_rival"
+          },
+          {
+            "type": "level",
+            "n": 14
+          }
+        ],
+        "reward": {
+          "lingshi": 300,
+          "pill": 1
+        }
+      },
+      "XN_Q12_Muwan": {
+        "objectives": [
+          {
+            "type": "visit",
+            "loc": "yunmeng_ze"
+          },
+          {
+            "type": "kill",
+            "loc": "yunmeng_ze",
+            "n": 4
+          }
+        ],
+        "reward": {
+          "lingshi": 300,
+          "level": 2
+        }
+      },
+      "XN_Q13_Wuxing": {
+        "objectives": [
+          {
+            "type": "flag",
+            "flag": "beat:xn_wuxing"
+          },
+          {
+            "type": "realm",
+            "n": 3
+          }
+        ],
+        "reward": {
+          "lingshi": 600,
+          "pill": 2
+        }
+      }
+    },
+    "xn3_nitian": {
+      "XN_Q20_Blood": {
+        "objectives": [
+          {
+            "type": "visit",
+            "loc": "xueguang_jin"
+          },
+          {
+            "type": "kill",
+            "loc": "xueguang_jin",
+            "n": 5
+          }
+        ],
+        "reward": {
+          "lingshi": 800
+        }
+      },
+      "XN_Q21_Heart": {
+        "objectives": [
+          {
+            "type": "flag",
+            "flag": "law_insight"
+          },
+          {
+            "type": "realm",
+            "n": 4
+          }
+        ],
+        "reward": {
+          "lingshi": 1000,
+          "pill": 2
+        }
+      },
+      "XN_Q22_Nitian": {
+        "objectives": [
+          {
+            "type": "flag",
+            "flag": "beat:xn_tiandao"
+          }
+        ],
+        "reward": {
+          "lingshi": 3000,
+          "level": 10
+        }
+      }
+    }
+  }
+}

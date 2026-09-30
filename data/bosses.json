@@ -163,6 +163,97 @@
       "karma": {
         "sha": 2
       }
+    },
+    "xn_heiyi": {
+      "name": "黑衣修士",
+      "sprite": "villain",
+      "el": "火",
+      "hp_mult": 3.0,
+      "atk_mult": 1.15,
+      "skills": [
+        {
+          "name": "血影刀",
+          "mult": 1.7,
+          "every": 3
+        }
+      ],
+      "on_win": [
+        {
+          "flag": "beat:xn_heiyi"
+        }
+      ],
+      "drops": "boss_early",
+      "karma": {
+        "sha": 2
+      }
+    },
+    "xn_rival": {
+      "name": "薛戰",
+      "sprite": "xuezhan",
+      "el": "金",
+      "hp_mult": 3.4,
+      "atk_mult": 1.2,
+      "skills": [
+        {
+          "name": "天才之劍",
+          "mult": 1.8,
+          "every": 3
+        }
+      ],
+      "on_win": [
+        {
+          "flag": "beat:xn_rival"
+        }
+      ],
+      "drops": "boss_wangchan",
+      "karma": {
+        "sha": 1
+      }
+    },
+    "xn_wuxing": {
+      "name": "五行守衛",
+      "sprite": "puppet_iron",
+      "el": "土",
+      "hp_mult": 3.9,
+      "atk_mult": 1.25,
+      "skills": [
+        {
+          "name": "五行輪轉",
+          "mult": 1.9,
+          "every": 3
+        }
+      ],
+      "on_win": [
+        {
+          "flag": "beat:xn_wuxing"
+        }
+      ],
+      "drops": "boss_quhun"
+    },
+    "xn_tiandao": {
+      "name": "天道化身",
+      "sprite": "tiandao",
+      "el": "雷",
+      "hp_mult": 5.0,
+      "atk_mult": 1.35,
+      "skills": [
+        {
+          "name": "天罰",
+          "mult": 2.2,
+          "every": 3
+        },
+        {
+          "name": "天道無情",
+          "mult": 1.6,
+          "every": 2
+        }
+      ],
+      "on_win": [
+        {
+          "flag": "beat:xn_tiandao"
+        }
+      ],
+      "drops": "boss_xinmo"
     }
   },
   "guardian": {

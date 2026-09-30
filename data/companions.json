@@ -122,6 +122,18 @@
       "likes": [
         "lingye"
       ]
+    },
+    "limuwan": {
+      "name": "李慕婉",
+      "loc": "tianyun_zong",
+      "sprite": "limuwan",
+      "element": "水",
+      "role": "healer",
+      "atk": 0.5,
+      "minRealm": 1,
+      "likes": [
+        "lingye"
+      ]
     }
   }
 }

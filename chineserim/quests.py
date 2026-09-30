@@ -6,8 +6,8 @@ from .character import item_name
 COUNTED = ("visit", "kill", "arrive")
 
 
-def arc_order(data):
-    return [a["id"] for a in data.arcs if a["id"] in data.quest_rules]
+def arc_order(data, campaign="fanren"):
+    return [a["id"] for a in data.arcs if a["id"] in data.quest_rules and a.get("campaign", "fanren") == campaign]
 
 
 def _arc(data, arc_id):
@@ -20,7 +20,7 @@ def _rules(data, arc_id):
 
 def ensure(ch, data=None):
     if not ch.quest:
-        first = arc_order(data)[0] if data else "arc0_qixuanmen"
+        first = arc_order(data, ch.campaign)[0] if data else "arc0_qixuanmen"
         ch.quest = {"arc": first, "q": 0, "o": 0, "baseline": dict(ch.counters), "done": False, "completed": []}
     return ch.quest
 
@@ -71,7 +71,7 @@ def update(data, ch, realms):
     q = ensure(ch, data)
     q.setdefault("completed", [])
     msgs = []
-    order = arc_order(data)
+    order = arc_order(data, ch.campaign)
     while True:
         if q["done"]:                       # 舊存檔：上一卷已完成但後面還有卷
             i = order.index(q["arc"])
@@ -106,7 +106,7 @@ def update(data, ch, realms):
 def view(data, ch):
     q = ensure(ch, data)
     arc = _arc(data, q["arc"])
-    last = arc_order(data)[-1] == q["arc"]
+    last = arc_order(data, ch.campaign)[-1] == q["arc"]
     out = {"arc": arc["name"], "done": q["done"] and last, "quests": []}
     for i, quest in enumerate(arc["quests"]):
         rule = _rules(data, q["arc"]).get(quest["id"], {"objectives": []})
@@ -136,7 +136,7 @@ def _region_of(data, loc):
 def target(data, ch):
     """目前目標該去哪裡：{"loc":地點id|None, "region":區域id|None}；沒有明確地點時回傳 None。"""
     q = ensure(ch, data)
-    if q["done"] and arc_order(data)[-1] == q["arc"]:
+    if q["done"] and arc_order(data, ch.campaign)[-1] == q["arc"]:
         return None
     arc = _arc(data, q["arc"])
     quest = arc["quests"][q["q"]] if q["q"] < len(arc["quests"]) else None

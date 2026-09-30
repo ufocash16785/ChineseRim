@@ -42,6 +42,12 @@ NPCS = {
     "puppet": dict(robe="#9a6a3a", trim="#d8b070", sash="#5a3a1a", hair="#6a4a2a", hairstyle="short", hat="#7a5a2a"),
     "puppet_spirit": dict(robe="#6a5ad8", trim="#e0d8ff", sash="#3a2a9a", hair="#9a8af0", hairstyle="short", hat="#5a4ac8"),
     "puppet_iron": dict(robe="#8a929c", trim="#d0d8e0", sash="#4a525c", hair="#5a626c", hairstyle="short", hat="#6a727c"),
+    "wanglin": dict(robe="#5a6a7a", trim="#c8d0d8", sash="#2a3440", hair="#1a1a24", hairstyle="topknot"),
+    "limuwan": dict(robe="#eef2fa", trim="#9ec8f0", sash="#7aa8e0", hair="#221c2c", hairstyle="long", accessory="pin", female=True, eye="#5a8ad8", shawl="#d0e8ff", ornament="#a8d8ff"),
+    "situnan": dict(robe="#7a8a5a", trim="#d8e0b8", sash="#4a5a2a", hair="#2b2233", hairstyle="short"),
+    "tianyunzi": dict(robe="#4a5a9a", trim="#e0e8ff", sash="#2a3468", hair="#e0e0f0", beard="#e0e0f0", hairstyle="elder"),
+    "xuezhan": dict(robe="#e8d8a0", trim="#c0a040", sash="#8a6a20", hair="#1a1414", hairstyle="ponytail"),
+    "tiandao": dict(robe="#f4f0e0", trim="#ffd35a", sash="#fff0b0", hair="#f8f4e8", hairstyle="long"),
     "yuzitong": dict(robe="#5a3a3a", trim="#a08a7a", sash="#2a1a1a", hair="#1a1414", hairstyle="topknot"),
     "merchant": dict(robe="#5a7a3a", trim="#e8d8a0", sash="#8a6a2a", hair="#3a2a2a", hairstyle="short", hat="#6a4a2a"),
     "boatman": dict(robe="#4a6a8a", trim="#a8c0d0", sash="#2a3a4a", hair="#3a3a3a", hairstyle="short", hat="#b89a5a"),
@@ -61,7 +67,7 @@ SPEAKERS = {
     "母親": "villager_f", "三叔": "villager_m", "執事": "disciple", "落雲宗執事": "disciple", "靈獸山弟子": "disciple",
     "聯盟使者": "disciple", "厲飛雨": "lifeiyu", "張鐵": "zhangtie", "墨大夫": "mo", "李化元": "li",
     "南宮婉": "nangong", "大衍神君": "dayan", "曲魂": "villain", "玄骨老祖": "xuangu", "慕沛靈": "mupei",
-    "凌玉靈": "lingyu", "余子童": "yuzitong", "王蟬": "wangchan", "天星雙聖": "tianxing", "魔族將領": "mozu", "心魔": "xinmo", "攤主": "merchant", "藥鋪掌櫃": "pharmacist", "掌櫃": "pharmacist", "奸商": "shady", "董萱兒": "dongxuaner", "墨彩環": "mocaihuan", "陳巧倩": "chenqiaoqian", "元瑤": "yuanyao", "文詩兒": "wenshier", "紫靈": "ziling", "船夫": "boatman",
+    "凌玉靈": "lingyu", "余子童": "yuzitong", "王林": "wanglin", "李慕婉": "limuwan", "司徒南": "situnan", "天運子": "tianyunzi", "薛戰": "xuezhan", "黑衣修士": "villain", "五行守衛": "puppet_iron", "天道化身": "tiandao", "珠中之聲": "xinmo", "王蟬": "wangchan", "天星雙聖": "tianxing", "魔族將領": "mozu", "心魔": "xinmo", "攤主": "merchant", "藥鋪掌櫃": "pharmacist", "掌櫃": "pharmacist", "奸商": "shady", "董萱兒": "dongxuaner", "墨彩環": "mocaihuan", "陳巧倩": "chenqiaoqian", "元瑤": "yuanyao", "文詩兒": "wenshier", "紫靈": "ziling", "船夫": "boatman",
     "天淵守軍": "soldier",
 }
 

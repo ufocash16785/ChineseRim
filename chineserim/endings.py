@@ -2,8 +2,12 @@
 from . import karma, items
 
 
+def ending_list(ch, data):
+    return data.endings.get("campaign_endings", {}).get(getattr(ch, "campaign", "fanren")) or data.endings["endings"]
+
+
 def pick_ending(ch, data):
-    cfg = data.endings["endings"]
+    cfg = ending_list(ch, data)
     st = karma.dao_state(ch, data.karma)
     sha, ren = karma.get(ch, "sha"), karma.get(ch, "ren")
     for e in cfg:
@@ -13,6 +17,8 @@ def pick_ending(ch, data):
         if sha < w.get("sha_min", 0) or ren < w.get("ren_min", 0):
             continue
         if w.get("companion") and not ch.companion:
+            continue
+        if w.get("companion_id") and ch.companion != w["companion_id"]:
             continue
         return e
     return cfg[-1]
@@ -51,7 +57,7 @@ class EndingMixin:
         if not info:
             return None
         cfg = self.data.endings
-        e = next((x for x in cfg["endings"] if x["id"] == info["id"]), None)
+        e = next((x for x in ending_list(h, self.data) if x["id"] == info["id"]), None)
         if not e:
             return None
         s, ex = info["stats"], cfg["extras"]
@@ -72,11 +78,11 @@ class EndingMixin:
             lines.append(ex["treasure"].format(name=s["treasure"].split("（")[0], lv=s["treasure"].split("（")[1].split(" ")[0]))
         if s["codex"]:
             lines.append(ex["codex"].format(n=s["codex"]))
-        art = e["id"]
+        art = e.get("art") or e["id"]
         if e["id"] == "together" and h.companion in self.data.companions["candidates"]:
             art = f"together_{h.companion}"                   # 依實際的道侶換插圖
         return {"id": e["id"], "art": art, "title": e["title"], "subtitle": e["subtitle"], "paras": e["paras"], "epilogue": lines, "stats": s, "seen": bool(h.flags.get("ending_seen")),
-                "all": [{"id": x["id"], "title": x["title"], "got": x["id"] == e["id"]} for x in cfg["endings"]]}
+                "all": [{"id": x["id"], "title": x["title"], "got": x["id"] == e["id"]} for x in ending_list(h, self.data)]}
 
     def _td_ending_close(self, **_):
         self.hero.flags["ending_seen"] = True
@@ -84,4 +90,4 @@ class EndingMixin:
 
 def quests_last(data, ch):
     from .quests import arc_order
-    return arc_order(data)[-1] == ch.quest.get("arc")
+    return arc_order(data, ch.campaign)[-1] == ch.quest.get("arc")

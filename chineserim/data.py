@@ -31,7 +31,7 @@ class GameData:
         self.treasures = {t["id"]: t for t in tr.get("treasures", [])}
         self.pills = {t["id"]: t for t in tr.get("pills", [])}
         self.characters = {c["id"]: c for c in _load(d / "characters.json")["characters"]}
-        self.arcs = _load(d / "story_arcs.json")["arcs"]
+        self.arcs = [a for f in sorted(d.glob("story_arcs*.json")) for a in _load(f)["arcs"]]
         self.dialogues = _merge(d, "dialogues*.json", "dialogues")
         self.ambient = _load(d / "ambient.json")
         self.farming = _load(d / "farming.json")
@@ -46,7 +46,8 @@ class GameData:
         self.codex = _load(d / "codex.json")
         self.endings = _load(d / "endings.json")
         self.quest_rules = _merge(d, "quests*.json", "arcs")
-        self.regions = _load(d / "regions.json")["worlds"]
+        self.regions = [w for f in sorted(d.glob("regions*.json")) for w in _load(f)["worlds"]]
+        self.campaigns = _load(d / "campaigns.json")["campaigns"]
         self.config = {"elemAdvMult": 1.5, "elemDisMult": 0.75}
         if mod_dir:
             self._merge_mods(pathlib.Path(mod_dir))

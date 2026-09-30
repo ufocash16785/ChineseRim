@@ -1,0 +1,134 @@
+{
+  "description": "仙逆篇的故事卷（campaign=xianni）。",
+  "arcs": [
+    {
+      "id": "xn1_hengyue",
+      "campaign": "xianni",
+      "name": "第一卷·恆岳派",
+      "region": "zhaoguo",
+      "playerRealm": "mortal → qi_refining",
+      "levelRange": [
+        1,
+        8
+      ],
+      "summary": "資質平庸的少年王林在恆岳派做雜役，於後山古洞得到神祕的逆天珠；珠中的聲音教他「逆天」之道。恆岳派遭黑衣修士血洗，王林只身逃出。",
+      "quests": [
+        {
+          "id": "XN_Q00_ZaYi",
+          "name": "雜役少年",
+          "objectives": [
+            "前往恆岳派報到",
+            "到恆岳藥園幫工"
+          ]
+        },
+        {
+          "id": "XN_Q01_Cave",
+          "name": "後山異響",
+          "objectives": [
+            "夜探後山古洞",
+            "清除洞中的妖獸"
+          ]
+        },
+        {
+          "id": "XN_Q02_Bead",
+          "name": "珠中之語",
+          "objectives": [
+            "在恆岳派靜坐，聆聽珠中之聲",
+            "突破到練氣期"
+          ]
+        },
+        {
+          "id": "XN_Q03_Raid",
+          "name": "血洗恆岳",
+          "objectives": [
+            "擊退闖山的黑衣修士",
+            "逃出恆岳派，前往趙國都城"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "xn2_tianyun",
+      "campaign": "xianni",
+      "name": "第二卷·天運宗",
+      "region": "tianyun",
+      "playerRealm": "qi_refining → core_formation",
+      "levelRange": [
+        8,
+        30
+      ],
+      "summary": "王林拜入天運宗，結識李慕婉，在宗門大比中擊敗天才薛戰，並闖過五行洞，踏上結丹之路。",
+      "quests": [
+        {
+          "id": "XN_Q10_Join",
+          "name": "投身天運",
+          "objectives": [
+            "前往天運宗域",
+            "拜入天運宗"
+          ]
+        },
+        {
+          "id": "XN_Q11_Match",
+          "name": "宗門大比",
+          "objectives": [
+            "在天運宗擊敗宗門天才薛戰",
+            "修煉到 14 級"
+          ]
+        },
+        {
+          "id": "XN_Q12_Muwan",
+          "name": "慕婉之約",
+          "objectives": [
+            "前往雲夢澤赴約",
+            "清除雲夢澤的妖獸"
+          ]
+        },
+        {
+          "id": "XN_Q13_Wuxing",
+          "name": "五行洞",
+          "objectives": [
+            "深入五行洞，擊敗五行守衛",
+            "突破到結丹期"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "xn3_nitian",
+      "campaign": "xianni",
+      "name": "第三卷·逆天",
+      "region": "tianyun",
+      "playerRealm": "core_formation → nascent_soul",
+      "levelRange": [
+        30,
+        60
+      ],
+      "summary": "闖過血光禁地，直面自己的心魔，最後踏入逆天殿，與天道化身一戰。",
+      "quests": [
+        {
+          "id": "XN_Q20_Blood",
+          "name": "血光禁地",
+          "objectives": [
+            "闖入血光禁地",
+            "清除禁地中的妖獸"
+          ]
+        },
+        {
+          "id": "XN_Q21_Heart",
+          "name": "直面心魔",
+          "objectives": [
+            "直面心魔，悟出屬於自己的道",
+            "突破到元嬰期"
+          ]
+        },
+        {
+          "id": "XN_Q22_Nitian",
+          "name": "逆天殿",
+          "objectives": [
+            "踏入逆天殿，擊敗天道化身"
+          ]
+        }
+      ]
+    }
+  ]
+}

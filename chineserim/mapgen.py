@@ -131,10 +131,10 @@ def _solid_grid(ground, w, h, block, objects):
 
 
 # ============================ 大地圖 ============================
-WORLD_SIZES = {"renjie": (176, 176), "lingjie": (110, 90)}
-REGION_RADIUS = {"tiannan": 34, "mulan": 19, "dajin": 22, "luanxinghai": 27, "tianyuan": 34}
+WORLD_SIZES = {"renjie": (176, 176), "lingjie": (110, 90), "xianni": (140, 130)}
+REGION_RADIUS = {"tiannan": 34, "mulan": 19, "dajin": 22, "luanxinghai": 27, "tianyuan": 34, "zhaoguo": 30, "tianyun": 30}
 ICON = {"town": "icon_town", "sect": "icon_sect", "deep": "icon_cave", "garden": "icon_garden", "dwelling": "icon_hut"}
-BIOME_OF = {"tiannan": "tiannan", "mulan": "mulan", "luanxinghai": "luanxinghai", "dajin": "dajin", "tianyuan": "tianyuan"}
+BIOME_OF = {"tiannan": "tiannan", "mulan": "mulan", "luanxinghai": "luanxinghai", "dajin": "dajin", "tianyuan": "tianyuan", "zhaoguo": "tiannan", "tianyun": "dajin"}
 
 
 def _wild_icon(loc):
@@ -188,6 +188,8 @@ def build_world(data, world_id="renjie"):
         cx, cy = g["coords"]
         if world_id == "renjie":
             centers[g["id"]] = (12 + cx * 1.7, 10 + (100 - cy) * 1.6)
+        elif world_id == "xianni":
+            centers[g["id"]] = (16 + cx * 1.2, 12 + (100 - cy) * 1.3)
         else:
             centers[g["id"]] = (W / 2, H / 2)
 
@@ -359,7 +361,7 @@ def build_world(data, world_id="renjie"):
             carve((x, y), entrance[near])
 
     # ---- 起點與連通性保證 ----
-    start_loc = "qingniu" if "qingniu" in entrance else next(iter(entrance))
+    start_loc = world.get("start_loc") or ("qingniu" if "qingniu" in entrance else next(iter(entrance)))
     sx, sy = entrance[start_loc]
     spawn = (sx, sy + 2)
     ground.set(*spawn, "r" if ground.get(*spawn) in ("t", "m", "R", ",", "~") else ground.get(*spawn))
@@ -408,9 +410,9 @@ def build_world(data, world_id="renjie"):
     solid = _solid_grid(ground.rows(), W, H, BLOCK_WORLD, [])
     zones_rows = ["".join(str(list(centers).index(zone[y][x])) if zone[y][x] else "." for x in range(W)) for y in range(H)]
     return {
-        "id": f"world:{world_id}", "kind": "world", "w": W, "h": H, "biome": "tiannan" if world_id == "renjie" else "tianyuan",
+        "id": f"world:{world_id}", "kind": "world", "w": W, "h": H, "biome": "tiannan" if world_id in ("renjie", "xianni") else "tianyuan",
         "ground": ground.rows(), "solid": ["".join(map(str, r)) for r in solid], "objects": [], "entities": entities,
-        "spawn": list(spawn), "zones": zones_rows, "zoneIds": list(centers), "docks": {k: list(v) for k, v in docks.items()},
+        "spawn": list(spawn), "zones": zones_rows, "zoneIds": list(centers), "zoneBiomes": [BIOME_OF.get(k, k) for k in centers], "docks": {k: list(v) for k, v in docks.items()},
         "start": start_loc, "centers": {k: [round(v[0], 1), round(v[1], 1)] for k, v in centers.items()},
     }
 
@@ -613,7 +615,7 @@ class LocBuilder:
         spots = [list(c) for c in random.Random(_seed_of("spots" + self.loc["id"])).sample(rr, min(14, len(rr)))]
         return {
             "spots": spots,
-            "id": "loc:" + self.loc["id"], "kind": "loc", "objScale": OBJ_SCALE, "w": self.W, "h": self.H, "biome": self.region, "cat": self.cat,
+            "id": "loc:" + self.loc["id"], "kind": "loc", "objScale": OBJ_SCALE, "w": self.W, "h": self.H, "biome": BIOME_OF.get(self.region, self.region), "cat": self.cat,
             "name": self.loc["name"].split("（")[0], "type": self.loc["type"], "ground": ground,
             "solid": ["".join(map(str, r)) for r in solid], "objects": self.objects, "entities": self.entities,
             "spawn": list(self.spawn), "exit": [list(c) for c in self.exit_cells], "npcSpot": list(npc_spot),

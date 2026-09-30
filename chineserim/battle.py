@@ -52,7 +52,7 @@ def make_enemy(ch, spec, deep, idx, diff=None):
 def _base_state(ch, loc_id, enemies, deep, diff, partner, log, allies=None):
     return {"loc": loc_id, "deep": bool(deep), "enemies": enemies, "diff": diff or {}, "log": log, "guard": False, "over": None, "turn": 1,
             "killed": [], "rewards": [], "partner": partner, "pact": None, "boss": False, "down": False,
-            "allies": [dict(a) for a in (allies or [])], "shield": 0.0, "invuln": False, "formation": None, "cd": {}, "mirror": 0, "mirror_hit": False, "retry": None}
+            "allies": [dict(a) for a in (allies or [])], "defy": 0, "defy_acc": 0.0, "defy_saved": False, "shield": 0.0, "invuln": False, "formation": None, "cd": {}, "mirror": 0, "mirror_hit": False, "retry": None}
 
 
 def start(ch, loc_id, specs, deep=False, diff=None, partner=None, allies=None):
@@ -120,7 +120,25 @@ REFUSE_NON_BOSS = "這種對手用不著——只有主要對手戰才能使用�
 
 
 def _exhausted_allowed(cmd):
-    return cmd in ("flee", "mpill", "item", "soul")
+    return cmd in ("flee", "mpill", "item", "soul", "defy")
+
+
+DEFY_STEP = 0.12          # 每承受 12% 氣血上限的傷害蓄積一層逆天之力
+DEFY_MAX = 5
+
+
+def _defy_gain(st, ch, dmg):
+    """逆天珠：承受傷害會蓄積逆天之力。"""
+    if ch.count("nitianzhu") <= 0 or dmg <= 0:
+        return
+    st["defy_acc"] += dmg
+    step = ch.max_hp * DEFY_STEP
+    while st["defy_acc"] >= step and st["defy"] < DEFY_MAX:
+        st["defy_acc"] -= step
+        st["defy"] += 1
+        st["log"].append(f"逆天珠微微發熱——逆天之力蓄積至 {st['defy']} 層")
+    if st["defy"] >= DEFY_MAX:
+        st["defy_acc"] = 0.0
 
 
 def command(st, ch, realms, rng, cmd, arg=None, target=None, bonus=None):
@@ -183,6 +201,21 @@ def command(st, ch, realms, rng, cmd, arg=None, target=None, bonus=None):
             ch.remove("mpill")
             ch.mp = min(ch.max_mp, ch.mp + ch.max_mp * 0.5)
             st["log"].append("服下聚氣丹，靈力恢復了一半")
+    elif cmd == "defy":
+        if ch.count("nitianzhu") <= 0:
+            st["log"].append("你沒有逆天珠。")
+            used_turn = False
+        elif st["defy"] <= 0:
+            st["log"].append("逆天之力尚未蓄積——承受傷害，才能蓄積它。")
+            used_turn = False
+        else:
+            n = st["defy"]
+            d = hero_atk(ch, bonus) * (1.8 + 0.9 * n) * rng.uniform(.92, 1.08)
+            _hit(st, t, d, f"你捏碎逆天之力（{n} 層）——逆轉！")
+            heal = ch.max_hp * 0.08 * n
+            ch.hp = min(ch.max_hp, ch.hp + heal)
+            st["log"].append(f"逆天之力反哺己身，回復 {round(heal)} 點氣血")
+            st["defy"], st["defy_acc"] = 0, 0.0
     elif cmd in ("talisman", "formation", "treasure"):
         used_turn = _use_gear(st, ch, rng, bonus, cmd, arg, t)
     elif cmd == "guard":
@@ -382,6 +415,12 @@ def _enemy_phase(st, ch, rng):
             if d > 0:
                 ch.hp -= d
                 st["log"].append(f"{name}襲來，你受到 {round(d)} 傷害" + ("（被剋制）" if m > 1 else ""))
+                _defy_gain(st, ch, d)
+            if ch.hp <= 0 and ch.count("nitianzhu") > 0 and st["defy"] >= 3 and not st["defy_saved"]:
+                ch.hp = max(1.0, ch.max_hp * 0.25)
+                st["defy"], st["defy_acc"], st["defy_saved"] = 0, 0.0, True
+                st["log"].append("致命一擊之下，逆天珠光芒大放——你逆轉了死局！")
+                continue
             if ch.hp <= 0:
                 ch.hp = 0
                 if ch.realm >= NASCENT_REALM:
@@ -595,7 +634,7 @@ def view(st, ch):
         return None
     return {"loc": st["loc"], "deep": st["deep"], "over": st["over"], "turn": st["turn"], "log": st["log"], "boss": st.get("boss", False),
             "down": st.get("down", False), "exhausted": ch.mp <= 0, "shield": round(st.get("shield", 0)), "formation": st.get("formation"),
-            "cd": st.get("cd", {}), "mirror": st.get("mirror", 0), "attackCost": attack_cost(ch),
+            "cd": st.get("cd", {}), "mirror": st.get("mirror", 0), "defy": st.get("defy", 0), "hasDefy": ch.count("nitianzhu") > 0, "attackCost": attack_cost(ch),
             "codex": ch.count("codex_beast") > 0,
             "enemies": [dict({k: e.get(k) for k in ("id", "kind", "name", "el", "hp", "maxhp", "dead", "sprite", "boss", "charging", "stun")},
                              **({"weak": [x for x in "金木水火土" if element_multiplier(x, e["el"]) > 1],

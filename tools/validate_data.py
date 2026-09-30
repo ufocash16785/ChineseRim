@@ -10,7 +10,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
-EDITOR_ID = re.compile(r"^CR_[A-Za-z0-9_]+$")
+EDITOR_ID = re.compile(r"^(CR|XN)_[A-Za-z0-9]+(_[A-Za-z0-9]+)*$")
 
 errors: list[str] = []
 warnings: list[str] = []
@@ -18,7 +18,13 @@ warnings: list[str] = []
 
 def load(name: str):
     with (DATA / f"{name}.json").open(encoding="utf-8") as fh:
-        return json.load(fh)
+        doc = json.load(fh)
+    if name in ("regions", "story_arcs"):                   # 多劇本：合併 <name>_*.json
+        key = "worlds" if name == "regions" else "arcs"
+        for f in sorted(DATA.glob(f"{name}_*.json")):
+            with f.open(encoding="utf-8") as fh:
+                doc[key] = doc[key] + json.load(fh)[key]
+    return doc
 
 
 def load_merged(pattern: str, key: str):
@@ -182,7 +188,23 @@ def main() -> int:
     for kind in load("pets")["pets"]:
         if kind not in cxd["pet_tips"]:
             errors.append(f"codex/pet_tips: 缺少 {kind}")
+    camps = load("campaigns")["campaigns"]
+    all_arcs = {a["id"]: a for a in arcs["arcs"]}
+    for cid, c in camps.items():
+        if c["start_region"] not in all_regions:
+            errors.append(f"campaigns/{cid}: 未知起始區域 {c['start_region']}")
+        if c.get("start_loc") and c["start_loc"] not in all_locs:
+            errors.append(f"campaigns/{cid}: 未知起始地點 {c['start_loc']}")
+        if not [a for a in arcs["arcs"] if a.get("campaign", "fanren") == cid]:
+            errors.append(f"campaigns/{cid}: 沒有任何故事卷")
+    for a in arcs["arcs"]:
+        if a.get("campaign", "fanren") not in camps:
+            errors.append(f"story_arcs/{a['id']}: 未知劇本 {a.get('campaign')}")
     en = load("endings")
+    for cid in en.get("campaign_endings", {}):
+        lst = en["campaign_endings"][cid]
+        if cid not in camps or lst[-1]["when"]:
+            errors.append(f"endings/{cid}: 劇本不存在或最後一個不是保底")
     ids = [e["id"] for e in en["endings"]]
     if len(ids) != len(set(ids)):
         errors.append("endings: id 重複")

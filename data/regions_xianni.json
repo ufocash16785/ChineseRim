@@ -1,0 +1,204 @@
+{
+  "description": "仙逆篇的世界（趙國與天運宗域）。",
+  "worlds": [
+    {
+      "id": "xianni",
+      "name": "仙逆·趙天",
+      "regions": [
+        {
+          "id": "zhaoguo",
+          "name": "趙國",
+          "coords": [
+            28,
+            58
+          ],
+          "summary": "仙逆篇的起點。凡人國度趙國，境內以恆岳派為首的小宗門林立，資質平庸的少年王林在這裡走上逆天之路。",
+          "nations": [
+            "趙國"
+          ],
+          "locations": [
+            {
+              "id": "qingshi_zhen",
+              "name": "青石鎮",
+              "type": "村鎮",
+              "note": "王林的故鄉小鎮，仙逆篇起點。",
+              "verified": false
+            },
+            {
+              "id": "hengyue_pai",
+              "name": "恆岳派",
+              "type": "門派",
+              "note": "趙國的中等宗門，王林入門的地方。門中弟子按資質分內外門。",
+              "verified": false
+            },
+            {
+              "id": "hengyue_yaoyuan",
+              "name": "恆岳藥園",
+              "type": "藥園",
+              "note": "恆岳派後山的藥園，雜役弟子照料靈草的地方：可種藥、住小屋、用丹爐。",
+              "verified": false
+            },
+            {
+              "id": "hengyue_cave",
+              "name": "後山古洞",
+              "type": "山",
+              "note": "恆岳後山無人問津的古洞，傳說有異響。王林在此得到逆天珠。",
+              "verified": false
+            },
+            {
+              "id": "zhao_capital",
+              "name": "趙國都城",
+              "type": "國都",
+              "note": "趙國皇城，各方修士往來的樞紐。",
+              "verified": false
+            },
+            {
+              "id": "zhao_market",
+              "name": "城西坊市",
+              "type": "坊市",
+              "note": "都城西側的修士坊市，丹藥鋪與奸商都在此。",
+              "verified": false
+            },
+            {
+              "id": "heiwu_lin",
+              "name": "黑霧林",
+              "type": "荒野",
+              "note": "終年黑霧籠罩的密林，妖獸出沒。",
+              "verified": false
+            },
+            {
+              "id": "chiyan_gu",
+              "name": "赤炎谷",
+              "type": "山",
+              "note": "地火翻湧的山谷，火屬性妖獸的巢穴。",
+              "verified": false
+            },
+            {
+              "id": "baili_lake",
+              "name": "白鹿湖",
+              "type": "荒野",
+              "note": "湖水清澈，據說有白鹿靈獸出沒。",
+              "verified": false
+            },
+            {
+              "id": "zhao_dongfu",
+              "name": "恆岳弟子洞府",
+              "type": "洞府",
+              "note": "弟子們修行的洞府：可休息、煉丹、打坐。",
+              "verified": false
+            },
+            {
+              "id": "lieyan_mine",
+              "name": "裂岩礦坑",
+              "type": "礦坑",
+              "note": "廢棄的靈石礦坑，藏著妖獸與殘餘靈石。",
+              "verified": false,
+              "minRealm": 1,
+              "profile": "rich"
+            }
+          ]
+        },
+        {
+          "id": "tianyun",
+          "name": "天運宗域",
+          "coords": [
+            62,
+            42
+          ],
+          "summary": "天運宗所在的修仙大域。宗門勢大，暗流洶湧；血光禁地與逆天殿的傳說，牽動著王林的命運。",
+          "nations": [
+            "天運宗域"
+          ],
+          "locations": [
+            {
+              "id": "tianyun_zong",
+              "name": "天運宗",
+              "type": "門派",
+              "note": "仙逆篇的核心宗門，弟子如雲。李慕婉、薛戰等人都在此。",
+              "verified": false
+            },
+            {
+              "id": "tianyun_yaoyuan",
+              "name": "天運藥園",
+              "type": "藥園",
+              "note": "天運宗的藥園：可種藥、住小屋、用丹爐。",
+              "verified": false
+            },
+            {
+              "id": "tianyun_market",
+              "name": "天運坊市",
+              "type": "坊市",
+              "note": "宗門山腳下的坊市，貨品比趙國豐富。",
+              "verified": false
+            },
+            {
+              "id": "tianyun_dongfu",
+              "name": "天運洞府",
+              "type": "洞府",
+              "note": "天運宗弟子的修行洞府。",
+              "verified": false
+            },
+            {
+              "id": "yunmeng_ze",
+              "name": "雲夢澤",
+              "type": "荒野",
+              "note": "雲霧繚繞的大澤，李慕婉與王林的約定之地。",
+              "verified": false
+            },
+            {
+              "id": "gudao",
+              "name": "古驛道",
+              "type": "荒野",
+              "note": "連接各宗門的古老驛道，常有攔路的妖獸與匪徒。",
+              "verified": false
+            },
+            {
+              "id": "wuxing_dong",
+              "name": "五行洞",
+              "type": "洞窟",
+              "note": "天運宗的試煉洞窟，五行之力在此流轉，有守衛看守。",
+              "verified": false,
+              "minRealm": 1,
+              "profile": "mixed"
+            },
+            {
+              "id": "xueguang_jin",
+              "name": "血光禁地",
+              "type": "秘境",
+              "note": "血光沖天的上古禁地，傳說吞噬過無數修士。",
+              "verified": false,
+              "minRealm": 2,
+              "profile": "rich"
+            },
+            {
+              "id": "tianni_dian",
+              "name": "逆天殿",
+              "type": "遺跡",
+              "note": "傳說中與天道對抗者留下的殿堂，逆天珠的來歷之所在。",
+              "verified": false,
+              "minRealm": 3,
+              "profile": "normal"
+            },
+            {
+              "id": "wanyao_gu",
+              "name": "萬妖谷",
+              "type": "妖修聚地",
+              "note": "妖修盤踞的山谷，強者為尊。",
+              "verified": false
+            },
+            {
+              "id": "shouhu_jian",
+              "name": "守護劍冢",
+              "type": "洞窟",
+              "note": "插滿古劍的洞窟，劍魂守護著遺落的寶物。",
+              "verified": false,
+              "minRealm": 2,
+              "profile": "trap"
+            }
+          ]
+        }
+      ],
+      "start_loc": "qingshi_zhen"
+    }
+  ]
+}

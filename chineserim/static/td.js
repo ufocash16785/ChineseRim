@@ -84,7 +84,7 @@ const TD = (() => {
   function groundTile(tx, ty, cam) {
     const c = MAP.ground[ty][tx], h = hs(tx, ty), f = Math.floor(now / 380 + tx + ty) % 4, dx = tx * TS - cam.x, dy = ty * TS - cam.y;
     let b = MAP.biome;
-    if (MAP.kind === 'world') { const z = MAP.zones[ty][tx]; b = z === '.' ? 'tiannan' : MAP.zoneIds[+z]; }
+    if (MAP.kind === 'world') { const z = MAP.zones[ty][tx]; b = z === '.' ? 'tiannan' : (MAP.zoneBiomes || MAP.zoneIds)[+z]; }
     let n;
     if (MAP.kind === 'world') {
       n = {'~': 'sea' + f, ',': 'water' + f, R: 'water' + f, g: 'grass' + [0, 0, 1, 1, 2, 2, 0, 3][h % 8], t: 'forest' + (h % 3), m: 'mountain' + (h % 3), s: 'sand' + (h % 2), r: 'path' + (h % 2), b: 'bridgeH', B: 'bridgeV', d: 'dirt' + (h % 2)}[c] || 'grass0';
@@ -383,7 +383,7 @@ const TD = (() => {
   function btCmd(cmd, arg) {
     if (busy || !S.battle || S.battle.over) return;
     const prevE = S.battle.enemies.map(e => e.hp), prevHp = S.hp, t = S.battle.enemies[bt.target] && !S.battle.enemies[bt.target].dead ? bt.target : S.battle.enemies.findIndex(e => !e.dead);
-    bt.menu = null; bt.heroAnim = {kind: ['attack', 'spell', 'talisman', 'treasure'].includes(cmd) ? 'attack' : 'idle', t: now, target: t, el: cmd === 'spell' ? S.elements[arg % S.elements.length] : null};
+    bt.menu = null; bt.heroAnim = {kind: ['attack', 'spell', 'talisman', 'treasure', 'defy'].includes(cmd) ? 'attack' : 'idle', t: now, target: t, el: cmd === 'spell' ? S.elements[arg % S.elements.length] : null};
     const hp0 = S.hp;
     post('battle', {cmd, arg: arg ?? '', target: t}).then(() => {
       if (S.battle.pact) bt.pAnim = Object.assign({t: now + 380}, S.battle.pact);
@@ -501,7 +501,7 @@ const TD = (() => {
   function btUI() {
     const b = S.battle, p = $('bt');
     if (!b) { p.style.display = 'none'; return; }
-    const k = JSON.stringify([b.stance, b.stanceLocked, b.over, b.turn, S.hp, S.mp, S.heal, S.mpills, b.log.length, bt.menu, b.down, b.shield, b.cd, b.formation, (S.bag || []).map(x => x.n).join()]);
+    const k = JSON.stringify([b.defy, b.stance, b.stanceLocked, b.over, b.turn, S.hp, S.mp, S.heal, S.mpills, b.log.length, bt.menu, b.down, b.shield, b.cd, b.formation, (S.bag || []).map(x => x.n).join()]);
     if (p._k === k) return; p._k = k;
     p.style.display = 'block';
     let h = `<div id=btlog>${b.log.map(x => '<div>' + x + '</div>').join('')}</div>`;
@@ -522,7 +522,7 @@ const TD = (() => {
       h += '<div class=row><b>法寶：</b>' + (l.length ? l.map(x => { const cd = (b.cd || {})[x.id] || 0; return `<button title="${x.desc}" ${cd ? 'disabled' : ''} onclick="TD.cmd('treasure','${x.id}')">${x.name}${cd ? '（冷卻 ' + cd + '）' : ''}</button>`; }).join('') : '<span style="color:#aaa">（還沒有法寶）</span>') + back + '</div>';
     } else {
       const ex = b.exhausted, dis = ex ? 'disabled' : '', gear = b.boss ? `<button ${dis} onclick="TD.menu('formation')">☯ 陣法</button><button ${dis} onclick="TD.menu('talisman')">📜 符錄</button><button ${dis} onclick="TD.menu('treasure')">🗡 法寶</button>` : '';
-      h += `<div class=row><button ${dis} onclick="TD.cmd('attack')">⚔ 劍擊(-${b.attackCost})</button><button ${dis} onclick="TD.menu('spell')">✦ 法術</button>${gear}<button ${S.heal ? '' : 'disabled'} onclick="TD.cmd('item')">💊 回春丹 ×${S.heal}</button><button ${S.mpills ? '' : 'disabled'} onclick="TD.cmd('mpill')">🔮 聚氣丹 ×${S.mpills}</button><button ${dis} onclick="TD.cmd('guard')">🛡 防禦</button><button onclick="TD.cmd('flee')">💨 逃跑</button>${b.boss ? '<small style="margin-left:10px;color:#e8a020">主要對手戰：可用陣法、符錄、法寶</small>' : '<small style="margin-left:10px">點擊敵人可選目標</small>'}</div>`;
+      h += `<div class=row><button ${dis} onclick="TD.cmd('attack')">⚔ 劍擊(-${b.attackCost})</button><button ${dis} onclick="TD.menu('spell')">✦ 法術</button>${gear}<button ${S.heal ? '' : 'disabled'} onclick="TD.cmd('item')">💊 回春丹 ×${S.heal}</button><button ${S.mpills ? '' : 'disabled'} onclick="TD.cmd('mpill')">🔮 聚氣丹 ×${S.mpills}</button>${b.hasDefy ? `<button ${b.defy ? '' : 'disabled'} style="color:#ffd24a" onclick="TD.cmd('defy')">☯ 逆天 ${'●'.repeat(b.defy)}${'○'.repeat(5 - b.defy)}</button>` : ''}<button ${dis} onclick="TD.cmd('guard')">🛡 防禦</button><button onclick="TD.cmd('flee')">💨 逃跑</button>${b.boss ? '<small style="margin-left:10px;color:#e8a020">主要對手戰：可用陣法、符錄、法寶</small>' : '<small style="margin-left:10px">點擊敵人可選目標</small>'}</div>`;
     }
     if (!b.over && !b.down && b.allies && b.allies.length && !bt.menu) h += `<div class=row style="margin-top:4px;font-size:13px"><b>夥伴戰術：</b>${Object.entries(b.stances).map(([k, v]) => `<button ${b.stance === k ? 'disabled' : ''} title="${v.desc}${b.stanceLocked ? '（本回合已調整過）' : ''}" onclick="TD.stance('${k}')">${v.name}</button>`).join('')}<small style="color:#aaa">${b.stances[b.stance].desc}　（切換不耗回合，每回合限一次）</small></div>`;
     p.innerHTML = h;
@@ -673,7 +673,7 @@ const TD = (() => {
     for (const e of ents) {
       const ax = e.px - cam.x, ay = e.py - cam.y;
       if (ax < -100 || ax > VW + 100 || ay < -100 || ay > VH + 100) continue;
-      if (e.k === 'enter') list.push({y: (e.y + 1) * TS, f: () => { const zb = e.region || 'tiannan', ix = (e.x + .5) * TS - cam.x, iy = (e.y + 1) * TS - cam.y; drawObj(zb, e.icon, ix, iy, 1); label(e.name, ix, iy + 13, '#fff', 12); const nw = (S.news || []).find(n => n.loc === e.loc && !n.resolved); if (nw) label(nw.kind === 'entity' ? '❗' : '✦', ix, iy - 44 + Math.sin(now / 250) * 4, '#ffd24a', 22); }});
+      if (e.k === 'enter') list.push({y: (e.y + 1) * TS, f: () => { const zb = (MAP.zoneBiomes && MAP.zoneIds.indexOf(e.region) >= 0 ? MAP.zoneBiomes[MAP.zoneIds.indexOf(e.region)] : e.region) || 'tiannan', ix = (e.x + .5) * TS - cam.x, iy = (e.y + 1) * TS - cam.y; drawObj(zb, e.icon, ix, iy, 1); label(e.name, ix, iy + 13, '#fff', 12); const nw = (S.news || []).find(n => n.loc === e.loc && !n.resolved); if (nw) label(nw.kind === 'entity' ? '❗' : '✦', ix, iy - 44 + Math.sin(now / 250) * 4, '#ffd24a', 22); }});
       else if (e.k === 'dock') list.push({y: (e.y + 1) * TS, f: () => { drawObj(e.region === 'luanxinghai' ? 'luanxinghai' : 'tiannan', 'dock', (e.x + .5) * TS - cam.x, (e.y + 1) * TS - cam.y, 1); label('渡口', (e.x + .5) * TS - cam.x, (e.y + 1) * TS - cam.y + 12, '#9df', 12); }});
       else if (e.k === 'plot') list.push({y: e.y * TS + 10, f: () => { const st = S.plots[e.id] || {stage: 0}, ix = (e.x + .5) * TS - cam.x, iy = (e.y + 1) * TS - cam.y - 2; drawObj(bio, 'plot' + st.stage, ix, iy, 1); if (st.stage === 3) label('可收成', ix, iy - 28 + Math.sin(now / 250) * 2, '#ffe36a', 11); else if (st.stage > 0) label(st.left + '日', ix, iy - 26, '#cfe', 10); }});
       else if (e.k === 'npc') list.push({y: e.py, f: () => drawNPC(e.npc, ax, ay, e.face || 'd', e.moving)});
@@ -707,6 +707,8 @@ const TD = (() => {
     const a = $('ask'); askOpen = true; a.style.display = 'block'; a._opts = [{}];
     const diffs = Object.entries(S.difficulties);
     a.innerHTML = `<b style="font-size:18px">${first ? '歡迎來到凡人修仙傳' : '新遊戲（會覆蓋存檔）'}</b>
+    <div style="margin:10px 0 4px;text-align:left"><b>劇本</b></div>
+    <div id=nc style="text-align:left">${Object.entries(S.campaigns).map(([k, v]) => `<label style="display:block;margin:3px 0"><input type=radio name=cc value="${k}" ${k === 'fanren' ? 'checked' : ''}> <b>${v.name}</b>　<small style="color:#bbb">${v.desc}（主角：${v.hero}）</small></label>`).join('')}</div>
     <div style="margin:10px 0 4px;text-align:left"><b>難度</b></div>
     <div id=nd style="text-align:left">${diffs.map(([k, v]) => `<label style="display:block;margin:3px 0"><input type=radio name=dd value="${k}" ${k === (S.configured ? S.difficulty : 'normal') ? 'checked' : ''}> <b>${v.name}</b>　<small style="color:#bbb">${v.desc}</small></label>`).join('')}</div>
     <div style="margin:10px 0;text-align:left">名字：<input id=nn value="韓立" maxlength=8 style="font-size:15px"></div>
@@ -716,9 +718,13 @@ const TD = (() => {
     $('nr').onchange = rootUI; rootUI();
     const close = () => { a.style.display = 'none'; askOpen = false; };
     const diff = () => document.querySelector('input[name=dd]:checked').value;
+    const camp = () => document.querySelector('input[name=cc]:checked').value;
+    const syncName = () => { const c = S.campaigns[camp()]; const n = $('nn'); if (n && (n.value === '韓立' || n.value === '王林' || !n.dataset.touched)) n.value = c.hero; };
+    document.querySelectorAll('input[name=cc]').forEach(x => x.onchange = syncName);
+    $('nn').oninput = () => { $('nn').dataset.touched = '1'; };
     if ($('nb3')) $('nb3').onclick = close;
-    $('nb2').onclick = () => { const d = diff(); close(); post('act', {c: 'new', diff: d}); };
-    $('nb1').onclick = () => { const r = S.roots.find(x => x.id === $('nr').value), el = [...document.querySelectorAll('.ck:checked')].map(x => x.value); if (el.length !== r.count) { alert('請選擇剛好 ' + r.count + ' 個屬性'); return; } const nm = $('nn').value, d = diff(); close(); post('act', {c: 'new', name: nm, root: r.id, elems: el.join(''), diff: d}); };
+    $('nb2').onclick = () => { const d = diff(); close(); post('act', {c: 'new', diff: d, campaign: camp()}); };
+    $('nb1').onclick = () => { const r = S.roots.find(x => x.id === $('nr').value), el = [...document.querySelectorAll('.ck:checked')].map(x => x.value); if (el.length !== r.count) { alert('請選擇剛好 ' + r.count + ' 個屬性'); return; } const nm = $('nn').value, d = diff(); close(); post('act', {c: 'new', name: nm, root: r.id, elems: el.join(''), diff: d, campaign: camp()}); };
   }
 
   async function boot() {

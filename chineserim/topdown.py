@@ -211,7 +211,10 @@ class TopDownMixin:
         return cache[map_id]
 
     def _world_id_of(self, region):
-        return "lingjie" if region == "tianyuan" else "renjie"
+        for w in self.data.regions:
+            if any(g["id"] == region for g in w["regions"]):
+                return w["id"]
+        return "renjie"
 
     def _entrance_pos(self, loc_id):
         m = self.get_map("world:" + self._world_id_of(self.data_region_of(loc_id)))
@@ -238,7 +241,7 @@ class TopDownMixin:
         wid = self._world_id_of(self.region)
         self.map_id = "world:" + wid
         m = self.get_map(self.map_id)
-        if self.region in ("tiannan",) or wid == "lingjie":
+        if self.region in ("tiannan",) or wid in ("lingjie", "xianni"):
             self._teleport(m["spawn"][0] + .5, m["spawn"][1] + .5)
         else:
             first = self.data.regions[0]["regions"]

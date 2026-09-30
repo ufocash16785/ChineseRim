@@ -118,41 +118,59 @@
   "puppet_iron": {
    "row": 114
   },
-  "yuzitong": {
+  "wanglin": {
    "row": 120
   },
-  "merchant": {
+  "limuwan": {
    "row": 126
   },
-  "boatman": {
+  "situnan": {
    "row": 132
   },
-  "soldier": {
+  "tianyunzi": {
    "row": 138
   },
-  "pharmacist": {
+  "xuezhan": {
    "row": 144
   },
-  "shady": {
+  "tiandao": {
    "row": 150
   },
-  "dongxuaner": {
+  "yuzitong": {
    "row": 156
   },
-  "mocaihuan": {
+  "merchant": {
    "row": 162
   },
-  "chenqiaoqian": {
+  "boatman": {
    "row": 168
   },
-  "yuanyao": {
+  "soldier": {
    "row": 174
   },
-  "wenshier": {
+  "pharmacist": {
    "row": 180
   },
-  "ziling": {
+  "shady": {
    "row": 186
+  },
+  "dongxuaner": {
+   "row": 192
+  },
+  "mocaihuan": {
+   "row": 198
+  },
+  "chenqiaoqian": {
+   "row": 204
+  },
+  "yuanyao": {
+   "row": 210
+  },
+  "wenshier": {
+   "row": 216
+  },
+  "ziling": {
+   "row": 222
   }
  },
  "npcAnims": {
@@ -199,6 +217,15 @@
   "慕沛靈": "mupei",
   "凌玉靈": "lingyu",
   "余子童": "yuzitong",
+  "王林": "wanglin",
+  "李慕婉": "limuwan",
+  "司徒南": "situnan",
+  "天運子": "tianyunzi",
+  "薛戰": "xuezhan",
+  "黑衣修士": "villain",
+  "五行守衛": "puppet_iron",
+  "天道化身": "tiandao",
+  "珠中之聲": "xinmo",
   "王蟬": "wangchan",
   "天星雙聖": "tianxing",
   "魔族將領": "mozu",

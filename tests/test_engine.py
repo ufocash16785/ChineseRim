@@ -135,7 +135,7 @@ class SaveQuestTest(unittest.TestCase):
         self.assertEqual(s.hero.quest["arc"], "arc6_lingjie")
         self.assertTrue(s.hero.flags.get("arc0_complete"))
         seen = {k[5:] for k in s.hero.flags if k.startswith("seen:")}
-        self.assertEqual({k for k, v in s.data.dialogues.items() if "cmp" not in v["trigger"]} - seen, set(), "有對話沒被觸發")
+        self.assertEqual({k for k, v in s.data.dialogues.items() if "cmp" not in v["trigger"] and not k.startswith("d_xn_")} - seen, set(), "有對話沒被觸發")
 
 
 class DialogueTest(unittest.TestCase):
@@ -365,8 +365,9 @@ class ArtAssetsTest(unittest.TestCase):
         d = GameData()
         for w in d.regions:
             for g in w["regions"]:
-                self.assertIn(g["id"], self.man["biomes"], g["id"])
-                self.assertTrue((self.ART / f"scene_{g['id']}.png").exists())
+                bio = __import__("chineserim.mapgen", fromlist=["BIOME_OF"]).BIOME_OF.get(g["id"], g["id"])
+                self.assertIn(bio, self.man["biomes"], g["id"])
+                self.assertTrue((self.ART / f"scene_{bio}.png").exists())
 
     def test_biome_rects_inside_atlas(self):
         for b, info in self.man["biomes"].items():
@@ -689,7 +690,7 @@ class TopDownFullPlaythroughTest(unittest.TestCase):
         self.assertTrue(s.hero.quest["done"], f"卡住：{s.hero.quest}（{steps} 步）")
         self.assertEqual(s.hero.quest["arc"], "arc6_lingjie")
         seen = {k[5:] for k in s.hero.flags if k.startswith("seen:")}
-        self.assertEqual({k for k, v in s.data.dialogues.items() if "cmp" not in v["trigger"]} - seen, set())
+        self.assertEqual({k for k, v in s.data.dialogues.items() if "cmp" not in v["trigger"] and not k.startswith("d_xn_")} - seen, set())
 
 
 class TeleportCounterTest(unittest.TestCase):
@@ -1153,7 +1154,7 @@ class SocialTest(unittest.TestCase):
             m = self.s.get_map("loc:" + c["loc"])
             self.assertTrue(any(e["k"] == "candidate" and e["cid"] == cid for e in m["entities"]), cid)
             seen[cid] = c["name"]
-        self.assertEqual(len(seen), 9)
+        self.assertEqual(len(seen), 10)
 
     def walk(self, prefer=0):
         s = self.s
@@ -2483,3 +2484,161 @@ class TogetherEndingArtTest(unittest.TestCase):
         a = Image.open(art / "ending_together_nangong.png").tobytes()
         b = Image.open(art / "ending_together_dongxuaner.png").tobytes()
         self.assertNotEqual(a, b)
+
+
+class XianniCampaignTest(unittest.TestCase):
+    def setUp(self):
+        import pathlib, tempfile
+        from chineserim.session import Session
+        self.tmp = pathlib.Path(tempfile.mkdtemp())
+        self.s = Session(self.tmp / "s.json", seed=40)
+        self.s.act("new", diff="normal", campaign="xianni")
+        self.h = self.s.hero
+
+    def test_new_game_sets_campaign_start_and_hero(self):
+        s, h = self.s, self.h
+        self.assertEqual(h.campaign, "xianni")
+        self.assertEqual(h.name, "王林")
+        self.assertEqual(s.region, "zhaoguo")
+        self.assertEqual(s.map_id, "world:xianni")
+        self.assertEqual(h.quest["arc"], "xn1_hengyue")
+        snap = s.snapshot()
+        self.assertEqual(snap["campaign"], "xianni")
+        self.assertEqual(set(snap["campaigns"]), {"fanren", "xianni"})
+        self.assertEqual(snap["quest"]["arc"], "第一卷·恆岳派")
+        s.act("new", diff="normal")                                # 預設回到凡人篇
+        self.assertEqual(s.hero.campaign, "fanren")
+        self.assertEqual(s.hero.name, "韓立")
+        self.assertEqual(s.region, "tiannan")
+
+    def test_world_map_connected_and_all_locations_reachable(self):
+        from chineserim import mapgen
+        m = self.s.get_map("world:xianni")
+        solid = [[c == "1" for c in row] for row in m["solid"]]
+        from collections import deque
+        sx, sy = int(m["spawn"][0]), int(m["spawn"][1])
+        seen, dq = {(sx, sy)}, deque([(sx, sy)])
+        while dq:
+            x, y = dq.popleft()
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < m["w"] and 0 <= ny < m["h"] and not solid[ny][nx] and (nx, ny) not in seen:
+                    seen.add((nx, ny))
+                    dq.append((nx, ny))
+        ents = [e for e in m["entities"] if e["k"] == "enter"]
+        self.assertEqual(len(ents), 22)
+        for e in ents:
+            self.assertIn((e["x"], e["y"] + 1), seen, e["loc"])
+        self.assertEqual(set(m["zoneIds"]), {"zhaoguo", "tianyun"})
+        self.assertEqual(m["zoneBiomes"], [mapgen.BIOME_OF[z] for z in m["zoneIds"]])
+
+    def test_every_location_map_builds(self):
+        for g in ("zhaoguo", "tianyun"):
+            for l in next(w for w in self.s.data.regions if w["id"] == "xianni")["regions"][0 if g == "zhaoguo" else 1]["locations"]:
+                m = self.s.get_map("loc:" + l["id"])
+                self.assertTrue(any(e["k"] == "well" for e in m["entities"]), l["id"])
+        self.assertTrue(any(e["k"] == "candidate" and e["cid"] == "limuwan" for e in self.s.get_map("loc:tianyun_zong")["entities"]))
+
+    def test_bot_finishes_xianni_and_gets_ending(self):
+        from tests.bot_td import play_through_td
+        play_through_td(self.s)
+        h = self.h
+        self.assertTrue(h.quest["done"])
+        self.assertTrue(h.flags.get("beat:xn_tiandao"))
+        self.assertGreater(h.count("nitianzhu"), 0)
+        v = self.s.snapshot()["ending"]
+        self.assertIsNotNone(v)
+        self.assertTrue(v["id"].startswith("xn_"))
+        self.assertTrue(v["art"])
+        seen = {k[5:] for k, x in h.flags.items() if k.startswith("seen:") and x}
+        self.assertEqual({k for k in self.s.data.dialogues if k.startswith("d_xn_")} - seen, set())
+
+    def test_endings_by_dao_and_companion(self):
+        from chineserim import endings, karma
+        pick = lambda: endings.pick_ending(self.h, self.s.data)["id"]
+        self.h.counters["karma:sha"] = 12
+        self.assertEqual(pick(), "xn_slay")
+        self.h.counters["karma:sha"] = 5
+        self.assertEqual(pick(), "xn_defy")
+        self.h.counters.update({"karma:sha": 0, "karma:ren": 6})
+        self.assertEqual(pick(), "xn_heart")
+        self.h.companion = "limuwan"
+        self.h.counters["karma:ren"] = 0
+        self.assertEqual(pick(), "xn_bond")
+        self.h.companion = "dongxuaner"                            # 別的道侶不算
+        self.assertEqual(pick(), "xn_lone")
+        self.h.campaign = "fanren"
+        self.h.companion = ""
+        self.assertEqual(pick(), "lone_sword")
+
+    def test_save_load_keeps_campaign(self):
+        from chineserim.session import Session
+        self.s.act("pos", x=1, y=1)
+        s2 = Session(self.tmp / "s.json")
+        s2.load()
+        self.assertEqual(s2.hero.campaign, "xianni")
+        self.assertEqual(s2.map_id, "world:xianni")
+
+
+class DefyMechanicTest(unittest.TestCase):
+    def setUp(self):
+        import pathlib, tempfile
+        from chineserim.session import Session
+        self.s = Session(pathlib.Path(tempfile.mkdtemp()) / "s.json", seed=41)
+        self.s.act("new", diff="normal", campaign="xianni")
+        self.h = self.s.hero
+        self.h.add("nitianzhu")
+        self.h.hp, self.h.mp = self.h.max_hp, self.h.max_mp
+
+    def _boss(self, atk=None):
+        self.s.start_boss_fight("xn_heiyi")
+        st = self.s.battle
+        st["enemies"][0]["hp"] *= 50
+        if atk is not None:
+            st["enemies"][0]["atk"] = atk
+        return st
+
+    def test_no_bead_no_defy(self):
+        self.h.inventory["nitianzhu"] = 0
+        st = self._boss()
+        self.assertFalse(self.s.snapshot()["battle"]["hasDefy"])
+        self.s.act("battle", cmd="defy")
+        self.assertEqual(st["turn"], 1)
+
+    def test_charges_from_damage_and_release(self):
+        st = self._boss(atk=self.h.max_hp * 0.2)
+        self.assertEqual(st["defy"], 0)
+        self.s.act("battle", cmd="defy")                          # 沒蓄積：不能用，不耗回合
+        self.assertEqual(st["turn"], 1)
+        for _ in range(3):
+            self.s.act("battle", cmd="guard")
+            self.h.hp = self.h.max_hp
+        self.assertGreaterEqual(st["defy"], 1)
+        n = st["defy"]
+        hp0 = st["enemies"][0]["hp"]
+        self.h.hp = self.h.max_hp * 0.5
+        self.s.act("battle", cmd="defy")
+        self.assertLess(st["enemies"][0]["hp"], hp0)
+        self.assertTrue(any(f"{n} 層" in x for x in st["log"]))
+        self.assertGreater(self.h.hp, self.h.max_hp * 0.5 - 1)   # 反哺：回復氣血（抵消該回合傷害）
+
+    def test_defy_saves_from_death_once(self):
+        st = self._boss(atk=1e9)
+        st["defy"] = 3
+        self.s.act("battle", cmd="guard")
+        self.assertGreater(self.h.hp, 0)
+        self.assertTrue(st["defy_saved"])
+        self.assertEqual(st["over"], None if st["over"] is None else st["over"])
+        self.assertNotEqual(st["over"], "lose")
+        self.assertTrue(any("逆轉了死局" in x for x in st["log"]))
+        st["defy"] = 5                                             # 一場只救一次
+        self.s.act("battle", cmd="guard")
+        self.assertTrue(self.s.battle is None or self.s.battle["over"] == "lose" or self.s.battle.get("down"))
+
+    def test_defy_usable_when_mp_zero(self):
+        st = self._boss(atk=1)
+        st["defy"] = 2
+        self.h.mp = 0
+        hp0 = st["enemies"][0]["hp"]
+        self.s.act("battle", cmd="defy")
+        self.assertLess(st["enemies"][0]["hp"], hp0)
