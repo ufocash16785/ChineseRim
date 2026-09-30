@@ -35,6 +35,10 @@ NPCS = {
     "xuangu": dict(robe="#2a2030", trim="#a03030", sash="#6a1a1a", hair="#d0d0d0", beard="#d0d0d0", hairstyle="elder"),
     "mupei": dict(robe="#c0492b", trim="#f0d090", sash="#6a2a1a", hair="#3a2418", hairstyle="long", accessory="flower", female=True, eye="#8a4a2a", shawl="#f8d8a0", ornament="#ffb84a"),
     "lingyu": dict(robe="#7a6ad8", trim="#f0e0ff", sash="#4a3a9a", hair="#241a34", hairstyle="long", accessory="pin", female=True, eye="#8a4ac8", shawl="#e0d0ff"),
+    "wangchan": dict(robe="#b8402a", trim="#f0c060", sash="#5a1a10", hair="#2a1414", hairstyle="short", hat="#7a2a1a"),
+    "tianxing": dict(robe="#3a4a9a", trim="#e0e8ff", sash="#1a2258", hair="#dcdcf0", beard="#dcdcf0", hairstyle="elder"),
+    "mozu": dict(robe="#2a1a2a", trim="#d03a1a", sash="#8a1a10", hair="#c02a1a", hairstyle="ponytail", hat="#3a2a3a"),
+    "xinmo": dict(robe="#1a1a24", trim="#8a8ab0", sash="#4a4a6a", hair="#0e0e16", hairstyle="topknot"),
     "yuzitong": dict(robe="#5a3a3a", trim="#a08a7a", sash="#2a1a1a", hair="#1a1414", hairstyle="topknot"),
     "merchant": dict(robe="#5a7a3a", trim="#e8d8a0", sash="#8a6a2a", hair="#3a2a2a", hairstyle="short", hat="#6a4a2a"),
     "boatman": dict(robe="#4a6a8a", trim="#a8c0d0", sash="#2a3a4a", hair="#3a3a3a", hairstyle="short", hat="#b89a5a"),
@@ -54,7 +58,7 @@ SPEAKERS = {
     "母親": "villager_f", "三叔": "villager_m", "執事": "disciple", "落雲宗執事": "disciple", "靈獸山弟子": "disciple",
     "聯盟使者": "disciple", "厲飛雨": "lifeiyu", "張鐵": "zhangtie", "墨大夫": "mo", "李化元": "li",
     "南宮婉": "nangong", "大衍神君": "dayan", "曲魂": "villain", "玄骨老祖": "xuangu", "慕沛靈": "mupei",
-    "凌玉靈": "lingyu", "余子童": "yuzitong", "攤主": "merchant", "藥鋪掌櫃": "pharmacist", "掌櫃": "pharmacist", "奸商": "shady", "董萱兒": "dongxuaner", "墨彩環": "mocaihuan", "陳巧倩": "chenqiaoqian", "元瑤": "yuanyao", "文詩兒": "wenshier", "紫靈": "ziling", "船夫": "boatman",
+    "凌玉靈": "lingyu", "余子童": "yuzitong", "王蟬": "wangchan", "天星雙聖": "tianxing", "魔族將領": "mozu", "心魔": "xinmo", "攤主": "merchant", "藥鋪掌櫃": "pharmacist", "掌櫃": "pharmacist", "奸商": "shady", "董萱兒": "dongxuaner", "墨彩環": "mocaihuan", "陳巧倩": "chenqiaoqian", "元瑤": "yuanyao", "文詩兒": "wenshier", "紫靈": "ziling", "船夫": "boatman",
     "天淵守軍": "soldier",
 }
 

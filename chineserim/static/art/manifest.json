@@ -97,41 +97,53 @@
   "lingyu": {
    "row": 72
   },
-  "yuzitong": {
+  "wangchan": {
    "row": 78
   },
-  "merchant": {
+  "tianxing": {
    "row": 84
   },
-  "boatman": {
+  "mozu": {
    "row": 90
   },
-  "soldier": {
+  "xinmo": {
    "row": 96
   },
-  "pharmacist": {
+  "yuzitong": {
    "row": 102
   },
-  "shady": {
+  "merchant": {
    "row": 108
   },
-  "dongxuaner": {
+  "boatman": {
    "row": 114
   },
-  "mocaihuan": {
+  "soldier": {
    "row": 120
   },
-  "chenqiaoqian": {
+  "pharmacist": {
    "row": 126
   },
-  "yuanyao": {
+  "shady": {
    "row": 132
   },
-  "wenshier": {
+  "dongxuaner": {
    "row": 138
   },
-  "ziling": {
+  "mocaihuan": {
    "row": 144
+  },
+  "chenqiaoqian": {
+   "row": 150
+  },
+  "yuanyao": {
+   "row": 156
+  },
+  "wenshier": {
+   "row": 162
+  },
+  "ziling": {
+   "row": 168
   }
  },
  "npcAnims": {
@@ -178,6 +190,10 @@
   "慕沛靈": "mupei",
   "凌玉靈": "lingyu",
   "余子童": "yuzitong",
+  "王蟬": "wangchan",
+  "天星雙聖": "tianxing",
+  "魔族將領": "mozu",
+  "心魔": "xinmo",
   "攤主": "merchant",
   "藥鋪掌櫃": "pharmacist",
   "掌櫃": "pharmacist",

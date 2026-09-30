@@ -10,6 +10,7 @@ const TD = (() => {
   const keys = {};
   let trail = [], ents = [], solid = [], shoreMask = null, busy = false, now = 0, last = performance.now();
   let askOpen = false, cool = {}, exitCool = 0, regionPending = false, syncT = 0, dist = 0, lastPos = null;
+  let bagOpen = false, walk = null, lastCam = {x: 0, y: 0}, stuckT = 0;
   let lastTp = null, toastT = 0, lastLog = '', bannerT = 0, lastRegion = null, minimapBase = null, uiKey = '';
   let bt = {target: 0, anim: [], hero: null, prev: null, fx: [], shake: {}, heroAnim: null, over: false};
   const rnd = (a, b = 0) => { let h = (a * 73856093) ^ (b * 19349663); h = (h ^ (h >>> 13)) >>> 0; return (h % 1000) / 1000; };
@@ -21,7 +22,8 @@ const TD = (() => {
   async function load() {
     try { S = await (await fetch('/state')).json(); $('err').style.display = 'none'; } catch (e) { err('連不上伺服器：' + e); return; }
     if (S.map_id !== mapId) await setMap(S.map_id);
-    if (S.tp !== lastTp) { lastTp = S.tp; hero.x = S.pos[0] * TS; hero.y = S.pos[1] * TS; hero.dir = 'd'; lastPos = null; exitCool = 1.2; ents.forEach(e => { if (e.k === 'dock') e.asked = true; }); }
+    if (!S.battle) bt = null; else if (!bt) bt = {target: 0, fx: [], shake: {}, heroAnim: null, prev: null, over: false, ids: [], t0: now};
+    if (S.tp !== lastTp) { walk = null; lastTp = S.tp; hero.x = S.pos[0] * TS; hero.y = S.pos[1] * TS; hero.dir = 'd'; lastPos = null; exitCool = 1.2; ents.forEach(e => { if (e.k === 'dock') e.asked = true; }); }
     const l = S.log[S.log.length - 1] || '';
     if (l !== lastLog) { lastLog = l; toast(l); }
     if (S.region !== lastRegion) { if (lastRegion !== null && MAP.kind === 'world') banner(S.region_name); lastRegion = S.region; }
@@ -133,7 +135,8 @@ const TD = (() => {
     if (bannerT > 0) { bannerT -= dt * 1000; if (bannerT <= 0) $('banner').style.opacity = 0; }
     hero.inv -= dt; exitCool -= dt;
     if (!S || !MAP) return;
-    const frozen = busy || S.dialogue || S.battle || askOpen || S.shop || S.board || S.cand;
+    const frozen = busy || S.dialogue || S.battle || askOpen || S.shop || S.board || S.cand || bagOpen;
+    if (frozen) walk = null;
     if (!frozen) {
       let dx = (down('d', 'arrowright') ? 1 : 0) - (down('a', 'arrowleft') ? 1 : 0), dy = (down('s', 'arrowdown') ? 1 : 0) - (down('w', 'arrowup') ? 1 : 0);
       hero.moving = false;
@@ -147,7 +150,8 @@ const TD = (() => {
         if (moved) { const l = trail[trail.length - 1]; if (!l || Math.hypot(l.x - hero.x, l.y - hero.y) > 6) { trail.push({x: hero.x, y: hero.y, dir: hero.dir}); if (trail.length > 60) trail.shift(); } }
         hero.dir = Math.abs(dx) >= Math.abs(dy) && dx ? (dx > 0 ? 'r' : 'l') : (dy > 0 ? 'd' : 'u');
         if (!dx) hero.dir = dy > 0 ? 'd' : 'u';
-      }
+        walk = null;
+      } else if (walk) followWalk(dt);
       triggers(dt);
       syncT += dt; if (syncT > 2) { syncT = 0; syncPos(); }
     } else hero.moving = false;
@@ -219,6 +223,8 @@ const TD = (() => {
       else if (e.k === 'chest' && !S.opened.includes(e.id)) out.push({id: e.id, x: (e.x + .5) * TS, y: (e.y + .9) * TS, text: '打開寶箱'});
       else if (e.k === 'dummy') out.push({id: e.id, x: e.px, y: e.py, text: '練習劍法（木人樁）'});
       else if (e.k === 'altar') out.push({id: e.id, x: (e.x + .5) * TS, y: (e.y + 1.2) * TS, text: '在祭壇前調息'});
+      else if (e.k === 'well') out.push({id: e.id, x: (e.x + .5) * TS, y: (e.y + 1.2) * TS, text: '在井邊存檔（死亡時回到這裡）'});
+      else if (e.k === 'guardian' && !(S.guardians || []).includes(S.cur_loc)) out.push({id: e.id, kind: 'guardian', x: (e.x + .5) * TS, y: (e.y + 1.2) * TS, text: `挑戰${e.name}（主要對手）`});
       else if (e.k === 'portal') out.push({id: e.id, x: (e.x + .5) * TS, y: (e.y + 1.2) * TS, text: '觸碰空間節點'});
       else if (e.k === 'sign') out.push({id: e.id, x: (e.x + .5) * TS, y: (e.y + 1.2) * TS, text: '查看告示牌'});
       else if (e.k === 'plot') { const st = S.plots[e.id] || {stage: 0}; out.push({id: e.id, kind: 'plot', x: (e.x + .5) * TS, y: (e.y + 1) * TS, text: ['空地：播種', '幼苗：查看', '生長中：查看', '已成熟：收成'][st.stage]}); }
@@ -235,10 +241,85 @@ const TD = (() => {
     return b;
   }
   function interact() {
-    if (busy || S.dialogue || S.battle || askOpen || S.shop || S.board || S.cand) return;
+    if (busy || S.dialogue || S.battle || askOpen || S.shop || S.board || S.cand || bagOpen) return;
     const n = nearest(); if (!n) return;
-    if (n.kind === 'plot') plotMenu(n.id); else if (n.kind === 'furnace') furnaceMenu(); else post('talk', {ent: n.id});
+    useIt(n);
   }
+  function useIt(n) {
+    if (n.kind === 'plot') plotMenu(n.id); else if (n.kind === 'furnace') furnaceMenu();
+    else if (n.kind === 'guardian') askBox(`${n.text.replace('挑戰', '')}攔在前方。要戰鬥嗎？（可使用陣法、符錄、法寶；敗北會回到上次儲存點）`, [{label: '戰鬥！', fn: () => post('talk', {ent: n.id})}, {label: '先不要', fn: () => {}}]);
+    else post('talk', {ent: n.id});
+  }
+  // ---- 滑鼠點擊移動（A* 尋路）----
+  function findPath(sx, sy, gx, gy) {
+    const W = MAP.w, H = MAP.h, idx = (x, y) => y * W + x, N = W * H;
+    if (isSolidTile(gx, gy)) {          // 目標是實心格：找最近的可走格
+      let best = null, bd = 1e9;
+      for (let r = 1; r <= 4 && !best; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) { const x = gx + dx, y = gy + dy; if (!isSolidTile(x, y) && dx * dx + dy * dy < bd) { bd = dx * dx + dy * dy; best = [x, y]; } }
+      if (!best) return null; gx = best[0]; gy = best[1];
+    }
+    if (sx === gx && sy === gy) return [[gx, gy]];
+    const gs = new Float32Array(N).fill(1e9), from = new Int32Array(N).fill(-1), closed = new Uint8Array(N), open = [[0, idx(sx, sy)]];
+    gs[idx(sx, sy)] = 0;
+    const hh = (x, y) => Math.max(Math.abs(x - gx), Math.abs(y - gy)) + .41 * Math.min(Math.abs(x - gx), Math.abs(y - gy));
+    let guard = 0;
+    while (open.length && guard++ < 60000) {
+      let bi = 0; for (let i = 1; i < open.length; i++) if (open[i][0] < open[bi][0]) bi = i;
+      const cur = open.splice(bi, 1)[0][1], cx = cur % W, cy = (cur / W) | 0;
+      if (closed[cur]) continue; closed[cur] = 1;
+      if (cx === gx && cy === gy) { const path = []; let c = cur; while (c !== -1) { path.push([c % W, (c / W) | 0]); c = from[c]; } return path.reverse(); }
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        if (!dx && !dy) continue;
+        const nx = cx + dx, ny = cy + dy;
+        if (isSolidTile(nx, ny) || (dx && dy && (isSolidTile(cx + dx, cy) || isSolidTile(cx, cy + dy)))) continue;
+        const ni = idx(nx, ny), ng = gs[cur] + (dx && dy ? 1.414 : 1);
+        if (ng < gs[ni]) { gs[ni] = ng; from[ni] = cur; open.push([ng + hh(nx, ny), ni]); }
+      }
+    }
+    return null;
+  }
+  function walkTo(px, py, ent) {
+    if (!S || !MAP || busy || S.dialogue || S.battle || askOpen || S.shop || S.board || S.cand || bagOpen) return;
+    const path = findPath(Math.floor(hero.x / TS), Math.floor(hero.y / TS), Math.max(0, Math.min(MAP.w - 1, Math.floor(px / TS))), Math.max(0, Math.min(MAP.h - 1, Math.floor(py / TS))));
+    if (!path) { toast('走不到那裡。'); return; }
+    const pts = path.slice(1).map(c => ({x: (c[0] + .5) * TS, y: (c[1] + .75) * TS}));
+    const last = path[path.length - 1];
+    walk = {pts, gx: (last[0] + .5) * TS, gy: (last[1] + .75) * TS, ent: ent || null, tries: 0};
+    stuckT = 0;
+  }
+  function followWalk(dt) {
+    const w = walk;
+    if (!w.pts.length) { const ent = w.ent; walk = null; if (ent) { const n = interactables().find(i => i.id === ent.id); if (n && Math.hypot(n.x - hero.x, n.y - hero.y) < 60) useIt(n); } return; }
+    const t = w.pts[0], dx = t.x - hero.x, dy = t.y - hero.y, d = Math.hypot(dx, dy), sp = (MAP.kind === 'world' ? 150 : 125) * dt;
+    if (d < Math.max(3, sp)) { hero.x = t.x; hero.y = t.y; w.pts.shift(); hero.moving = true; return; }
+    const nx = hero.x + dx / d * sp, ny = hero.y + dy / d * sp;
+    let moved = false;
+    if (free(nx, ny)) { dist += sp; hero.x = nx; hero.y = ny; moved = true; }
+    else if (Math.abs(dx) > 1 && free(nx, hero.y)) { dist += Math.abs(nx - hero.x); hero.x = nx; moved = true; }
+    else if (Math.abs(dy) > 1 && free(hero.x, ny)) { dist += Math.abs(ny - hero.y); hero.y = ny; moved = true; }
+    hero.moving = moved;
+    if (moved) { stuckT = 0; const l = trail[trail.length - 1]; if (!l || Math.hypot(l.x - hero.x, l.y - hero.y) > 6) { trail.push({x: hero.x, y: hero.y, dir: hero.dir}); if (trail.length > 60) trail.shift(); } }
+    else { stuckT += dt; if (stuckT > .5) { const e = w.ent; walk = null; if (w.tries < 2) { walkTo(w.gx, w.gy, e); if (walk) walk.tries = w.tries + 1; } } }
+    hero.dir = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'r' : 'l') : (dy > 0 ? 'd' : 'u');
+  }
+  function clickWalk(ev) {
+    if (!S || S.battle || !MAP) return;
+    const r = cv.getBoundingClientRect(), x = (ev.clientX - r.left) * VW / r.width + lastCam.x, y = (ev.clientY - r.top) * VH / r.height + lastCam.y;
+    if (MAP.kind === 'loc') {
+      let best = null, bd = 34;
+      for (const i of interactables()) { const d = Math.hypot(i.x - x, i.y - (y + 10)); if (d < bd) { bd = d; best = i; } }
+      if (best) { walkTo(best.x, best.y, best); return; }
+    } else {
+      for (const e of ents) if (e.k === 'enter' && Math.hypot((e.x + .5) * TS - x, (e.y + .5) * TS - y) < 34) { walkTo((e.x + .5) * TS, (e.y + 1.6) * TS, null); return; }
+    }
+    walkTo(x, y, null);
+  }
+  cv.addEventListener('mousedown', ev => { if (ev.button === 0 && !(S && S.battle)) clickWalk(ev); });
+  $('mini').addEventListener('mousedown', ev => {
+    if (!S || !MAP || MAP.kind !== 'world') return;
+    const r = $('mini').getBoundingClientRect(), k = 150 / Math.max(MAP.w, MAP.h);
+    walkTo((ev.clientX - r.left) * 150 / r.width / k * TS, (ev.clientY - r.top) * 150 / r.height / k * TS, null); ev.stopPropagation();
+  });
   function askBox(title, opts) {
     askOpen = true; const a = $('ask'); a.style.display = 'block';
     a.innerHTML = `<div style="font-size:18px;margin-bottom:8px">${title}</div>` + opts.map((o, i) => `<button data-i="${i}">${i + 1}. ${o.label}</button>`).join('');
@@ -271,8 +352,11 @@ const TD = (() => {
     const nm = S.world.find(w => w.id === to).name;
     askBox(`搭船前往「${nm}」？（約 8 日航程）`, [{label: '出發', fn: () => post('ferry', {to})}, {label: '再等等', fn: () => {}}]);
   }
+  function toggleBag() { bagOpen = !bagOpen; walk = null; panels(); }
   const key = k => {
     if (askOpen) { const a = $('ask'); if (k === '1' || k === 'enter') closeAsk(0); else if (k === '2') closeAsk(1); else if (k === 'escape') closeAsk(a._opts.length - 1); return; }
+    if (k === 'b' && S && !S.battle) { toggleBag(); return; }
+    if (k === 'escape' && bagOpen) { toggleBag(); return; }
     if (S && S.battle) return;
     if (k === 'e' || k === ' ' || k === 'enter') interact();
   };
@@ -291,7 +375,8 @@ const TD = (() => {
   function btCmd(cmd, arg) {
     if (busy || !S.battle || S.battle.over) return;
     const prevE = S.battle.enemies.map(e => e.hp), prevHp = S.hp, t = S.battle.enemies[bt.target] && !S.battle.enemies[bt.target].dead ? bt.target : S.battle.enemies.findIndex(e => !e.dead);
-    bt.heroAnim = {kind: cmd === 'attack' ? 'attack' : cmd === 'spell' ? 'attack' : 'idle', t: now, target: t, el: cmd === 'spell' ? S.elements[arg % S.elements.length] : null};
+    bt.menu = null; bt.heroAnim = {kind: ['attack', 'spell', 'talisman', 'treasure'].includes(cmd) ? 'attack' : 'idle', t: now, target: t, el: cmd === 'spell' ? S.elements[arg % S.elements.length] : null};
+    const hp0 = S.hp;
     post('battle', {cmd, arg: arg ?? '', target: t}).then(() => {
       if (S.battle.pact) bt.pAnim = Object.assign({t: now + 380}, S.battle.pact);
       S.battle.enemies.forEach((e, i) => { const d = prevE[i] - e.hp; if (d > 0.5) { bt.fx.push({x: 0, i, t: now + 320, txt: Math.round(d), c: '#ffec99'}); bt.shake[i] = now + 500; } });
@@ -300,7 +385,7 @@ const TD = (() => {
     });
   }
   function btEnd() {
-    const lost = S.battle && S.battle.over === 'lose', ids = bt.ids || [];
+    const ids = (bt && bt.ids) || [];
     if (S.battle && S.battle.over === 'flee') ids.forEach(id => cool['f' + id] = now + 3500);
     post('battle_end');
   }
@@ -337,12 +422,16 @@ const TD = (() => {
       if (e.dead && !(bt.shake[i] && now < bt.shake[i] + 400)) return;
       const ex = 660 + i * 95, ey = 360 + i * 46, sh = bt.shake[i] && now < bt.shake[i] ? Math.sin(now / 25) * 6 : 0;
       g.globalAlpha = e.dead ? Math.max(0, 1 - (now - bt.shake[i]) / 400 + .4) : 1;
-      shadow(ex, ey + 2, 46); drawBeast(e, ex + sh, ey, 3, true, Math.floor(now / 250) % 4);
+      const off = e.sprite ? 62 : 0;
+      shadow(ex, ey + 2, e.sprite ? 54 : 46);
+      if (e.sprite && Art.man.npcs[e.sprite]) human('npcs', Art.man.npcs[e.sprite].row, Art.man.npcAnims, 'l', false, ex + sh, ey, 4, {anim: 'idle', f: [0, 1, 0, 1, 0, 1, 2, 1][Math.floor(now / 330) % 8]});
+      else drawBeast(e, ex + sh, ey, e.boss ? 3.6 : 3, true, Math.floor(now / 250) % 4);
       g.globalAlpha = 1;
       if (!e.dead) {
-        g.fillStyle = '#222'; g.fillRect(ex - 44, ey - 150, 88, 8); g.fillStyle = '#e44'; g.fillRect(ex - 44, ey - 150, 88 * Math.max(0, e.hp / e.maxhp), 8);
-        label(e.el + ' ' + e.name, ex, ey - 158, ECOL[e.el], 13);
-        if (i === bt.target && !b.over) label('▼', ex, ey - 168 + Math.sin(now / 150) * 4, '#ffd24a', 24);
+        g.fillStyle = '#222'; g.fillRect(ex - 44, ey - 150 - off, 88, 8); g.fillStyle = e.boss ? '#e8a020' : '#e44'; g.fillRect(ex - 44, ey - 150 - off, 88 * Math.max(0, e.hp / e.maxhp), 8);
+        label((e.boss ? '★ ' : '') + e.el + ' ' + e.name + (e.stun ? ' 💫' : ''), ex, ey - 158 - off, ECOL[e.el], 13);
+        if (e.charging) { g.globalAlpha = .5 + .5 * Math.sin(now / 90); label('⚠ 蓄力絕招！', ex, ey - 184 - off, '#ff5a5a', 16); g.globalAlpha = 1; }
+        if (i === bt.target && !b.over) label('▼', ex, ey - 168 - off + Math.sin(now / 150) * 4, '#ffd24a', 24);
       }
     });
     // 夥伴特效
@@ -381,6 +470,13 @@ const TD = (() => {
     g.fillStyle = '#222'; g.fillRect(24, 42, 234, 10); g.fillStyle = '#e44'; g.fillRect(24, 42, 234 * Math.max(0, S.hp / S.max_hp), 10);
     g.fillStyle = '#222'; g.fillRect(24, 58, 234, 8); g.fillStyle = '#48c'; g.fillRect(24, 58, 234 * Math.max(0, S.mp / S.max_mp), 8);
     label(`氣血 ${S.hp}/${S.max_hp}`, 141, 51, '#fff', 10); label(`靈力 ${S.mp}/${S.max_mp}`, 141, 66, '#fff', 9);
+    const st = [];
+    if (b.shield) st.push('🛡護盾 ' + b.shield);
+    if (b.formation) st.push('☯' + ({ju: '聚靈陣', kun: '困敵陣', sha: '殺陣', hu: '護體陣'}[b.formation.id]) + ' ' + b.formation.turns + '回合');
+    if (b.mirror) st.push('🪞照妖鏡');
+    if (st.length) { g.fillStyle = '#000a'; g.fillRect(16, 82, 250, 22); label(st.join('　'), 141, 98, '#9fe', 12); }
+    if (b.exhausted && !b.down) label('靈力耗盡！只能逃跑或服丹', 141, 122, '#ff8a8a', 14);
+    if (b.down) label('氣血耗盡……只有元嬰出竅能保命', 141, 122, '#ff5a5a', 15);
   }
   cv.addEventListener('click', ev => {
     if (!S || !S.battle) return;
@@ -390,17 +486,28 @@ const TD = (() => {
   function btUI() {
     const b = S.battle, p = $('bt');
     if (!b) { p.style.display = 'none'; return; }
-    const k = JSON.stringify([b.over, b.turn, S.hp, S.mp, S.heal, S.mpills, b.log.length, bt.spellOpen]);
+    const k = JSON.stringify([b.over, b.turn, S.hp, S.mp, S.heal, S.mpills, b.log.length, bt.menu, b.down, b.shield, b.cd, b.formation, (S.bag || []).map(x => x.n).join()]);
     if (p._k === k) return; p._k = k;
     p.style.display = 'block';
     let h = `<div id=btlog>${b.log.map(x => '<div>' + x + '</div>').join('')}</div>`;
+    const bag = cat => (S.bag || []).filter(x => x.cat === cat);
+    const back = '<button onclick="TD.menu(null)">返回</button>';
     if (b.over) {
-      const t = {win: '🏆 戰鬥勝利', lose: '💀 你敗下陣來', flee: '💨 逃脫成功'}[b.over];
+      const t = {win: '🏆 戰鬥勝利', lose: '💀 你敗下陣來', flee: '💨 逃脫成功', soul: '🌀 元嬰出竅，遁走保命'}[b.over];
       h += `<div class=row><b style="font-size:18px">${t}</b><button onclick="TD.btEnd()">確定</button></div>`;
-    } else if (bt.spellOpen) {
-      h += '<div class=row><b>選擇五行法術：</b>' + S.elements.map((e, i) => `<button ${S.mp < b.spellCost ? 'disabled' : ''} style="color:${ECOL[e]}" onclick="TD.cmd('spell',${i})">${e}（-${b.spellCost}靈力）</button>`).join('') + '<button onclick="TD.spellMenu(false)">返回</button></div>';
+    } else if (b.down) {
+      h += '<div class=row><b style="color:#ff8a8a">氣血耗盡，動彈不得！</b><button style="font-size:17px;background:#3a2a5a" onclick="TD.cmd(\'soul\')">🌀 元嬰出竅（保住性命，靈力歸零、略損靈石）</button></div>';
+    } else if (bt.menu === 'spell') {
+      h += '<div class=row><b>選擇五行法術：</b>' + S.elements.map((e, i) => `<button ${S.mp < b.spellCost ? 'disabled' : ''} style="color:${ECOL[e]}" onclick="TD.cmd('spell',${i})">${e}（-${b.spellCost}靈力）</button>`).join('') + back + '</div>';
+    } else if (bt.menu === 'talisman' || bt.menu === 'formation') {
+      const cat = bt.menu === 'talisman' ? '符錄' : '陣法', l = bag(cat);
+      h += `<div class=row><b>${cat}：</b>` + (l.length ? l.map(x => `<button title="${x.desc}" onclick="TD.cmd('${bt.menu}','${x.id}')">${x.name} ×${x.n}</button>`).join('') : '<span style="color:#aaa">（儲物袋裡沒有，可到丹藥鋪購買或從強敵身上奪取）</span>') + back + '</div>';
+    } else if (bt.menu === 'treasure') {
+      const l = bag('法寶');
+      h += '<div class=row><b>法寶：</b>' + (l.length ? l.map(x => { const cd = (b.cd || {})[x.id] || 0; return `<button title="${x.desc}" ${cd ? 'disabled' : ''} onclick="TD.cmd('treasure','${x.id}')">${x.name}${cd ? '（冷卻 ' + cd + '）' : ''}</button>`; }).join('') : '<span style="color:#aaa">（還沒有法寶）</span>') + back + '</div>';
     } else {
-      h += `<div class=row><button onclick="TD.cmd('attack')">⚔ 劍擊</button><button onclick="TD.spellMenu(true)">✦ 法術</button><button ${S.heal ? '' : 'disabled'} onclick="TD.cmd('item')">💊 回春丹 ×${S.heal}</button><button ${S.mpills ? '' : 'disabled'} onclick="TD.cmd('mpill')">🔮 聚氣丹 ×${S.mpills}</button><button onclick="TD.cmd('guard')">🛡 防禦</button><button onclick="TD.cmd('flee')">💨 逃跑</button><small style="margin-left:10px">點擊敵人可選目標</small></div>`;
+      const ex = b.exhausted, dis = ex ? 'disabled' : '', gear = b.boss ? `<button ${dis} onclick="TD.menu('formation')">☯ 陣法</button><button ${dis} onclick="TD.menu('talisman')">📜 符錄</button><button ${dis} onclick="TD.menu('treasure')">🗡 法寶</button>` : '';
+      h += `<div class=row><button ${dis} onclick="TD.cmd('attack')">⚔ 劍擊(-${b.attackCost})</button><button ${dis} onclick="TD.menu('spell')">✦ 法術</button>${gear}<button ${S.heal ? '' : 'disabled'} onclick="TD.cmd('item')">💊 回春丹 ×${S.heal}</button><button ${S.mpills ? '' : 'disabled'} onclick="TD.cmd('mpill')">🔮 聚氣丹 ×${S.mpills}</button><button ${dis} onclick="TD.cmd('guard')">🛡 防禦</button><button onclick="TD.cmd('flee')">💨 逃跑</button>${b.boss ? '<small style="margin-left:10px;color:#e8a020">主要對手戰：可用陣法、符錄、法寶</small>' : '<small style="margin-left:10px">點擊敵人可選目標</small>'}</div>`;
     }
     p.innerHTML = h;
     const l = $('btlog'); l.scrollTop = 1e6;
@@ -432,6 +539,8 @@ const TD = (() => {
       (sh.sells.length ? '<div style="margin-top:6px;font-size:13px;color:#aaa">— 收購 —</div>' + sh.sells.map(i => `<div class=row2><span>${i.name}×${i.have}　${i.price} 靈石</span><button onclick="TD.post('sell',{item:'${i.id}'})">賣一個</button></div>`).join('') : '') +
       (sh.kind === 'shady' ? `<div style="margin-top:6px">${sh.appraised ? `<div style="color:#ffd97a;font-size:13px">🔍 ${sh.appraised}</div>` : `<button onclick="TD.post('appraise')">🔍 請人鑑定這批貨（${sh.appraise_cost} 靈石）</button>`}</div>` : '') +
       '<button style="margin-top:6px" onclick="TD.post(\'shop_close\')">離開</button>' : '');
+    const bgs = S.bag || [];
+    lst('bag', bagOpen ? '<b>🎒 儲物袋</b> <small style="color:#9d9">容量：無限</small>' + ['錢財', '丹藥', '材料', '符錄', '陣法', '法寶'].map(c => { const l = bgs.filter(x => x.cat === c); return l.length ? `<div style="margin-top:8px;color:#e6b45a;font-size:13px">— ${c} —</div>` + l.map(x => `<div class=row2><span title="${x.desc}">${x.name} <b>×${x.n}</b><small style="color:#999"> ${x.desc}</small></span>${x.use ? `<button onclick="TD.post('use',{item:'${x.id}'})">使用</button>` : ''}</div>`).join('') : ''; }).join('') + `<div style="margin-top:8px;font-size:12px;color:#aaa">符錄、陣法、法寶只能在主要對手戰中使用。儲存點：${S.checkpoint || '無'}</div><button style="margin-top:6px" onclick="TD.bag()">關閉（B）</button>` : '');
     const bd = S.board;
     lst('board', bd ? `<b>📜 布告欄</b><div style="font-size:15px;margin:6px 0;color:#ffe9a6">${bd.title}</div>` +
       bd.offers.map(o => `<div class=offer><span>${o.give_txt} ⇒ <b>${o.get_txt}</b>${o.done ? '（已完成）' : ''}</span><button ${o.ok ? '' : 'disabled'} onclick="TD.post('barter',{idx:${o.id}})">交換</button></div>`).join('') +
@@ -471,6 +580,7 @@ const TD = (() => {
     const camX = MAP.w * TS <= VW ? -(VW - MAP.w * TS) / 2 : Math.max(0, Math.min(MAP.w * TS - VW, hero.x - VW / 2));
     const camY = MAP.h * TS <= VH ? -(VH - MAP.h * TS) / 2 : Math.max(0, Math.min(MAP.h * TS - VH, hero.y - VH / 2));
     const cam = {x: Math.round(camX), y: Math.round(camY)};
+    lastCam = cam;
     g.fillStyle = '#000'; g.fillRect(0, 0, VW, VH);
     const x0 = Math.max(0, Math.floor(cam.x / TS)), y0 = Math.max(0, Math.floor(cam.y / TS)), x1 = Math.min(MAP.w - 1, x0 + Math.ceil(VW / TS) + 1), y1 = Math.min(MAP.h - 1, y0 + Math.ceil(VH / TS) + 1);
     for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) groundTile(tx, ty, cam);
@@ -489,12 +599,15 @@ const TD = (() => {
       else if (e.k === 'plot') list.push({y: e.y * TS + 10, f: () => { const st = S.plots[e.id] || {stage: 0}, ix = (e.x + .5) * TS - cam.x, iy = (e.y + 1) * TS - cam.y - 2; drawObj(bio, 'plot' + st.stage, ix, iy, 1); if (st.stage === 3) label('可收成', ix, iy - 28 + Math.sin(now / 250) * 2, '#ffe36a', 11); else if (st.stage > 0) label(st.left + '日', ix, iy - 26, '#cfe', 10); }});
       else if (e.k === 'npc') list.push({y: e.py, f: () => drawNPC(e.npc, ax, ay, e.face || 'd', e.moving)});
       else if (e.k === 'candidate') list.push({y: e.py, f: () => { drawNPC(e.npc, ax, ay, hero.x < e.px ? 'l' : 'r', false); label(e.name, ax, ay + 14, '#ffc0d8', 12); const a = S.affinity[e.cid] || 0; label(S.partner && S.partner.id === e.cid ? '♥ 道侶' : (a > 0 ? '♥' + a : '♡'), ax, ay - 62 + Math.sin(now / 300) * 2, '#ff7aa8', 14); }});
+      else if (e.k === 'guardian' && !(S.guardians || []).includes(S.cur_loc)) list.push({y: (e.y + 1) * TS, f: () => { const gx = (e.x + .5) * TS - cam.x, gy = (e.y + 1) * TS - cam.y; shadow(gx, gy + 2, 40); drawBeast(e, gx, gy, 2.2, false, Math.floor(now / 250) % 4); label('★ ' + e.name, gx, gy - 100, '#ff9a5a', 14); label(e.el, gx, gy - 116, ECOL[e.el], 14); }});
+      else if (e.k === 'well') list.push({y: (e.y + 1) * TS + 1, f: () => label('💾', (e.x + .5) * TS - cam.x, e.y * TS - cam.y - 22 + Math.sin(now / 400) * 2, '#9df', 16)});
       else if (e.k === 'enemy' && !S.defeated.includes(e.id)) list.push({y: e.py, f: () => { const B = Art.man.beasts; drawBeast(e, ax, ay, 1, (e.dir || 1) < 0); label(e.el, ax, ay - 46 - (e.kind === 'bat' ? 26 : 0), ECOL[e.el], 13); if ((cool['f' + e.id] || 0) > now) { g.globalAlpha = .6; label('…', ax, ay - 60, '#fff', 14); g.globalAlpha = 1; } }});
     }
     if (MAP.kind === 'loc' && S.questNpc) { const q = questPos(), ax = q[0] - cam.x, ay = q[1] - cam.y, id = speakerSprite(S.questNpc); if (id) list.push({y: q[1], f: () => { drawNPC(id, ax, ay, hero.x < q[0] ? 'l' : 'r', false); label('!', ax, ay - 62 + Math.sin(now / 220) * 4, '#ffd24a', 30); label(S.questNpc, ax, ay + 14, '#ffe9a6', 12); }}); }
     list.push({y: hero.y, f: () => drawHero(cam)});
     list.sort((a, b) => a.y - b.y);
     for (const it of list) it.f();
+    if (walk) { const mx = walk.gx - cam.x, my = walk.gy - cam.y, pr = 6 + (now / 120 % 6); g.strokeStyle = '#ffd24a'; g.lineWidth = 2; g.beginPath(); g.ellipse(mx, my + 4, pr + 6, (pr + 6) * .45, 0, 0, 7); g.stroke(); g.fillStyle = '#ffd24a'; g.beginPath(); g.ellipse(mx, my + 4, 4, 2, 0, 0, 7); g.fill(); }
     // 目標標記
     const bob = Math.sin(now / 250) * 5;
     if (MAP.kind === 'world') {
@@ -536,5 +649,5 @@ const TD = (() => {
   }
   boot();
   window.__td = {get S() { return S; }, get MAP() { return MAP; }, hero, get ents() { return ents; }, post, load, get bt() { return bt; }};
-  return {post, act, openNew, cmd: btCmd, btEnd, spellMenu: v => { bt.spellOpen = v; $('bt')._k = ''; btUI(); }};
+  return {post, act, openNew, cmd: btCmd, btEnd, bag: toggleBag, menu: v => { bt.menu = v; $('bt')._k = ''; btUI(); }, spellMenu: v => { bt.menu = v ? 'spell' : null; $('bt')._k = ''; btUI(); }};
 })();
