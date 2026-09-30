@@ -11,6 +11,7 @@ class RealmSystem:
         self.data = data
         self.rng = rng or random.Random()
         self.listeners = listeners if listeners is not None else {}   # 事件名 -> [callable]
+        self.chance_bonus = 0.0          # 難度對突破成功率的加減
 
     def emit(self, event, **kw):
         for f in self.listeners.get(event, []):
@@ -61,7 +62,7 @@ class RealmSystem:
             return False
         if bt == "pill" and pill is None:
             return False
-        chance = BASE_CHANCE + ch.sub * SUB_BONUS
+        chance = BASE_CHANCE + ch.sub * SUB_BONUS + self.chance_bonus
         if pill and ch.remove(pill):
             chance += PILL_BONUS
         ok = self.rng.random() < min(chance, 1.0)

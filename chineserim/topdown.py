@@ -245,7 +245,7 @@ class TopDownMixin:
         return None
 
     def _td_buy(self, item="heal", **_):
-        prices = self.data.ambient["shop"]
+        prices = {k: round(v * self.dcfg["price"]) for k, v in self.data.ambient["shop"].items()}
         if item not in prices or self.mode != "loc":
             return
         if self.hero.remove("lingshi", prices[item]):
@@ -263,7 +263,7 @@ class TopDownMixin:
             return
         h.flags[key] = True
         scale = 1 + h.realm
-        gold = int(self.rng.uniform(40, 120) * scale)
+        gold = int(self.rng.uniform(40, 120) * scale * self.dcfg["chest"])
         h.add("lingshi", gold)
         msg = [f"獲得靈石 {gold}"]
         r = self.rng.random()
@@ -293,7 +293,7 @@ class TopDownMixin:
         if not ents:
             return
         deep = m["cat"] == "deep"
-        self.battle = battle.start(self.hero, self.cur_loc, [{"id": e["id"], "kind": e["kind"], "el": e["el"]} for e in ents], deep)
+        self.battle = battle.start(self.hero, self.cur_loc, [{"id": e["id"], "kind": e["kind"], "el": e["el"], "loot": e.get("loot", 1.0), "name": e.get("name")} for e in ents], deep, self.dcfg)
 
     def _td_battle(self, cmd="attack", arg=None, target=None, **_):
         if not self.battle:
@@ -306,7 +306,7 @@ class TopDownMixin:
             over = self.battle["over"]
             self.defeated.extend(self.battle["killed"])
             if over == "lose":
-                lost = min(50, h.count("lingshi"))
+                lost = min(self.dcfg["death_loss"], h.count("lingshi"))
                 h.remove("lingshi", lost)
                 h.hp = h.max_hp / 2
                 self.log.append(f"你被人救回，損失靈石 {lost}。")

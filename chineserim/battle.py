@@ -19,19 +19,20 @@ def spell_cost(ch):
     return max(4, round(ch.max_mp * SPELL_MP_FRAC))
 
 
-def make_enemy(ch, spec, deep, idx):
+def make_enemy(ch, spec, deep, idx, diff=None):
+    diff = diff or {}
     scale = 1 + ch.realm * (1.3 if deep else 1.0)
-    hp = 60 * scale * (1.6 if deep else 1)
-    return {"id": spec.get("id", f"e{idx}"), "kind": spec["kind"], "name": KINDS.get(spec["kind"], "妖獸"), "el": spec["el"],
-            "hp": hp, "maxhp": hp, "atk": 9.0 * scale * (1.15 if deep else 1.0), "dead": False}
+    hp = 60 * scale * (1.6 if deep else 1) * diff.get("enemy_hp", 1.0)
+    return {"id": spec.get("id", f"e{idx}"), "kind": spec["kind"], "name": spec.get("name") or KINDS.get(spec["kind"], "妖獸"), "el": spec["el"],
+            "hp": hp, "maxhp": hp, "atk": 9.0 * scale * (1.15 if deep else 1.0) * diff.get("enemy_atk", 1.0), "dead": False, "loot": spec.get("loot", 1.0)}
 
 
-def start(ch, loc_id, specs, deep=False):
+def start(ch, loc_id, specs, deep=False, diff=None):
     specs = specs[:2 if deep else 3]
     if not specs:
         raise ValueError("沒有敵人")
-    return {"loc": loc_id, "deep": bool(deep), "enemies": [make_enemy(ch, s, deep, i) for i, s in enumerate(specs)],
-            "log": [f"遭遇 {'、'.join(KINDS.get(s['kind'], '妖獸') for s in specs)}！"], "guard": False, "over": None, "turn": 1,
+    return {"loc": loc_id, "deep": bool(deep), "enemies": [make_enemy(ch, s, deep, i, diff) for i, s in enumerate(specs)], "diff": diff or {},
+            "log": [f"遭遇 {'、'.join(s.get('name') or KINDS.get(s['kind'], '妖獸') for s in specs)}！"], "guard": False, "over": None, "turn": 1,
             "killed": [], "rewards": []}
 
 
@@ -93,12 +94,20 @@ def command(st, ch, realms, rng, cmd, arg=None, target=None, bonus=None):
             amt = ch.max_hp * HEAL_FRAC
             ch.hp = min(ch.max_hp, ch.hp + amt)
             st["log"].append(f"服下回春丹，回復 {round(amt)} 點氣血")
+    elif cmd == "mpill":
+        if ch.count("mpill") <= 0:
+            st["log"].append("沒有聚氣丹了！")
+            used_turn = False
+        else:
+            ch.remove("mpill")
+            ch.mp = min(ch.max_mp, ch.mp + ch.max_mp * 0.5)
+            st["log"].append("服下聚氣丹，靈力恢復了一半")
     elif cmd == "guard":
         st["guard"] = True
         ch.mp = min(ch.max_mp, ch.mp + ch.max_mp * 0.04)
         st["log"].append("你運功守禦，靈力略有恢復")
     elif cmd == "flee":
-        chance = 0.35 if st["deep"] else 0.6
+        chance = max(0.05, min(0.95, (0.35 if st["deep"] else 0.6) + st.get("diff", {}).get("flee", 0)))
         if rng.random() < chance:
             st["log"].append("你成功逃脫了！")
             st["over"] = "flee"
@@ -135,7 +144,7 @@ def _win(st, ch, realms, rng):
     st["over"] = "win"
     st["log"].append("戰鬥勝利！")
     for e in st["enemies"]:
-        msgs = kill_reward(realms, ch, rng, st["loc"], st["deep"])
+        msgs = kill_reward(realms, ch, rng, st["loc"], st["deep"], st.get("diff", {}).get("gold", 1.0) * e.get("loot", 1.0))
         st["rewards"].extend(msgs)
     ch.mp = min(ch.max_mp, ch.mp + ch.max_mp * 0.1)
     if rng.random() < 0.25:
@@ -150,4 +159,4 @@ def view(st, ch):
         return None
     return {"loc": st["loc"], "deep": st["deep"], "over": st["over"], "turn": st["turn"], "log": st["log"],
             "enemies": [{k: e[k] for k in ("id", "kind", "name", "el", "hp", "maxhp", "dead")} for e in st["enemies"]],
-            "spellCost": spell_cost(ch), "killed": st["killed"], "rewards": st["rewards"]}
+            "spellCost": spell_cost(ch), "diff": st.get("diff", {}).get("name", ""), "killed": st["killed"], "rewards": st["rewards"]}

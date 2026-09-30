@@ -4,7 +4,7 @@ import pathlib
 import random
 from dataclasses import asdict
 
-from . import battle, dialogue, quests, treasures
+from . import battle, dialogue, difficulty, quests, treasures
 from .character import Character
 from .data import ROOT, GameData
 from .elements import ADV_MULT, DIS_MULT, PAIRS, PARENT
@@ -24,7 +24,9 @@ class Session(TopDownMixin):
         self.world = WorldMap(self.data)
         self.save_path = pathlib.Path(save_path) if save_path else None
         self.rs.on("CR_OnRealmChanged", lambda actor, order, sub, old: self.log.append(f"★ 境界變更 → {self.data.realms[order]['name']}"))
-        self.new_game()
+        self.difficulty = difficulty.DEFAULT
+        # 全新安裝（沒有存檔）時，前端會先叫出「難度＋角色」設定畫面
+        self.new_game(configured=bool(self.save_path and self.save_path.exists()) if self.save_path else True)
 
     def create_hero(self, name=None, root=None, elems=None):
         """依靈根規則建立角色；資料不合法時回到原作設定（韓立·四靈根）。"""
@@ -39,13 +41,24 @@ class Session(TopDownMixin):
         except (KeyError, ValueError):
             return Character(*default[:1], elements=default[2], root_type=default[1])
 
-    def new_game(self, name=None, root=None, elems=None):
+    @property
+    def dcfg(self):
+        return difficulty.get(self.difficulty)
+
+    def set_difficulty(self, name):
+        self.difficulty = name if name in difficulty.DIFFICULTY else difficulty.DEFAULT
+        self.rs.chance_bonus = self.dcfg["breakthrough"]
+
+    def new_game(self, name=None, root=None, elems=None, diff=None, configured=True):
         self.log = []
+        self.set_difficulty(diff)
+        self.configured = configured
         self.hero = self.create_hero(name, root, elems)
         self.rs.set_realm(self.hero, "mortal")
-        self.hero.add("lingshi", 500)
+        self.hero.add("lingshi", self.dcfg["start_lingshi"])
+        self.hero.add("mpill", self.dcfg["start_mpill"]) if self.dcfg["start_mpill"] else None
         self.day, self.region = 0, "tiannan"
-        self.hero.add("heal", 3)
+        self.hero.add("heal", self.dcfg["start_heal"])
         self.log = ["你是青牛鎮少年韓立。走上地圖上的地點圖示就能進入；先去看看家鄉青牛鎮吧。"]
         quests.ensure(self.hero, self.data)
         self.shop_open = False
@@ -53,7 +66,7 @@ class Session(TopDownMixin):
 
     # ---- 存檔 ----
     def to_dict(self):
-        return {"version": SAVE_VERSION, "day": self.day, "region": self.region, "log": self.log[-30:], "hero": asdict(self.hero),
+        return {"version": SAVE_VERSION, "day": self.day, "region": self.region, "log": self.log[-30:], "hero": asdict(self.hero), "difficulty": self.difficulty, "configured": self.configured,
                 "td": {"mode": self.mode, "map_id": self.map_id, "pos": self.pos, "tp": getattr(self, "tp", 0), "cur_loc": self.cur_loc, "defeated": self.defeated,
                        "train_n": self.train_n, "step_acc": self.step_acc, "battle": self.battle}}
 
@@ -67,6 +80,8 @@ class Session(TopDownMixin):
         if self.region not in self.world.regions:
             raise ValueError("存檔區域不存在")
         self.shop_open = False
+        self.set_difficulty(d.get("difficulty"))
+        self.configured = d.get("configured", True)
         td = d.get("td")
         if td and td["map_id"].split(":")[0] in ("world", "loc"):
             try:
@@ -144,7 +159,7 @@ class Session(TopDownMixin):
         if kind == "kill":
             self.log.extend(kill_reward(self.rs, h, self.rng, q.get("loc", "total"), q.get("deep") == "1"))
         elif kind == "die":
-            lost = min(50, h.count("lingshi"))
+            lost = min(self.dcfg["death_loss"], h.count("lingshi"))
             h.remove("lingshi", lost)
             h.hp = h.max_hp / 2
             self.log.append(f"你重傷倒下，被人救回，損失靈石 {lost}")
@@ -171,7 +186,7 @@ class Session(TopDownMixin):
             self.advance(7)
             self.log.append("閉關 7 日，傷勢痊癒")
         elif kind == "new":
-            self.new_game(q.get("name"), q.get("root"), list(q["elems"]) if q.get("elems") else None)
+            self.new_game(q.get("name"), q.get("root"), list(q["elems"]) if q.get("elems") else None, q.get("diff"))
             self.save()
             return
         self._after(q.get("loc") if kind == "visit" else None, arrived if kind == "travel" and ok else None)
@@ -201,8 +216,9 @@ class Session(TopDownMixin):
             "realms": [x["name"] for x in self.data.realms[:6]],
             "elem": {"adv": ADV_MULT, "dis": DIS_MULT, "parent": PARENT, "pairs": PAIRS},
             "dialogue": dialogue.view(self.data, h),
+            "difficulty": self.difficulty, "difficultyName": self.dcfg["name"], "configured": self.configured, "difficulties": {k: {"name": v["name"], "desc": v["desc"]} for k, v in difficulty.DIFFICULTY.items()},
             "mode": self.mode, "map_id": self.map_id, "pos": self.pos, "tp": getattr(self, "tp", 0), "cur_loc": self.cur_loc, "defeated": self.defeated,
-            "battle": battle.view(self.battle, h), "shop": self.shop_open and self.mode == "loc", "mp": round(h.mp), "max_mp": round(h.max_mp), "heal": h.count("heal"),
+            "battle": battle.view(self.battle, h), "shop": self.shop_open and self.mode == "loc", "mp": round(h.mp), "max_mp": round(h.max_mp), "heal": h.count("heal"), "mpills": h.count("mpill"), "prices": {k: round(v * self.dcfg["price"]) for k, v in self.data.ambient["shop"].items()},
             "questNpc": dialogue.pending_npc(self.data, h, self.cur_loc) if self.mode == "loc" else None,
             "opened": [k.split(":", 3)[3] for k in h.flags if k.startswith(f"chest:{self.map_id}:")],
             "region": self.region, "region_name": reg["name"], "gongfa": [{"id": g, "name": self.data.gongfa[g]["name"]} for g in h.gongfa if g in self.data.gongfa],

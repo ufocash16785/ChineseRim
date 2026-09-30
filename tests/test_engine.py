@@ -716,3 +716,70 @@ class FrontendTdSmokeTest(unittest.TestCase):
         f = pathlib.Path(__file__).parents[1] / "chineserim" / "static" / "td.js"
         r = subprocess.run([node, "--check", str(f)], capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stderr)
+
+
+class DifficultyTest(unittest.TestCase):
+    def mk(self):
+        import pathlib, tempfile
+        from chineserim.session import Session
+        return Session(pathlib.Path(tempfile.mkdtemp()) / "s.json", seed=1)
+
+    def test_start_resources_and_snapshot(self):
+        s = self.mk()
+        self.assertFalse(s.snapshot()["configured"])                     # 全新安裝：前端會先叫出設定畫面
+        for diff, lingshi, heal in (("easy", 800, 5), ("normal", 500, 3), ("hard", 300, 1)):
+            s.act("new", diff=diff)
+            self.assertEqual((s.difficulty, s.hero.count("lingshi"), s.hero.count("heal")), (diff, lingshi, heal))
+        self.assertTrue(s.snapshot()["configured"])
+        self.assertEqual(set(s.snapshot()["difficulties"]), {"easy", "normal", "hard"})
+        s.act("new", diff="bogus")
+        self.assertEqual(s.difficulty, "normal")
+
+    def test_enemy_strength_scales(self):
+        from chineserim import battle, difficulty
+        c = Character("t")
+        hp = {}
+        for d in ("easy", "normal", "hard"):
+            hp[d] = battle.start(c, "x", [{"kind": "wolf", "el": "木"}], False, difficulty.get(d))["enemies"][0]
+        self.assertLess(hp["easy"]["hp"], hp["normal"]["hp"])
+        self.assertLess(hp["normal"]["hp"], hp["hard"]["hp"])
+        self.assertLess(hp["easy"]["atk"], hp["hard"]["atk"])
+
+    def test_death_penalty_and_shop_price_and_breakthrough_bonus(self):
+        s = self.mk()
+        s.act("new", diff="hard")
+        self.assertEqual(s.rs.chance_bonus, -0.1)
+        s.act("enter", loc="jiazhou")
+        shop = next(e for e in s.get_map(s.map_id)["entities"] if e.get("role") == "shop")
+        s.act("talk", ent=shop["id"])
+        self.assertEqual(s.snapshot()["prices"]["heal"], round(30 * 1.25))
+        s.act("leave")
+        s.act("enter", loc="taiyue")
+        e = next(e for e in s.get_map(s.map_id)["entities"] if e["k"] == "enemy")
+        s.act("battle_start", ids=e["id"])
+        n = s.hero.count("lingshi")
+        s.hero.hp = 1
+        for _ in range(40):
+            if s.battle["over"]:
+                break
+            s.hero.hp = 1
+            s.act("battle", cmd="guard")
+        if s.battle["over"] == "lose":
+            self.assertEqual(s.hero.count("lingshi"), n - 150 if n >= 150 else 0)
+
+    def test_persisted_in_save(self):
+        from chineserim.session import Session
+        s = self.mk()
+        s.act("new", diff="easy")
+        s2 = Session(s.save_path)
+        s2.load()
+        self.assertEqual((s2.difficulty, s2.rs.chance_bonus), ("easy", 0.15))
+
+    def test_hard_mode_still_finishes_story(self):
+        import pathlib, tempfile
+        from chineserim.session import Session
+        from tests.bot_td import play_through_td
+        s = Session(pathlib.Path(tempfile.mkdtemp()) / "s.json", seed=11)
+        s.act("new", diff="hard")
+        play_through_td(s)
+        self.assertTrue(s.hero.quest["done"])

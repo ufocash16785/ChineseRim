@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 
 
-ITEM_NAMES = {"lingshi": "靈石", "pill": "突破丹", "lingye": "靈液", "heal": "回春丹"}
+ITEM_NAMES = {"lingshi": "靈石", "pill": "突破丹", "lingye": "靈液", "heal": "回春丹", "mpill": "聚氣丹", "herb": "靈草"}
 
 
 def item_name(i):
@@ -46,3 +46,4 @@ class Character:
     quest: dict = field(default_factory=dict)
     flags: dict = field(default_factory=dict)
     dialogue: dict = field(default_factory=dict)   # 進行中的對話 {"id","node"}
+    plots: dict = field(default_factory=dict)      # "loc:plot_id" -> {"seed","day","boost"}

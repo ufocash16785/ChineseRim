@@ -72,16 +72,16 @@ def scale_for(ch, deep=False):
     return 1 + ch.realm * (1.6 if deep else 1.0)
 
 
-def kill_reward(realms, ch, rng, loc_id, deep=False):
+def kill_reward(realms, ch, rng, loc_id, deep=False, mult=1.0):
     """即時戰鬥擊殺一隻妖獸的結算（卷軸前端使用）。回傳訊息列表。"""
     scale = scale_for(ch, deep)
-    gold = int(rng.uniform(20, 60) * scale * (3 if deep else 1))
+    gold = int(rng.uniform(20, 60) * scale * (3 if deep else 1) * mult)
     ch.add("lingshi", gold)
     for k in (f"kill:{loc_id}", "kill:total"):
         ch.counters[k] = ch.counters.get(k, 0) + 1
     realms.gain_level(ch, 8 if deep else 3)
-    msg = [f"擊殺妖獸，獲得靈石 {gold}"]
-    if deep and rng.random() < 0.6:
+    msg = [f"擊殺妖獸，獲得靈石 {gold}" if gold else "擊殺妖獸，卻一無所獲……"]
+    if deep and rng.random() < min(0.95, 0.6 * mult):
         ch.add("lingye")
         msg.append("秘境深處拾得一滴靈液")
     return msg
