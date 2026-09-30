@@ -322,3 +322,67 @@ class CreationTest(unittest.TestCase):
         self.s.act("new", root="penta", elems="金木水火土")       # 最慢的靈根也要能打通
         play_through(self.s)
         self.assertTrue(self.s.hero.quest["done"])
+
+
+class ArtAssetsTest(unittest.TestCase):
+    """像素素材與 manifest 的一致性（不需要 Pillow：只讀 PNG 檔頭）。"""
+    ART = None
+
+    @classmethod
+    def setUpClass(cls):
+        import json, pathlib
+        cls.ART = pathlib.Path(__file__).parents[1] / "chineserim" / "static" / "art"
+        cls.man = json.loads((cls.ART / "manifest.json").read_text(encoding="utf-8"))
+
+    @staticmethod
+    def png_size(path):
+        import struct
+        b = path.read_bytes()[:24]
+        assert b[:8] == b"\x89PNG\r\n\x1a\n", path
+        return struct.unpack(">II", b[16:24])
+
+    def test_sheets_fit_manifest(self):
+        fw, fh = self.man["human"]["frameW"], self.man["human"]["frameH"]
+        w, h = self.png_size(self.ART / "heroes.png")
+        self.assertEqual(w, 8 * fw)
+        self.assertEqual(h, 6 * self.man["heroes"]["rowsPerOutfit"] * fh)
+        w, h = self.png_size(self.ART / "npcs.png")
+        self.assertGreaterEqual(h, (max(n["row"] for n in self.man["npcs"].values()) + 2) * fh)
+        b = self.man["beasts"]
+        w, h = self.png_size(self.ART / "beasts.png")
+        self.assertEqual(w, 4 * b["frameW"])
+        self.assertEqual(h, len(b["kinds"]) * len(b["elements"]) * b["frameH"])
+
+    def test_speakers_have_sprites(self):
+        for name, npc in self.man["speakers"].items():
+            self.assertIn(npc, self.man["npcs"], name)
+        # 對話中出現的說話者（旁白除外）都要有立繪
+        d = GameData()
+        speakers = {n["speaker"] for dlg in d.dialogues.values() for n in dlg["nodes"].values()} - {"旁白"}
+        self.assertEqual(speakers - set(self.man["speakers"]), set(), "有說話者沒有 NPC 立繪")
+
+    def test_every_region_has_a_biome(self):
+        d = GameData()
+        for w in d.regions:
+            for g in w["regions"]:
+                self.assertIn(g["id"], self.man["biomes"], g["id"])
+                self.assertTrue((self.ART / f"scene_{g['id']}.png").exists())
+
+    def test_biome_rects_inside_atlas(self):
+        for b, info in self.man["biomes"].items():
+            w, h = self.png_size(self.ART / f"scene_{b}.png")
+            for name, (x, y, rw, rh) in info["rects"].items():
+                self.assertLessEqual(x + rw, w, (b, name))
+                self.assertLessEqual(y + rh, h, (b, name))
+        w, h = self.png_size(self.ART / "fx.png")
+        for name, (x, y, rw, rh) in self.man["fx"]["rects"].items():
+            self.assertTrue(x + rw <= w and y + rh <= h, name)
+
+    def test_art_js_parses(self):
+        import pathlib, shutil, subprocess
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("沒有 node")
+        f = pathlib.Path(__file__).parents[1] / "chineserim" / "static" / "art.js"
+        r = subprocess.run([node, "--check", str(f)], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)

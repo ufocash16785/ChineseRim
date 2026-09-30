@@ -146,9 +146,10 @@ def target(data, ch):
     for did, d in data.dialogues.items():        # 尚未播放的簡報優先
         t = d["trigger"]
         if not ch.flags.get("seen:" + did) and t.get("quest") == quest["id"] and t.get("obj") == q["o"]:
+            speaker = d["nodes"]["start"]["speaker"]
             if "arrive" in t:
-                return {"loc": None, "region": t["arrive"]}
-            return {"loc": t["loc"], "region": _region_of(data, t["loc"])}
+                return {"loc": None, "region": t["arrive"], "speaker": speaker}
+            return {"loc": t["loc"], "region": _region_of(data, t["loc"]), "speaker": speaker}
     cond = rule["objectives"][q["o"]]
     if cond["type"] in ("visit", "kill") and cond["loc"] != "total":
         return {"loc": cond["loc"], "region": _region_of(data, cond["loc"])}

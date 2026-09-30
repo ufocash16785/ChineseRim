@@ -75,9 +75,27 @@ class H(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(b)
 
+    def _static(self, url):
+        base = (pathlib.Path(__file__).parent / "static").resolve()
+        rel = "art.js" if url == "/static/art.js" else url.lstrip("/").split("?")[0]
+        f = (base / rel).resolve()
+        if base not in f.parents or not f.is_file():
+            self.send_error(404)
+            return
+        ctype = {".png": "image/png", ".json": "application/json", ".js": "text/javascript"}.get(f.suffix, "application/octet-stream")
+        b = f.read_bytes()
+        self.send_response(200)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(b)))
+        self.send_header("Cache-Control", "no-cache")
+        self.end_headers()
+        self.wfile.write(b)
+
     def do_GET(self):
         if self.path == "/state":
             self._send(json.dumps(session.snapshot(), ensure_ascii=False), "application/json")
+        elif self.path.startswith("/art/") or self.path == "/static/art.js":
+            self._static(self.path)
         elif self.path.startswith("/map"):
             self._send(PAGE, "text/html")
         else:

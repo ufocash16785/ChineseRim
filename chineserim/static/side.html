@@ -13,6 +13,7 @@ canvas{display:block;width:100%;background:#000}
 button{padding:6px 12px;font-size:14px}a{color:#9bd}
 #dlg,#trv{display:none;position:absolute;left:0;right:0;bottom:0;background:#1d222aef;border-top:2px solid #b8893a;padding:14px 20px;z-index:9}
 #trv{top:0;bottom:auto;border-top:0;border-bottom:2px solid #b8893a}
+canvas.pt{float:left;width:104px;height:135px;image-rendering:pixelated;margin:-34px 16px 0 0;background:linear-gradient(#3a4256,#252a38);border:2px solid #b8893a;border-radius:6px}
 #dlg .sp{color:#e6b45a;font-weight:bold;margin-bottom:4px}#dlg .tx{font-size:17px;line-height:1.6;margin-bottom:8px}#dlg button,#trv button{display:block;margin:4px 0;font-size:15px;text-align:left}
 #err{display:none;background:#7a1f1f;padding:6px 10px}
 #logp{max-width:960px;margin:0 auto;padding:4px 12px;font-size:13px;color:#aaa;min-height:60px}
@@ -25,10 +26,12 @@ button{padding:6px 12px;font-size:14px}a{color:#9bd}
 <div id=bar2><button onclick="act('break')">突破</button><button onclick="act('refine')">祭煉青竹蜂雲劍</button><button onclick="act('rest')">閉關7日</button>
 <button onclick="openNew()">新遊戲</button><a href="/map">舊版地圖頁</a><small>自動存檔</small></div>
 <div id=logp></div>
+<script src="/static/art.js"></script>
 <script>
 const $=id=>document.getElementById(id), cv=$('c'), g=cv.getContext('2d'), W=960, H=540, GY=430, SP=700, X0=900;
 const ECOL={"金":"#e0e0e0","木":"#6c6","水":"#48c","火":"#e64","土":"#ca6","雷":"#dd4","冰":"#8ef","風":"#9d9"};
-const ALL=Object.keys(ECOL), BEASTS=["青狼","毒蛛","鐵背熊","赤焰蛇","碧水蟒","山魈","血翼蝠"];
+const ALL=Object.keys(ECOL), KINDS=['wolf','spider','bear','snake','python','ape','bat'], KNAME={wolf:'青狼',spider:'毒蛛',bear:'鐵背熊',snake:'赤焰蛇',python:'碧水蟒',ape:'山魈',bat:'血翼蝠'};
+let sparks=[];
 let S=null, layoutRegion=null, locs=[], plats=[], beasts=[], shots=[], fx=[], unlocked={}, cam=0, worldLen=3000, busy=false, toastT=0, lastLog='', spellIdx=0;
 const hero={x:300,y:GY,vx:0,vy:0,face:1,hp:100,maxhp:100,inv:0,atk:0,spl:0,fly:false,ground:true,slash:0};
 const keys={};
@@ -49,7 +52,7 @@ function act(c){post('act',{c})}
 async function load(){
   try{S=await (await fetch('/state')).json();$('err').style.display='none'}catch(e){$('err').style.display='block';$('err').textContent='連不上伺服器：'+e;return}
   hero.maxhp=S.max_hp;hero.hp=S.hp;
-  if(S.region!==layoutRegion)build();
+  if(S.region!==layoutRegion){build();Art.ensureBiome(S.region)}
   const last=S.log[S.log.length-1]||'';if(last!==lastLog){lastLog=last;toast(last)}
   ui()}
 function build(){
@@ -61,14 +64,15 @@ function build(){
   locs.forEach(l=>{if(l.wild||l.deep){const n=l.deep?2:3;for(let k=0;k<n;k++)beasts.push(spawn(l,k))}});
   hero.x=300;hero.y=GY;hero.vx=hero.vy=0;hero.fly=false;cam=0}
 function spawn(l,k){const scale=1+S.realm_index*(l.deep?1.6:1);const el=ALL[Math.floor(Math.random()*ALL.length)];
-  const hp=60*scale*(l.deep?2:1);return{zone:l.id,deep:l.deep,x:l.wx-300+k*300+Math.random()*100,y:GY,hp,maxhp:hp,el,name:BEASTS[Math.floor(Math.random()*BEASTS.length)],dir:Math.random()<.5?-1:1,home:l.wx,hit:0,dead:0,scale,w:l.deep?56:40,h:l.deep?44:30,k}}
+  const hp=60*scale*(l.deep?2:1),kind=KINDS[Math.floor(Math.random()*KINDS.length)];return{zone:l.id,deep:l.deep,x:l.wx-300+k*300+Math.random()*100,y:GY,hp,maxhp:hp,el,kind:kind,name:KNAME[kind],moving:false,dir:Math.random()<.5?-1:1,home:l.wx,hit:0,dead:0,scale,w:l.deep?84:56,h:l.deep?62:42,k}}
 function ui(){
   const q=S.quest.quests.find(x=>x.state=='active');
   $('quest').innerHTML=q?`<b>▶ ${q.name}</b>`+q.objectives.filter(o=>o.state!='locked').map(o=>`<div>${o.state=='done'?'☑':'☐'} ${o.text}${o.progress&&o.state=='active'?' <small>('+o.progress+')</small>':''}</div>`).join(''):(S.quest.done?'全部任務完成':'');
   $('top').innerHTML=`<b>${S.name}</b><span>${S.realm}·${S.sub}</span><span>Lv ${S.level}/${S.cap}${S.bottleneck?' <b style=color:#e6a>【瓶頸→按突破】</b>':''}</span>
   <span>HP <span class=bar><i style="width:${100*S.hp/S.max_hp}%;background:#c44"></i></span> ${S.hp}/${S.max_hp}</span><span>靈石 ${S.lingshi}　丹 ${S.pills}　靈液 ${S.lingye}</span><span>功法：${S.gongfa.length?S.gongfa.map(x=>x.name).join('、'):'無'}</span><span>第 ${S.day} 日・${S.region_name}</span><span>法術 <b style="color:${ECOL[S.elements[spellIdx%S.elements.length]]}">${S.elements[spellIdx%S.elements.length]}</b></span>`;
   const d=S.dialogue,dl=$('dlg');dl.style.display=d?'block':'none';
-  if(d)dl.innerHTML=`<div class=sp>${d.speaker}</div><div class=tx>${d.text}</div>`+(d.cont?`<button onclick="post('choose')">▶ 繼續</button>`:d.choices.map(c=>`<button onclick="post('choose',{i:${c.i}})">${c.text}</button>`).join(''));
+  if(d)dl.innerHTML=(Art.ok?`<canvas id=pt class=pt width=40 height=52></canvas>`:'')+`<div class=sp>${d.speaker}</div><div class=tx>${d.text}</div>`+(d.cont?`<button onclick="post('choose')">▶ 繼續</button>`:d.choices.map(c=>`<button onclick="post('choose',{i:${c.i}})">${c.text}</button>`).join(''));
+  if(d&&Art.ok&&$('pt'))Art.portrait($('pt'),d.speaker,S);
   $('logp').innerHTML=S.log.slice(-4).map(x=>'<div>'+x+'</div>').join('')}
 function nearLoc(){let b=null,bd=110;for(const l of locs){const d=Math.abs(l.wx-hero.x);if(d<bd){bd=d;b=l}}return b}
 function nearPortal(){return Math.abs(hero.x-200)<90}
@@ -111,7 +115,7 @@ function slash(){if(hero.atk>0)return;hero.atk=.35;hero.slash=.18;
   for(const b of beasts)if(!b.dead&&b.x+b.w/2>x0&&b.x-b.w/2<x1&&Math.abs(b.y-hero.y)<70)hit(b,dmgBase()*(1+S.combat.slashDmg),'')}
 function spell(){if(hero.spl>0)return;hero.spl=.6;const el=S.elements[spellIdx%S.elements.length];
   shots.push({x:hero.x+hero.face*30,y:hero.y-40,vx:hero.face*520,el,life:1.4,dmg:dmgBase()*.9*(1+(S.combat.elemDmg[el]||0))})}
-function hit(b,base,el){const m=el?mult(el,b.el):1;const [d,crit]=rollCrit(base*m);b.hp-=d;b.hit=.15;b.x+=hero.face*10;
+function hit(b,base,el){sparks.push({x:b.x,y:b.y-b.h/2,t:.3});const m=el?mult(el,b.el):1;const [d,crit]=rollCrit(base*m);b.hp-=d;b.hit=.15;b.x+=hero.face*10;
   fx.push({x:b.x,y:b.y-b.h-10,t:.8,txt:Math.round(d)+(crit?'！':'')+(m>1?' ↑':m<1?' ↓':''),c:m>1?'#ff8':m<1?'#88f':'#fff'});
   if(b.hp<=0&&!b.dead){b.dead=1;b.respawn=12;post('kill',{loc:b.zone,deep:b.deep?1:0})}}
 function update(dt){
@@ -132,19 +136,52 @@ function update(dt){
   for(const b of beasts){
     if(b.dead){b.respawn-=dt;if(b.respawn<=0){Object.assign(b,spawn(locs.find(l=>l.id==b.zone),b.k))}continue}
     b.hit-=dt;const dx=hero.x-b.x;
-    if(Math.abs(dx)<380&&Math.abs(hero.y-b.y)<160){b.dir=Math.sign(dx)||1;b.x+=b.dir*(b.deep?95:75)*dt}
-    else{b.x+=b.dir*40*dt;if(Math.abs(b.x-b.home)>420)b.dir*=-1}
+    if(Math.abs(dx)<380&&Math.abs(hero.y-b.y)<160){b.dir=Math.sign(dx)||1;b.x+=b.dir*(b.deep?95:75)*dt;b.moving=true}
+    else{b.x+=b.dir*40*dt;if(Math.abs(b.x-b.home)>420)b.dir*=-1;b.moving=true}
     if(hero.inv<=0&&Math.abs(dx)<b.w/2+14&&hero.y>b.y-b.h-40&&hero.y-b.y<20){
       const inc=mult(b.el,S.elements[0]);hero.hp-=12*b.scale*(b.deep?1.5:1)*inc*.7;hero.inv=1;
       fx.push({x:hero.x,y:hero.y-70,t:.8,txt:'-'+Math.round(12*b.scale*inc*.7),c:'#f66'});
       if(hero.hp<=0){hero.hp=1;post('die');hero.x=300;hero.y=GY;beasts.forEach(k=>{if(!k.dead)k.hit=0})}}}
   for(const f of fx){f.t-=dt;f.y-=30*dt}fx=fx.filter(f=>f.t>0);
+  for(const q of sparks)q.t-=dt;sparks=sparks.filter(q=>q.t>0);
   cam=Math.max(0,Math.min(worldLen-W,hero.x-W/2));
   const l=nearLoc();$('prompt').textContent=nearPortal()?'E：傳送陣（前往其他區域）':l?(l.wild?`E：探查 ${l.name.replace(/（.*/,'')}`:`E：進入 ${l.name.replace(/（.*/,'')}${l.deep&&S.realm_index<l.min_realm?'（境界不足）':''}`):'';
 }
 function tree(x,y,s,c){g.fillStyle='#3b2a1a';g.fillRect(x-4*s,y-40*s,8*s,40*s);g.fillStyle=c;g.beginPath();g.arc(x,y-56*s,26*s,0,7);g.fill()}
+function drawLabel(l){const x=l.wx;g.textAlign='center';
+  g.font='bold 18px sans-serif';g.fillStyle='#000a';g.fillText(l.name.replace(/（.*/,''),x+1,GY-166+1);g.fillStyle=l.wild?'#f99':l.deep?'#e9f':'#ffe9a6';g.fillText(l.name.replace(/（.*/,''),x,GY-166);
+  g.font='12px sans-serif';g.fillStyle='#ccc';g.fillText(l.type+(l.wild?'・妖獸出沒':''),x,GY-148)}
+function drawMarkers(){const tl=tgtLoc(),bob=Math.sin(performance.now()/250)*6;
+  if(tl){g.fillStyle='#ffd24a';g.font='bold 26px sans-serif';g.textAlign='center';g.fillText('▼',tl.wx,GY-190+bob);g.font='bold 13px sans-serif';g.fillText('目標',tl.wx,GY-208+bob)}
+  else if(tgtRegionName()){g.fillStyle='#ffd24a';g.font='bold 26px sans-serif';g.textAlign='center';g.fillText('▼',200,GY-100+bob)}
+  return tl}
+function drawEdge(tl){
+  if(tl){const sx=tl.wx-cam;if(sx<40||sx>W-40){g.fillStyle='#ffd24a';g.font='bold 18px sans-serif';g.textAlign=sx<40?'left':'right';g.fillText((sx<40?'◀ ':'')+'目標 '+Math.round(Math.abs(tl.wx-hero.x)/100)*100+'m'+(sx<40?'':' ▶'),sx<40?8:W-8,GY-120)}}
+  else if(tgtRegionName()){g.fillStyle='#ffd24a';g.font='bold 15px sans-serif';g.textAlign='center';g.fillText('目標在「'+tgtRegionName()+'」：到傳送陣(E)前往',W/2,60)}}
+function drawArt(){
+  const now=performance.now();g.imageSmoothingEnabled=false;Art.GY=GY;
+  Art.backdrop(g,S,cam,W,H,GY,now);
+  g.save();g.translate(-cam,0);
+  for(const p of plats){if(p.x+p.w<cam||p.x>cam+W)continue;Art.platform(g,S,p)}
+  Art.portal(g,S,200,GY,now);g.fillStyle='#cfe';g.font='14px sans-serif';g.textAlign='center';g.fillText('傳送陣',200,GY-70);
+  for(const l of locs){if(l.wx<cam-300||l.wx>cam+W+300)continue;Art.location(g,S,l,unlocked[l.id],now);drawLabel(l)}
+  // 任務 NPC：站在目標地點旁
+  const tl0=tgtLoc();
+  if(tl0&&S.target.speaker&&Art.npc(g,S.target.speaker,tl0.wx+150,GY,now,hero.x<tl0.wx+150?-1:1)){
+    g.font='bold 34px sans-serif';g.textAlign='center';g.lineWidth=5;g.strokeStyle='#3a2410';g.strokeText('!',tl0.wx+150,GY-112+Math.sin(now/220)*5);g.fillStyle='#ffd24a';g.fillText('!',tl0.wx+150,GY-112+Math.sin(now/220)*5)}
+  for(const b of beasts){if(b.dead)continue;Art.beast(g,b,now);
+    g.fillStyle='#222';g.fillRect(b.x-22,b.y-b.h-14,44,5);g.fillStyle='#e44';g.fillRect(b.x-22,b.y-b.h-14,44*Math.max(0,b.hp/b.maxhp),5);
+    g.fillStyle=ECOL[b.el];g.font='12px sans-serif';g.textAlign='center';g.fillText(b.el+b.name,b.x,b.y-b.h-18)}
+  for(const s of shots)Art.orb(g,s,now);
+  if(hero.inv<=0||Math.floor(hero.inv*12)%2==0)Art.hero(g,hero,S,now);
+  if(hero.slash>0)Art.slash(g,hero);
+  for(const q of sparks)Art.spark(g,q.x,q.y,1-q.t/.3);
+  const tl=drawMarkers();
+  for(const f of fx){g.fillStyle=f.c;g.font='bold 16px sans-serif';g.textAlign='center';g.fillText(f.txt,f.x,f.y)}
+  g.restore();drawEdge(tl)}
 function draw(){
   if(!S)return;g.clearRect(0,0,W,H);
+  if(Art.hasBiome(S.region)){drawArt();return}
   const hue=[...S.region].reduce((a,c)=>a+c.charCodeAt(0),0)*37%360;
   const sky=g.createLinearGradient(0,0,0,GY);sky.addColorStop(0,`hsl(${hue},45%,18%)`);sky.addColorStop(1,`hsl(${hue},40%,42%)`);g.fillStyle=sky;g.fillRect(0,0,W,H);
   g.fillStyle='#ffffffcc';g.beginPath();g.arc(760-cam*.02,90,26,0,7);g.fill();
@@ -183,5 +220,5 @@ function draw(){
 let last=performance.now();
 function loop(t){const dt=Math.min(.05,(t-last)/1000);last=t;try{update(dt);draw()}catch(e){$('err').style.display='block';$('err').textContent='執行錯誤：'+e.message}requestAnimationFrame(loop)}
 window.__game={hero,get S(){return S},get beasts(){return beasts},get locs(){return locs},post,load};
-load().then(()=>requestAnimationFrame(loop));
+Art.init().then(load).then(()=>{Art.ensureBiome(S.region);requestAnimationFrame(loop)});
 </script>
