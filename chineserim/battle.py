@@ -49,21 +49,21 @@ def make_enemy(ch, spec, deep, idx, diff=None):
             "hp": hp, "maxhp": hp, "atk": 9.0 * scale * (1.15 if deep else 1.0) * diff.get("enemy_atk", 1.0), "dead": False, "loot": spec.get("loot", 1.0)}
 
 
-def _base_state(ch, loc_id, enemies, deep, diff, partner, log):
+def _base_state(ch, loc_id, enemies, deep, diff, partner, log, allies=None):
     return {"loc": loc_id, "deep": bool(deep), "enemies": enemies, "diff": diff or {}, "log": log, "guard": False, "over": None, "turn": 1,
             "killed": [], "rewards": [], "partner": partner, "pact": None, "boss": False, "down": False,
-            "shield": 0.0, "invuln": False, "formation": None, "cd": {}, "mirror": 0, "mirror_hit": False, "retry": None}
+            "allies": [dict(a) for a in (allies or [])], "shield": 0.0, "invuln": False, "formation": None, "cd": {}, "mirror": 0, "mirror_hit": False, "retry": None}
 
 
-def start(ch, loc_id, specs, deep=False, diff=None, partner=None):
+def start(ch, loc_id, specs, deep=False, diff=None, partner=None, allies=None):
     specs = specs[:2 if deep else 3]
     if not specs:
         raise ValueError("沒有敵人")
     return _base_state(ch, loc_id, [make_enemy(ch, s, deep, i, diff) for i, s in enumerate(specs)], deep, diff, partner,
-                       [f"遭遇 {'、'.join(s.get('name') or KINDS.get(s['kind'], '妖獸') for s in specs)}！"])
+                       [f"遭遇 {'、'.join(s.get('name') or KINDS.get(s['kind'], '妖獸') for s in specs)}！"], allies)
 
 
-def start_boss(ch, boss, loc_id, deep=False, diff=None, partner=None, boss_id="boss", retry=None, refine_cfg=None):
+def start_boss(ch, boss, loc_id, deep=False, diff=None, partner=None, boss_id="boss", retry=None, refine_cfg=None, allies=None):
     """主要對手戰。boss：bosses.json 的定義（已補上 name/el/kind 或 sprite）。"""
     diff = diff or {}
     scale = 1 + ch.realm
@@ -72,7 +72,7 @@ def start_boss(ch, boss, loc_id, deep=False, diff=None, partner=None, boss_id="b
     e = {"id": f"boss:{boss_id}", "kind": boss.get("kind", "bear"), "sprite": boss.get("sprite"), "name": boss["name"], "el": el, "hp": hp, "maxhp": hp,
          "atk": 9.0 * scale * boss["atk_mult"] * diff.get("enemy_atk", 1.0), "dead": False, "loot": boss.get("loot", 3.0), "boss": True, "boss_id": boss_id,
          "skills": boss["skills"], "t": 0, "charging": False, "stun": 0, "stun_imm": 0, "rage": False, "drops": boss.get("drops"), "on_win": boss.get("on_win", []), "karma": boss.get("karma", {}), "win_bonus": boss.get("win_bonus", {})}
-    st = _base_state(ch, loc_id, [e], deep, diff, partner, ([boss["intro"]] if boss.get("intro") else []) + [f"強敵「{boss['name']}」攔住了去路！（可使用陣法、符錄、法寶）"])
+    st = _base_state(ch, loc_id, [e], deep, diff, partner, ([boss["intro"]] if boss.get("intro") else []) + [f"強敵「{boss['name']}」攔住了去路！（可使用陣法、符錄、法寶）"], allies)
     st["boss"] = True
     st["retry"] = retry
     st["refine_cfg"] = refine_cfg or {}
@@ -208,6 +208,9 @@ def command(st, ch, realms, rng, cmd, arg=None, target=None, bonus=None):
     if not alive(st):
         return _win(st, ch, realms, rng)
     _partner_act(st, ch, realms, rng)
+    if not alive(st):
+        return _win(st, ch, realms, rng)
+    _allies_act(st, ch, rng)
     if not alive(st):
         return _win(st, ch, realms, rng)
     if _enemy_phase(st, ch, rng):
@@ -349,6 +352,14 @@ def _enemy_phase(st, ch, rng):
         if inv:
             st["log"].append(f"{name}襲來，卻被法寶擋了下來！")
         else:
+            pup = next((a for a in st.get("allies", []) if a["type"] == "puppet" and a["hp"] > 0), None)
+            if pup and d > 0 and rng.random() < pup["absorb"]:
+                pup["hp"] -= d * pup["absorb_frac"]
+                st["log"].append(f"{pup['name']}擋在你身前，替你承受了攻擊！")
+                if pup["hp"] <= 0:
+                    pup["hp"] = 0
+                    st["log"].append(f"{pup['name']}破損了……（戰後需要修理）")
+                d = 0
             if st["shield"] > 0:
                 ab = min(st["shield"], d)
                 st["shield"] -= ab
@@ -401,6 +412,21 @@ def _soul(st, ch):
     return True
 
 
+def _allies_act(st, ch, rng):
+    """靈寵與傀儡自動出手。"""
+    st["aact"] = []
+    for a in st.get("allies", []):
+        al = alive(st)
+        if not al or a["hp"] <= 0:
+            continue
+        t = min(al, key=lambda i: st["enemies"][i]["hp"])
+        e = st["enemies"][t]
+        m = element_multiplier(a["el"], e["el"]) if a.get("el") else 1.0
+        d = hero_atk(ch, {}) * a["atk"] * m * rng.uniform(.9, 1.1)
+        _hit(st, t, d, f"{a['name']}撲上去攻擊" + ("（剋制！）" if m > 1 else ""))
+        st["aact"].append({"type": a["type"], "target": t})
+
+
 def _partner_act(st, ch, realms, rng):
     """道侶自動出手：血量低時可能治療，否則攻擊或施展五行法術。"""
     p = st.get("partner")
@@ -451,5 +477,5 @@ def view(st, ch):
             "down": st.get("down", False), "exhausted": ch.mp <= 0, "shield": round(st.get("shield", 0)), "formation": st.get("formation"),
             "cd": st.get("cd", {}), "mirror": st.get("mirror", 0), "attackCost": attack_cost(ch),
             "enemies": [{k: e.get(k) for k in ("id", "kind", "name", "el", "hp", "maxhp", "dead", "sprite", "boss", "charging", "stun")} for e in st["enemies"]],
-            "partner": st.get("partner"), "pact": st.get("pact"), "spellCost": spell_cost(ch), "diff": st.get("diff", {}).get("name", ""),
+            "partner": st.get("partner"), "pact": st.get("pact"), "allies": [{k: a.get(k) for k in ("type", "name", "kind", "el", "sprite", "hp", "maxhp", "level")} for a in st.get("allies", [])], "aact": st.get("aact", []), "spellCost": spell_cost(ch), "diff": st.get("diff", {}).get("name", ""),
             "killed": st["killed"], "rewards": st["rewards"]}

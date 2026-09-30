@@ -39,6 +39,8 @@ NPCS = {
     "tianxing": dict(robe="#3a4a9a", trim="#e0e8ff", sash="#1a2258", hair="#dcdcf0", beard="#dcdcf0", hairstyle="elder"),
     "mozu": dict(robe="#2a1a2a", trim="#d03a1a", sash="#8a1a10", hair="#c02a1a", hairstyle="ponytail", hat="#3a2a3a"),
     "xinmo": dict(robe="#1a1a24", trim="#8a8ab0", sash="#4a4a6a", hair="#0e0e16", hairstyle="topknot"),
+    "puppet": dict(robe="#9a6a3a", trim="#d8b070", sash="#5a3a1a", hair="#6a4a2a", hairstyle="short", hat="#7a5a2a"),
+    "puppet_iron": dict(robe="#8a929c", trim="#d0d8e0", sash="#4a525c", hair="#5a626c", hairstyle="short", hat="#6a727c"),
     "yuzitong": dict(robe="#5a3a3a", trim="#a08a7a", sash="#2a1a1a", hair="#1a1414", hairstyle="topknot"),
     "merchant": dict(robe="#5a7a3a", trim="#e8d8a0", sash="#8a6a2a", hair="#3a2a2a", hairstyle="short", hat="#6a4a2a"),
     "boatman": dict(robe="#4a6a8a", trim="#a8c0d0", sash="#2a3a4a", hair="#3a3a3a", hairstyle="short", hat="#b89a5a"),

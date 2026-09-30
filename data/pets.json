@@ -1,0 +1,83 @@
+{
+  "description": "靈寵與傀儡。靈寵由靈獸蛋孵化，會隨戰鬥與餵養成長，每天有機會帶回靈草。傀儡可煉製與升級，會替你擋下部分攻擊，受損後要修理。",
+  "egg": "pet_egg",
+  "max_level": 10,
+  "stage_levels": [
+    4,
+    8
+  ],
+  "exp_base": 3,
+  "exp_per_level": 2,
+  "feed_exp": 1,
+  "fetch_chance": 0.25,
+  "atk_base": 0.3,
+  "atk_per_level": 0.07,
+  "pets": {
+    "wolf": [
+      "幼狼",
+      "靈狼",
+      "銀月狼"
+    ],
+    "bear": [
+      "小熊",
+      "鐵背熊",
+      "碎岩熊王"
+    ],
+    "python": [
+      "小蟒",
+      "碧水蟒",
+      "蛟蟒"
+    ],
+    "ape": [
+      "小猴",
+      "山魈",
+      "靈猿"
+    ],
+    "bat": [
+      "小蝠",
+      "血翼蝠",
+      "幽冥蝠王"
+    ],
+    "spider": [
+      "小蛛",
+      "毒蛛",
+      "千絲蛛后"
+    ],
+    "snake": [
+      "小蛇",
+      "赤焰蛇",
+      "焚天蛇"
+    ]
+  },
+  "puppets": {
+    "wood": {
+      "name": "木傀儡",
+      "atk": 0.5,
+      "absorb": 0.15,
+      "cost": 400,
+      "realm": 0,
+      "sprite": "puppet",
+      "desc": "輕巧靈活，偏重輸出。"
+    },
+    "iron": {
+      "name": "鐵傀儡",
+      "atk": 0.3,
+      "absorb": 0.45,
+      "cost": 900,
+      "realm": 2,
+      "sprite": "puppet_iron",
+      "desc": "皮糙肉厚，會替你擋下大部分攻擊。"
+    }
+  },
+  "puppet_max_level": 5,
+  "upgrade_cost": [
+    300,
+    600,
+    1000,
+    1600
+  ],
+  "repair_per_level": 80,
+  "puppet_hp_frac": 0.6,
+  "puppet_hp_per_level": 0.25,
+  "absorb_damage_frac": 0.6
+}

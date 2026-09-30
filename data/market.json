@@ -67,6 +67,10 @@
         "zhen_hu": {
           "price": 160,
           "daily": 2
+        },
+        "pet_egg": {
+          "price": 500,
+          "daily": 1
         }
       },
       "sell": {
@@ -83,7 +87,8 @@
         "zhen_ju": 70,
         "zhen_kun": 80,
         "zhen_sha": 90,
-        "zhen_hu": 75
+        "zhen_hu": 75,
+        "pet_egg": 200
       }
     }
   },

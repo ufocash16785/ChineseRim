@@ -50,4 +50,6 @@ class Character:
     members: list = field(default_factory=list)     # 已加入的宗門 id
     companion: str = ""                              # 道侶（候選人 id）
     affinity: dict = field(default_factory=dict)     # 候選人 id -> 好感度
+    pet: dict = field(default_factory=dict)          # 靈寵 {"kind","el","level","exp"}
+    puppet: dict = field(default_factory=dict)       # 傀儡 {"kind","level","hp"}
     bought: dict = field(default_factory=dict)       # "loc:item:day" -> 今日已購數量

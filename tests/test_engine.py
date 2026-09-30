@@ -1634,3 +1634,79 @@ class AlchemyMiniGameTest(unittest.TestCase):
             s.act("alch_act", a="heat2")
         self.assertTrue(s.alch["over"])
         self.assertEqual(s.alch["tier"], 0)
+
+
+class PetAndPuppetTest(unittest.TestCase):
+    def setUp(self):
+        import pathlib, tempfile
+        from chineserim.session import Session
+        self.s = Session(pathlib.Path(tempfile.mkdtemp()) / "s.json", seed=6)
+        self.s.act("new", diff="normal")
+        self.h = self.s.hero
+
+    def test_hatch_feed_evolve_and_fetch(self):
+        h, s = self.h, self.s
+        h.add("pet_egg", 2)
+        s.act("use", item="pet_egg")
+        self.assertTrue(h.pet)
+        self.assertEqual(h.count("pet_egg"), 1)
+        s.act("use", item="pet_egg")                               # 已有靈寵：不會消耗
+        self.assertEqual(h.count("pet_egg"), 1)
+        h.add("herb", 400)
+        for _ in range(130):
+            s.act("pet_feed")
+        self.assertEqual(h.pet["level"], s.data.pets["max_level"])
+        self.assertEqual(s.pet_stage(h.pet), 2)
+        n = h.count("herb")
+        s.advance(60)
+        self.assertGreater(h.count("herb"), n)                    # 每天有機會帶回靈草
+        s.act("pet_release")
+        self.assertFalse(h.pet)
+
+    def test_puppet_build_upgrade_repair(self):
+        h, s = self.h, self.s
+        h.inventory["lingshi"] = 0
+        s.act("puppet_build", ptype="wood")
+        self.assertFalse(h.puppet)                                # 沒錢
+        h.add("lingshi", 5000)
+        s.act("puppet_build", ptype="iron")
+        self.assertFalse(h.puppet)                                # 境界不足
+        s.act("puppet_build", ptype="wood")
+        self.assertEqual(h.puppet["level"], 1)
+        s.act("puppet_upgrade")
+        self.assertEqual(h.puppet["level"], 2)
+        self.assertGreater(s.puppet_maxhp(h.puppet), round(h.max_hp * 0.6))
+        h.puppet["hp"] = 1
+        s.act("puppet_repair")
+        self.assertEqual(h.puppet["hp"], s.puppet_maxhp(h.puppet))
+
+    def test_allies_fight_and_puppet_absorbs(self):
+        h, s = self.h, self.s
+        h.add("lingshi", 5000)
+        s.act("puppet_build", ptype="wood")
+        h.pet = {"kind": "wolf", "el": "火", "level": 5, "exp": 0}
+        h.puppet["kind"] = "wood"
+        s.start_boss_fight("yuzitong")
+        st = s.battle
+        self.assertEqual({a["type"] for a in st["allies"]}, {"pet", "puppet"})
+        st["allies"][1]["absorb"] = 1.0                           # 必定擋招
+        hp0 = st["enemies"][0]["hp"]
+        h.hp = h.max_hp
+        s.act("battle", cmd="guard")
+        self.assertLess(st["enemies"][0]["hp"], hp0)              # 盟友出手
+        self.assertEqual(h.hp, h.max_hp)                          # 傷害被傀儡擋下
+        self.assertLess(st["allies"][1]["hp"], st["allies"][1]["maxhp"])
+        self.assertEqual(len(s.snapshot()["battle"]["allies"]), 2)
+        st["enemies"][0]["hp"] = 1
+        s.act("battle", cmd="attack")
+        self.assertEqual(st["over"], "win")
+        self.assertEqual(h.pet["exp"], 1)                         # 勝利給靈寵經驗
+        self.assertLess(h.puppet["hp"], s.puppet_maxhp(h.puppet)) # 傀儡的損傷帶回戰後
+
+    def test_pets_persist_in_save(self):
+        from chineserim.session import Session
+        self.h.pet = {"kind": "bear", "el": "土", "level": 3, "exp": 1}
+        self.s.act("pos", x=1, y=1)
+        s2 = Session(self.s.save_path)
+        s2.load()
+        self.assertEqual(s2.hero.pet["kind"], "bear")

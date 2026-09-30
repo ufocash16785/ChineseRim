@@ -8,7 +8,7 @@ from .character import item_name
 from .explore import DEEP, min_realm
 
 _MAP_CACHE = {}          # 地圖只由資料決定，行程內共用（唯讀）
-TD_KINDS = {"sell", "appraise", "barter", "join", "board_close", "gift", "chat", "cand_close", "plant", "harvest", "boost", "craft", "shop_close", "enter", "leave", "talk", "region", "ferry", "pos", "battle_start", "battle", "battle_end", "buy", "chest", "portal", "use", "fb_refine", "fb_bond", "alch_start", "alch_act", "alch_close"}
+TD_KINDS = {"sell", "appraise", "barter", "join", "board_close", "gift", "chat", "cand_close", "plant", "harvest", "boost", "craft", "shop_close", "enter", "leave", "talk", "region", "ferry", "pos", "battle_start", "battle", "battle_end", "buy", "chest", "portal", "use", "fb_refine", "fb_bond", "alch_start", "alch_act", "alch_close", "pet_feed", "pet_release", "puppet_build", "puppet_upgrade", "puppet_repair"}
 STEPS_PER_DAY = 160
 FERRY_DAYS = 8
 
@@ -45,7 +45,7 @@ class TopDownMixin:
             spec.update({"on_win": [{"flag": "xinmojie_pass"}], "drops": "guardian_normal", "win_bonus": {"chance": self.data.karma["xinmo"][karma.dao_state(h, self.data.karma)]["reward_bonus"]}})
         b = dict(spec or self.data.bosses["bosses"][bid])
         deep = self.mode == "loc" and self.get_map(self.map_id)["cat"] == "deep"
-        self.battle = battle.start_boss(h, b, self.cur_loc or "total", deep, self.dcfg, self.partner_spec(), boss_id=bid, retry=did, refine_cfg=self.data.karma["refine"])
+        self.battle = battle.start_boss(h, b, self.cur_loc or "total", deep, self.dcfg, self.partner_spec(), boss_id=bid, retry=did, refine_cfg=self.data.karma["refine"], allies=self.allies_spec())
 
     def _maybe_boss(self):
         pb = self.pending_boss
@@ -178,7 +178,9 @@ class TopDownMixin:
         if h.count(item) <= 0:
             return
         u = (items.info(item) or {}).get("use")
-        if u == "heal":
+        if u == "hatch":
+            self.hatch_egg()
+        elif u == "heal":
             h.remove(item)
             h.hp = min(h.max_hp, h.hp + h.max_hp * battle.HEAL_FRAC)
             self.log.append("服下回春丹，氣血回復了。")
@@ -483,7 +485,7 @@ class TopDownMixin:
             m = self.get_map(self.map_id)
             self.log.append("寶箱突然張開了血盆大口——是寶箱怪！")
             self.battle = battle.start(h, self.cur_loc, [{"id": "mimic:" + e["id"], "kind": "spider", "el": self.rng.choice("金木水火土"), "name": "寶箱怪", "loot": 2.0}],
-                                       m["cat"] == "deep", self.dcfg)
+                                       m["cat"] == "deep", self.dcfg, None, self.allies_spec())
             self.battle["chest_bonus"] = True
             return
         rich = loot == "rich"
@@ -608,7 +610,7 @@ class TopDownMixin:
         if not ents:
             return
         deep = m["cat"] == "deep"
-        self.battle = battle.start(self.hero, self.cur_loc, [{"id": e["id"], "kind": e["kind"], "el": e["el"], "loot": e.get("loot", 1.0) * (1 + self.perk_totals()["loot"]), "name": e.get("name")} for e in ents], deep, self.dcfg, self.partner_spec())
+        self.battle = battle.start(self.hero, self.cur_loc, [{"id": e["id"], "kind": e["kind"], "el": e["el"], "loot": e.get("loot", 1.0) * (1 + self.perk_totals()["loot"]), "name": e.get("name")} for e in ents], deep, self.dcfg, self.partner_spec(), self.allies_spec())
 
     def _td_battle(self, cmd="attack", arg=None, target=None, **_):
         if not self.battle:
@@ -621,6 +623,7 @@ class TopDownMixin:
             st = self.battle
             over = st["over"]
             self.defeated.extend(st["killed"])
+            self.sync_allies(st, over == "win")
             if st.get("boss") and over != "win" and st.get("retry"):
                 h.flags.pop("seen:" + st["retry"], None)          # 強敵還在，重新進入此地可再戰
                 self.log.append("強敵仍在原地等著你，準備好了再來。")

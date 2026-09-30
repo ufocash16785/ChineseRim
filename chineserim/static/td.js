@@ -10,7 +10,7 @@ const TD = (() => {
   const keys = {};
   let trail = [], ents = [], solid = [], shoreMask = null, busy = false, now = 0, last = performance.now();
   let askOpen = false, cool = {}, exitCool = 0, regionPending = false, syncT = 0, dist = 0, lastPos = null;
-  let bagOpen = false, walk = null, lastCam = {x: 0, y: 0}, stuckT = 0;
+  let compOpen = false, bagOpen = false, walk = null, lastCam = {x: 0, y: 0}, stuckT = 0;
   let lastTp = null, toastT = 0, lastLog = '', bannerT = 0, lastRegion = null, minimapBase = null, uiKey = '';
   let bt = {target: 0, anim: [], hero: null, prev: null, fx: [], shake: {}, heroAnim: null, over: false};
   const rnd = (a, b = 0) => { let h = (a * 73856093) ^ (b * 19349663); h = (h ^ (h >>> 13)) >>> 0; return (h % 1000) / 1000; };
@@ -135,7 +135,7 @@ const TD = (() => {
     if (bannerT > 0) { bannerT -= dt * 1000; if (bannerT <= 0) $('banner').style.opacity = 0; }
     hero.inv -= dt; exitCool -= dt;
     if (!S || !MAP) return;
-    const frozen = busy || S.dialogue || S.battle || askOpen || S.shop || S.board || S.cand || bagOpen || S.alch;
+    const frozen = busy || S.dialogue || S.battle || askOpen || S.shop || S.board || S.cand || bagOpen || compOpen || S.alch;
     if (frozen) walk = null;
     if (!frozen) {
       let dx = (down('d', 'arrowright') ? 1 : 0) - (down('a', 'arrowleft') ? 1 : 0), dy = (down('s', 'arrowdown') ? 1 : 0) - (down('w', 'arrowup') ? 1 : 0);
@@ -242,7 +242,7 @@ const TD = (() => {
     return b;
   }
   function interact() {
-    if (busy || S.dialogue || S.battle || askOpen || S.shop || S.board || S.cand || bagOpen) return;
+    if (busy || S.dialogue || S.battle || askOpen || S.shop || S.board || S.cand || bagOpen || compOpen) return;
     const n = nearest(); if (!n) return;
     useIt(n);
   }
@@ -280,7 +280,7 @@ const TD = (() => {
     return null;
   }
   function walkTo(px, py, ent) {
-    if (!S || !MAP || busy || S.dialogue || S.battle || askOpen || S.shop || S.board || S.cand || bagOpen) return;
+    if (!S || !MAP || busy || S.dialogue || S.battle || askOpen || S.shop || S.board || S.cand || bagOpen || compOpen) return;
     const path = findPath(Math.floor(hero.x / TS), Math.floor(hero.y / TS), Math.max(0, Math.min(MAP.w - 1, Math.floor(px / TS))), Math.max(0, Math.min(MAP.h - 1, Math.floor(py / TS))));
     if (!path) { toast('走不到那裡。'); return; }
     const pts = path.slice(1).map(c => ({x: (c[0] + .5) * TS, y: (c[1] + .75) * TS}));
@@ -353,10 +353,13 @@ const TD = (() => {
     const nm = S.world.find(w => w.id === to).name;
     askBox(`搭船前往「${nm}」？（約 8 日航程）`, [{label: '出發', fn: () => post('ferry', {to})}, {label: '再等等', fn: () => {}}]);
   }
-  function toggleBag() { bagOpen = !bagOpen; walk = null; panels(); }
+  function toggleBag() { bagOpen = !bagOpen; if (bagOpen) compOpen = false; walk = null; panels(); }
+  function toggleComp() { compOpen = !compOpen; if (compOpen) bagOpen = false; walk = null; panels(); }
   const key = k => {
     if (askOpen) { const a = $('ask'); if (k === '1' || k === 'enter') closeAsk(0); else if (k === '2') closeAsk(1); else if (k === 'escape') closeAsk(a._opts.length - 1); return; }
     if (k === 'b' && S && !S.battle) { toggleBag(); return; }
+    if (k === 'p' && S && !S.battle) { toggleComp(); return; }
+    if (k === 'escape' && compOpen) { toggleComp(); return; }
     if (k === 'escape' && bagOpen) { toggleBag(); return; }
     if (S && S.battle) return;
     if (k === 'e' || k === ' ' || k === 'enter') interact();
@@ -416,6 +419,10 @@ const TD = (() => {
       human('npcs', Art.man.npcs[b.partner.sprite].row, Art.man.npcAnims, 'r', false, px, py, 3, {anim: 'idle', f: [0, 1, 0, 1, 0, 1, 2, 1][Math.floor(now / 330) % 8]});
       label('♥ ' + b.partner.name, px, py + 22, '#ffc0d8', 12);
     }
+    (b.allies || []).forEach((a, i) => {
+      if (a.type === 'pet') { const px = 165, py = 382; shadow(px, py + 2, 30); drawBeast({kind: a.kind, el: a.el}, px, py, 1.7, false, Math.floor(now / 250) % 4); label(a.name + ' Lv' + a.level, px, py + 20, '#cfe', 11); }
+      else if (Art.man.npcs[a.sprite]) { const px = 58, py = 398; g.globalAlpha = a.hp <= 0 ? .4 : 1; shadow(px, py + 2, 34); human('npcs', Art.man.npcs[a.sprite].row, Art.man.npcAnims, 'r', false, px, py, 3, {anim: 'idle', f: [0, 1, 0, 1, 0, 1, 2, 1][Math.floor(now / 330) % 8]}); g.globalAlpha = 1; label(a.name + (a.hp <= 0 ? '（破損）' : ` ${Math.round(a.hp)}/${a.maxhp}`), px, py + 20, '#fda', 11); }
+    });
     shadow(hx, hy + 2, 42);
     human('heroes', heroBase(), Art.man.heroes.anims, 'r', false, hx, hy, 3, frame || {anim: 'idle', f: [0, 1, 0, 1, 0, 1, 2, 1][Math.floor(now / 330) % 8]});
     // 敵人
@@ -540,6 +547,11 @@ const TD = (() => {
       (sh.sells.length ? '<div style="margin-top:6px;font-size:13px;color:#aaa">— 收購 —</div>' + sh.sells.map(i => `<div class=row2><span>${i.name}×${i.have}　${i.price} 靈石</span><button onclick="TD.post('sell',{item:'${i.id}'})">賣一個</button></div>`).join('') : '') +
       (sh.kind === 'shady' ? `<div style="margin-top:6px">${sh.appraised ? `<div style="color:#ffd97a;font-size:13px">🔍 ${sh.appraised}</div>` : `<button onclick="TD.post('appraise')">🔍 請人鑑定這批貨（${sh.appraise_cost} 靈石）</button>`}</div>` : '') +
       '<button style="margin-top:6px" onclick="TD.post(\'shop_close\')">離開</button>' : '');
+    const cp = S.comp;
+    lst('comp', compOpen && cp ? '<b>🐾 夥伴</b>' + '<div style="margin-top:8px;color:#e6b45a;font-size:13px">— 靈寵 —</div>' + (cp.pet ? `<div class=row2><span><b>${cp.pet.name}</b>（${cp.pet.el}）Lv${cp.pet.level}/${cp.pet.max}　${cp.pet.stage >= 2 ? '★完全體' : cp.pet.stage === 1 ? '進化型' : '幼體'}<br><small style="color:#999">經驗 ${cp.pet.exp}/${cp.pet.need}　戰鬥時自動出手、每天有機會帶回靈草</small></span><span><button ${cp.herbs && cp.pet.level < cp.pet.max ? '' : 'disabled'} onclick="TD.post('pet_feed')">餵靈草 (${cp.herbs})</button><button onclick="TD.post('pet_release')">放生</button></span></div>` : `<div style="font-size:13px;color:#aaa">還沒有靈寵。靈獸蛋可從強敵身上取得，或到丹藥鋪購買。</div>${cp.eggs ? `<button onclick="TD.post('use',{item:'pet_egg'})">孵化靈獸蛋 ×${cp.eggs}</button>` : ''}`) +
+      '<div style="margin-top:10px;color:#e6b45a;font-size:13px">— 傀儡 —</div>' + (cp.puppet ? `<div class=row2 style="flex-wrap:wrap"><span><b>${cp.puppet.name}</b> ${cp.puppet.level} 階${cp.puppet.broken ? ' <b style="color:#f88">破損</b>' : ''}<br><small style="color:#999">耐久 ${cp.puppet.hp}/${cp.puppet.maxhp}　攻擊 ×${cp.puppet.atk}　擋招 ${Math.round(cp.puppet.absorb * 100)}%</small></span><span>${cp.puppet.repair ? `<button onclick="TD.post('puppet_repair')">修理（${cp.puppet.repair}）</button>` : ''}${cp.puppet.upgrade ? `<button onclick="TD.post('puppet_upgrade')">升階（${cp.puppet.upgrade}）</button>` : '<small>最高階</small>'}</span></div>` : '') +
+      `<div style="font-size:12px;color:#aaa;margin-top:6px">${cp.puppet ? '重新煉製會取代現有傀儡：' : '煉製傀儡：'}</div>` + Object.entries(cp.build).map(([k, v]) => `<div class=row2><span>${v.name}<small style="color:#999"> ${v.desc}${v.ok ? '' : '（需 ' + S.realms[v.realm] + '）'}</small></span><button ${v.ok ? '' : 'disabled'} onclick="TD.post('puppet_build',{ptype:'${k}'})">${v.cost} 靈石</button></div>`).join('') +
+      '<button style="margin-top:6px" onclick="TD.comp()">關閉（P）</button>' : '');
     const al = S.alch;
     lst('alch', al ? `<b>🔥 煉製${al.name}</b> <small>第 ${Math.min(al.round + 1, al.rounds)}/${al.rounds} 回合　得分 ${al.score}/${al.maxScore}</small>` +
       `<div style="position:relative;height:26px;background:#222;border-radius:6px;margin:10px 0;overflow:hidden"><div style="position:absolute;left:32%;width:36%;top:0;bottom:0;background:#5a4a10"></div><div style="position:absolute;left:42%;width:16%;top:0;bottom:0;background:#3a7a2a"></div><div style="position:absolute;left:${al.heat}%;top:-2px;bottom:-2px;width:5px;margin-left:-2px;background:#ff5a2a;box-shadow:0 0 8px #f80"></div></div>` +
@@ -614,6 +626,7 @@ const TD = (() => {
     }
     if (MAP.kind === 'loc' && S.karma_ev) { const k = S.karma_ev, ax = (k.x + .5) * TS - cam.x, ay = (k.y + .9) * TS - cam.y, av = k.kind === 'avenger'; list.push({y: (k.y + .9) * TS, f: () => { drawNPC(k.sprite, ax, ay, hero.x < (k.x + .5) * TS ? 'r' : 'l', false); label(av ? '仇' : '恩', ax, ay - 62 + Math.sin(now / 240) * 3, av ? '#ff5a5a' : '#7dff9a', 26); label(k.name, ax, ay + 14, av ? '#ff9a9a' : '#b8ffc8', 12); }}); }
     if (MAP.kind === 'loc' && S.questNpc) { const q = questPos(), ax = q[0] - cam.x, ay = q[1] - cam.y, id = speakerSprite(S.questNpc); if (id) list.push({y: q[1], f: () => { drawNPC(id, ax, ay, hero.x < q[0] ? 'l' : 'r', false); label('!', ax, ay - 62 + Math.sin(now / 220) * 4, '#ffd24a', 30); label(S.questNpc, ax, ay + 14, '#ffe9a6', 12); }}); }
+    if (S.comp && S.comp.pet && trail.length) { const t = trail[Math.max(0, trail.length - 4)], px = t.x - cam.x + 12, py = t.y - cam.y + 2, pt = S.comp.pet; list.push({y: t.y, f: () => { shadow(px, py + 1, 10); drawBeast({kind: pt.kind, el: pt.el}, px, py, .8, t.dir === 'l', hero.moving ? Math.floor(now / 160) % 4 : 0); }}); }
     list.push({y: hero.y, f: () => drawHero(cam)});
     list.sort((a, b) => a.y - b.y);
     for (const it of list) it.f();
@@ -659,5 +672,5 @@ const TD = (() => {
   }
   boot();
   window.__td = {get S() { return S; }, get MAP() { return MAP; }, hero, get ents() { return ents; }, post, load, get bt() { return bt; }};
-  return {post, act, openNew, cmd: btCmd, btEnd, bag: toggleBag, menu: v => { bt.menu = v; $('bt')._k = ''; btUI(); }, spellMenu: v => { bt.menu = v ? 'spell' : null; $('bt')._k = ''; btUI(); }};
+  return {post, act, openNew, cmd: btCmd, btEnd, bag: toggleBag, comp: toggleComp, menu: v => { bt.menu = v; $('bt')._k = ''; btUI(); }, spellMenu: v => { bt.menu = v ? 'spell' : null; $('bt')._k = ''; btUI(); }};
 })();

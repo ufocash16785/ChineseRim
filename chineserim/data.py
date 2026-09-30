@@ -41,6 +41,7 @@ class GameData:
         self.bosses = _load(d / "bosses.json")
         self.drops = _load(d / "drops.json")
         self.karma = _load(d / "karma.json")
+        self.pets = _load(d / "pets.json")
         self.quest_rules = _merge(d, "quests*.json", "arcs")
         self.regions = _load(d / "regions.json")["worlds"]
         self.config = {"elemAdvMult": 1.5, "elemDisMult": 0.75}
