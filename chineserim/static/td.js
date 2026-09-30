@@ -579,9 +579,9 @@ const TD = (() => {
     if (en && !en.seen && !endingOpen && endingSeenKey !== en.id) { endingOpen = true; walk = null; }
     if (en && endingOpen) endingSeenKey = en.id;
     const stt = en ? en.stats : null;
-    lst('ending', en && endingOpen ? `<div class=endbox><div class=endsub>${en.subtitle}</div><div class=endtitle>${en.title}</div>` +
-      en.paras.map((p, i) => `<p class=endp style="animation-delay:${1.2 + i * 1.6}s">${p}</p>`).join('') +
-      `<div class=endep style="animation-delay:${1.2 + en.paras.length * 1.6}s">${en.epilogue.map(x => '<div>' + x + '</div>').join('')}` +
+    lst('ending', en && endingOpen ? `<div class=endbox><div class=endsub>${en.subtitle}</div><div class=endtitle>${en.title}</div><img class=endimg src="/art/ending_${en.id}.png" alt="${en.title}">` +
+      en.paras.map((p, i) => `<p class=endp style="animation-delay:${2.6 + i * 1.6}s">${p}</p>`).join('') +
+      `<div class=endep style="animation-delay:${2.6 + en.paras.length * 1.6}s">${en.epilogue.map(x => '<div>' + x + '</div>').join('')}` +
       `<div class=endstats>${[['歷時', stt.day + ' 日'], ['境界', stt.realm + ' Lv' + stt.level], ['道心', stt.dao + '（殺 ' + stt.sha + '／善 ' + stt.ren + '）'], ['擊敗強敵', stt.bosses], ['累計擊殺', stt.kills], ['煉丹', stt.alch + ' 次']].map(([a, b]) => `<span><small>${a}</small><b>${b}</b></span>`).join('')}</div>` +
       `<div class=endall>已達成：${en.all.map(x => x.got ? `<b style="color:#ffd24a">「${x.title}」</b>` : `<span style="color:#666">？？？</span>`).join(' ')}　<small style="color:#888">（共 ${en.all.length} 種結局）</small></div>` +
       `<div style="margin-top:10px"><button onclick="TD.endClose(false)">繼續遊玩（自由探索）</button><button onclick="TD.endClose(true)">開始新的一輪</button></div></div></div>` : '');

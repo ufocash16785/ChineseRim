@@ -2424,3 +2424,37 @@ class EndingTest(unittest.TestCase):
         self.assertIn("靈狼", st["pet"] or "")
         self.assertEqual(st["wars_defend"], 1)
         self.assertIn("攝魂鈴", st["treasure"])
+
+
+class EndingArtTest(unittest.TestCase):
+    def test_every_ending_has_illustration(self):
+        import pathlib
+        from PIL import Image
+        from chineserim.data import GameData
+        art = pathlib.Path(__file__).resolve().parents[1] / "chineserim" / "static" / "art"
+        for e in GameData().endings["endings"]:
+            f = art / f"ending_{e['id']}.png"
+            self.assertTrue(f.exists(), f"缺少結局插圖 {f.name}")
+            im = Image.open(f)
+            self.assertEqual(im.size, (320, 180))
+            self.assertGreater(len(set(im.convert("RGB").getdata())), 40)      # 不是空白圖
+
+    def test_illustration_generators_match_endings(self):
+        from tools.art import endings
+        from chineserim.data import GameData
+        self.assertEqual(set(endings.ENDINGS), {e["id"] for e in GameData().endings["endings"]})
+
+    def test_art_served_over_http(self):
+        import threading, urllib.request
+        from http.server import HTTPServer
+        from chineserim import web
+        from chineserim.session import Session
+        web.session = Session(None, seed=1)
+        srv = HTTPServer(("127.0.0.1", 0), web.H)
+        threading.Thread(target=srv.serve_forever, daemon=True).start()
+        try:
+            r = urllib.request.urlopen(f"http://127.0.0.1:{srv.server_port}/art/ending_saint.png")
+            self.assertEqual(r.headers.get_content_type(), "image/png")
+            self.assertGreater(len(r.read()), 500)
+        finally:
+            srv.shutdown()

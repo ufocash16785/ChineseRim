@@ -205,6 +205,8 @@ def main():
     manifest["fx"] = {"rects": rects}
 
     (OUT / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=1), encoding="utf-8")
+    from . import endings
+    endings.main()
     print("素材輸出到", OUT, sorted(p.name for p in OUT.iterdir()))
 
 
