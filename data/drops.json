@@ -67,6 +67,15 @@
           1
         ],
         "chance": 0.25
+      },
+      {
+        "item": "codex_beast",
+        "n": [
+          1,
+          1
+        ],
+        "chance": 0.3,
+        "unique": true
       }
     ],
     "boss_wangchan": [
@@ -103,6 +112,15 @@
           1
         ],
         "chance": 0.25
+      },
+      {
+        "item": "codex_pet",
+        "n": [
+          1,
+          1
+        ],
+        "chance": 0.3,
+        "unique": true
       }
     ],
     "boss_quhun": [
@@ -292,6 +310,15 @@
           1
         ],
         "chance": 0.15
+      },
+      {
+        "item": "codex_beast",
+        "n": [
+          1,
+          1
+        ],
+        "chance": 0.12,
+        "unique": true
       }
     ],
     "guardian_rich": [
@@ -360,6 +387,24 @@
           1
         ],
         "chance": 0.35
+      },
+      {
+        "item": "codex_beast",
+        "n": [
+          1,
+          1
+        ],
+        "chance": 0.25,
+        "unique": true
+      },
+      {
+        "item": "codex_pet",
+        "n": [
+          1,
+          1
+        ],
+        "chance": 0.25,
+        "unique": true
       }
     ],
     "guardian_poor": [
@@ -452,6 +497,24 @@
           1
         ],
         "chance": 0.08,
+        "unique": true
+      },
+      {
+        "item": "codex_pet",
+        "n": [
+          1,
+          1
+        ],
+        "chance": 0.25,
+        "unique": true
+      },
+      {
+        "item": "codex_beast",
+        "n": [
+          1,
+          1
+        ],
+        "chance": 0.25,
         "unique": true
       }
     ]

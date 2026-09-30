@@ -169,6 +169,19 @@ def main() -> int:
         for r in rows:
             if r["item"] not in item_ids:
                 errors.append(f"drops/{tname}: 未知物品 {r['item']}")
+    cxd = load("codex")
+    for kind in ("wolf", "spider", "bear", "snake", "python", "ape", "bat"):
+        if kind not in cxd["beasts"]:
+            errors.append(f"codex/beasts: 缺少 {kind}")
+    for bid in load("bosses")["bosses"]:
+        if bid not in cxd["bosses"]:
+            errors.append(f"codex/bosses: 缺少 {bid}")
+    for b in (cxd["beast_book"], cxd["pet_book"]):
+        if b not in item_ids:
+            errors.append(f"codex: 未知物品 {b}")
+    for kind in load("pets")["pets"]:
+        if kind not in cxd["pet_tips"]:
+            errors.append(f"codex/pet_tips: 缺少 {kind}")
     pets = load("pets")
     for kind in pets["pets"]:
         if kind not in pets["skills"]:

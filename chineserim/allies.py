@@ -48,6 +48,7 @@ class AlliesMixin:
         h.remove(self.data.pets["egg"])
         kind = self.rng.choice(list(self.data.pets["pets"]))
         h.pet = {"kind": kind, "el": self.rng.choice("金木水火土"), "level": 1, "exp": 0}
+        self.codex_see_pet(kind)
         self.log.append(f"蛋殼裂開，一隻{h.pet['el']}屬性的「{self.pet_name(h.pet)}」鑽了出來，親暱地蹭著你！")
         return True
 
@@ -150,10 +151,15 @@ class AlliesMixin:
         if won and h.pet:
             self.pet_gain_exp(1)
 
+    def has_pet_book(self):
+        return self.hero.count(self.data.codex["pet_book"]) > 0
+
     def _skill_view(self, pet):
         c = self.data.pets
         base = c["skills"][pet["kind"]]
         sk = self.pet_skill(pet)
+        if not self.has_pet_book():
+            return {"name": "？？？", "desc": "需要《靈寵圖鑑》才能得知牠的技能。", "unlocked": bool(sk), "unlock_level": c["stage_levels"][c["skill_unlock_stage"] - 1], "upgraded": False, "cd": 0, "hidden": True}
         v = sk["val"] if sk else base["val"][0]
         pct = round(v * 100) if base["type"] in ("howl", "shield", "drain", "web") else 0
         return {"name": base["name"], "desc": base["desc"].format(pct=pct), "unlocked": bool(sk), "unlock_level": c["stage_levels"][c["skill_unlock_stage"] - 1],

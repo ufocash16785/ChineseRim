@@ -541,6 +541,9 @@ def view(st, ch):
     return {"loc": st["loc"], "deep": st["deep"], "over": st["over"], "turn": st["turn"], "log": st["log"], "boss": st.get("boss", False),
             "down": st.get("down", False), "exhausted": ch.mp <= 0, "shield": round(st.get("shield", 0)), "formation": st.get("formation"),
             "cd": st.get("cd", {}), "mirror": st.get("mirror", 0), "attackCost": attack_cost(ch),
-            "enemies": [{k: e.get(k) for k in ("id", "kind", "name", "el", "hp", "maxhp", "dead", "sprite", "boss", "charging", "stun")} for e in st["enemies"]],
-            "partner": st.get("partner"), "pact": st.get("pact"), "allies": [dict({k: a.get(k) for k in ("type", "name", "kind", "el", "sprite", "hp", "maxhp", "level", "cd")}, skill=(a.get("skill") or {}).get("name")) for a in st.get("allies", [])], "aact": st.get("aact", []), "spellCost": spell_cost(ch), "diff": st.get("diff", {}).get("name", ""),
+            "codex": ch.count("codex_beast") > 0,
+            "enemies": [dict({k: e.get(k) for k in ("id", "kind", "name", "el", "hp", "maxhp", "dead", "sprite", "boss", "charging", "stun")},
+                             **({"weak": [x for x in "金木水火土" if element_multiplier(x, e["el"]) > 1],
+                                 "skills": [f"{s['name']}（每{s['every']}回合）" for s in e.get("skills", [])]} if ch.count("codex_beast") > 0 else {})) for e in st["enemies"]],
+            "partner": st.get("partner"), "pact": st.get("pact"), "allies": [dict({k: a.get(k) for k in ("type", "name", "kind", "el", "sprite", "hp", "maxhp", "level", "cd")}, skill=((a.get("skill") or {}).get("name") if ch.count("codex_pet") > 0 else ("？？？" if a.get("skill") else None))) for a in st.get("allies", [])], "aact": st.get("aact", []), "spellCost": spell_cost(ch), "diff": st.get("diff", {}).get("name", ""),
             "killed": st["killed"], "rewards": st["rewards"]}

@@ -1957,3 +1957,112 @@ class PetSkillTest(unittest.TestCase):
             self.s.act("battle", cmd="guard")
             used += any("月嘯" in x for x in st["log"])
         self.assertIn(used, (2, 3))                              # 3 階冷卻：約每 4 回合一次
+
+
+class CodexTest(unittest.TestCase):
+    def setUp(self):
+        import pathlib, tempfile
+        from chineserim.session import Session
+        self.s = Session(pathlib.Path(tempfile.mkdtemp()) / "s.json", seed=14)
+        self.s.act("new", diff="normal")
+        self.h = self.s.hero
+        self.h.hp, self.h.mp = self.h.max_hp, self.h.max_mp
+
+    def _shop(self):
+        for w in self.s.data.regions:
+            for g in w["regions"]:
+                for l in g["locations"]:
+                    m = self.s.get_map("loc:" + l["id"])
+                    ph = next((e for e in m["entities"] if e.get("role") == "pharmacy"), None)
+                    if ph:
+                        self.s.region = g["id"]
+                        if self.s.mode == "loc":
+                            self.s.act("leave")
+                        self.s.act("enter", loc=l["id"])
+                        self.s.act("talk", ent=ph["id"])
+                        return
+        self.fail("沒有丹藥鋪")
+
+    def test_locked_without_book(self):
+        v = self.s.snapshot()["codex"]
+        self.assertFalse(v["beast"]["owned"])
+        self.assertNotIn("entries", v["beast"])
+        self.assertFalse(v["pet"]["owned"])
+
+    def test_battle_view_hides_knowledge_without_book(self):
+        self.s.start_boss_fight("yuzitong")
+        b = self.s.snapshot()["battle"]
+        self.assertFalse(b["codex"])
+        self.assertNotIn("weak", b["enemies"][0])
+        self.assertNotIn("skills", b["enemies"][0])
+        self.s.battle = None
+        self.h.add("codex_beast")
+        self.s.start_boss_fight("yuzitong")
+        b = self.s.snapshot()["battle"]
+        self.assertTrue(b["codex"])
+        self.assertIn("weak", b["enemies"][0])
+        self.assertTrue(b["enemies"][0]["skills"])
+
+    def test_entries_unlock_by_encounter(self):
+        self.h.add("codex_beast")
+        v = self.s.snapshot()["codex"]["beast"]
+        self.assertEqual(v["found"], 0)
+        self.assertTrue(all(not e["known"] for e in v["entries"]))
+        self.s.start_boss_fight("yuzitong")
+        v = self.s.snapshot()["codex"]["beast"]
+        b = next(x for x in v["bosses"] if x["id"] == "yuzitong")
+        self.assertTrue(b["known"] and b["skills"])
+        self.assertEqual(v["found"], 1)
+        self.s.battle = None
+        self.s.act("enter", loc="taiyue")
+        e = next(e for e in self.s.get_map(self.s.map_id)["entities"] if e["k"] == "enemy")
+        self.s.act("battle_start", ids=e["id"])
+        v = self.s.snapshot()["codex"]["beast"]
+        got = next(x for x in v["entries"] if x["id"] == e["kind"])
+        self.assertTrue(got["known"])
+        self.assertEqual(got["elements"][0]["el"], e["el"])
+        self.assertTrue(got["elements"][0]["weak"])
+
+    def test_pet_book_gates_skill_info(self):
+        self.h.add("pet_egg")
+        self.s.act("use", item="pet_egg")
+        self.h.pet["level"] = 4
+        sk = self.s.snapshot()["comp"]["pet"]["skill"]
+        self.assertTrue(sk.get("hidden"))
+        self.assertEqual(sk["name"], "？？？")
+        self.s.start_boss_fight("yuzitong")
+        self.assertEqual(self.s.snapshot()["battle"]["allies"][0]["skill"], "？？？")
+        self.s.battle = None
+        self.h.add("codex_pet")
+        sk = self.s.snapshot()["comp"]["pet"]["skill"]
+        self.assertFalse(sk.get("hidden"))
+        v = self.s.snapshot()["codex"]["pet"]
+        self.assertEqual(v["found"], 1)                       # 養過的靈寵解鎖
+
+    def test_buy_once_and_shop_states(self):
+        self._shop()
+        self.h.add("lingshi", 2000)
+        v = self.s.snapshot()["shop"]
+        it = next(i for i in v["items"] if i["id"] == "codex_beast")
+        self.assertIsNone(it["left"])
+        self.s.act("buy", item="codex_beast")
+        self.assertEqual(self.h.count("codex_beast"), 1)
+        n = self.h.count("lingshi")
+        self.s.act("buy", item="codex_beast")                # 已有：不能再買
+        self.assertEqual(self.h.count("codex_beast"), 1)
+        self.assertEqual(self.h.count("lingshi"), n)
+        it = next(i for i in self.s.snapshot()["shop"]["items"] if i["id"] == "codex_beast")
+        self.assertEqual(it["left"], 0)
+
+    def test_found_in_drops(self):
+        from chineserim import loot
+        import random
+        got = set()
+        for i in range(200):
+            for it, n in loot.roll_table(self.s.data, "guardian_rich", self.h, random.Random(i)):
+                got.add(it)
+        self.assertIn("codex_beast", got)
+        self.assertIn("codex_pet", got)
+        self.h.add("codex_beast")                             # 已有就不會再掉
+        for i in range(200):
+            self.assertNotIn("codex_beast", [it for it, n in loot.roll_table(self.s.data, "guardian_rich", self.h, random.Random(i))])

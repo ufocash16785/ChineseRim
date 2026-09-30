@@ -44,6 +44,10 @@ class TopDownMixin:
             spec = karma.xinmo_spec(self.data, h)
             spec.update({"on_win": [{"flag": "xinmojie_pass"}], "drops": "guardian_normal", "win_bonus": {"chance": self.data.karma["xinmo"][karma.dao_state(h, self.data.karma)]["reward_bonus"]}})
         b = dict(spec or self.data.bosses["bosses"][bid])
+        if bid in self.data.codex["bosses"] or bid in ("xinmojie",):
+            self.codex_see_boss("xinmo" if bid == "xinmojie" else bid)
+        elif bid == "guardian" and b.get("kind"):
+            self.codex_see_beast(b["kind"], b.get("el"))
         deep = self.mode == "loc" and self.get_map(self.map_id)["cat"] == "deep"
         self.battle = battle.start_boss(h, b, self.cur_loc or "total", deep, self.dcfg, self.partner_spec(), boss_id=bid, retry=did, refine_cfg=self.data.karma["refine"], allies=self.allies_spec())
 
@@ -180,6 +184,8 @@ class TopDownMixin:
         u = (items.info(item) or {}).get("use")
         if u == "hatch":
             self.hatch_egg()
+        elif u == "codex":
+            self.log.append("你翻開圖錄，仔細閱讀了起來。（點右上「📖 圖錄」查看）")
         elif u == "heal":
             h.remove(item)
             h.hp = min(h.max_hp, h.hp + h.max_hp * battle.HEAL_FRAC)
@@ -491,6 +497,10 @@ class TopDownMixin:
                                        m["cat"] == "deep", self.dcfg, None, self.allies_spec())
             self.battle["chest_bonus"] = True
             return
+        for book in (self.data.codex["beast_book"], self.data.codex["pet_book"]):
+            if h.count(book) == 0 and self.rng.random() < 0.06:
+                h.add(book)
+                self.log.append(f"箱底壓著一本舊書——是《{items.name(book)}》！")
         rich = loot == "rich"
         gold = int(self.rng.uniform(40, 120) * scale * mult * (3.5 if rich else 1))
         h.add("lingshi", gold)
@@ -612,6 +622,8 @@ class TopDownMixin:
         ents = [e for e in m["entities"] if e["k"] == "enemy" and e["id"] in idl]
         if not ents:
             return
+        for e in ents:
+            self.codex_see_beast(e["kind"], e["el"])
         deep = m["cat"] == "deep"
         lm, am = self.wev_mod(self.cur_loc, "loot"), self.wev_mod(self.cur_loc, "atk")
         dcfg = dict(self.dcfg, enemy_atk=self.dcfg.get("enemy_atk", 1.0) * am) if am != 1.0 else self.dcfg

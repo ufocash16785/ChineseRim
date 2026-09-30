@@ -2,6 +2,7 @@
 import random
 from hashlib import md5
 
+from . import items as itemdb
 from .character import item_name
 
 WEEK = 7
@@ -107,6 +108,8 @@ class SocialMixin:
             left = None
             if it.get("daily") is not None:
                 left = max(0, it["daily"] - self.hero.bought.get(self._bought_key(ctx, iid), 0))
+            if itemdb.cat(iid) == "圖錄" and self.hero.count(iid) > 0:
+                left = 0
             items.append({"id": iid, "name": item_name(iid), "price": self._price(ctx, iid, it["price"]), "left": left})
         sells = []
         if ctx["kind"] != "shady":
@@ -130,6 +133,9 @@ class SocialMixin:
         if item not in items:
             return
         it = items[item]
+        if itemdb.cat(item) == "圖錄" and h.count(item) > 0:
+            self.log.append("這本書你已經有了。")
+            return
         key = self._bought_key(ctx, item)
         if it.get("daily") is not None and h.bought.get(key, 0) >= it["daily"]:
             self.log.append("這個貨賣完了，明天再來吧。")

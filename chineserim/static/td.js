@@ -10,7 +10,7 @@ const TD = (() => {
   const keys = {};
   let trail = [], ents = [], solid = [], shoreMask = null, busy = false, now = 0, last = performance.now();
   let askOpen = false, cool = {}, exitCool = 0, regionPending = false, syncT = 0, dist = 0, lastPos = null;
-  let compOpen = false, bagOpen = false, walk = null, lastCam = {x: 0, y: 0}, stuckT = 0;
+  let codexOpen = false, codexTab = 'beast', compOpen = false, bagOpen = false, walk = null, lastCam = {x: 0, y: 0}, stuckT = 0;
   let lastTp = null, toastT = 0, lastLog = '', bannerT = 0, lastRegion = null, minimapBase = null, uiKey = '';
   let bt = {target: 0, anim: [], hero: null, prev: null, fx: [], shake: {}, heroAnim: null, over: false};
   const rnd = (a, b = 0) => { let h = (a * 73856093) ^ (b * 19349663); h = (h ^ (h >>> 13)) >>> 0; return (h % 1000) / 1000; };
@@ -135,7 +135,7 @@ const TD = (() => {
     if (bannerT > 0) { bannerT -= dt * 1000; if (bannerT <= 0) $('banner').style.opacity = 0; }
     hero.inv -= dt; exitCool -= dt;
     if (!S || !MAP) return;
-    const frozen = busy || S.dialogue || S.battle || askOpen || S.shop || S.board || S.cand || bagOpen || compOpen || S.alch || S.war;
+    const frozen = busy || S.dialogue || S.battle || askOpen || S.shop || S.board || S.cand || bagOpen || compOpen || S.alch || S.war || codexOpen;
     if (frozen) walk = null;
     if (!frozen) {
       let dx = (down('d', 'arrowright') ? 1 : 0) - (down('a', 'arrowleft') ? 1 : 0), dy = (down('s', 'arrowdown') ? 1 : 0) - (down('w', 'arrowup') ? 1 : 0);
@@ -243,7 +243,7 @@ const TD = (() => {
     return b;
   }
   function interact() {
-    if (busy || S.dialogue || S.battle || askOpen || S.shop || S.board || S.cand || bagOpen || compOpen) return;
+    if (busy || S.dialogue || S.battle || askOpen || S.shop || S.board || S.cand || bagOpen || compOpen || codexOpen) return;
     const n = nearest(); if (!n) return;
     useIt(n);
   }
@@ -281,7 +281,7 @@ const TD = (() => {
     return null;
   }
   function walkTo(px, py, ent) {
-    if (!S || !MAP || busy || S.dialogue || S.battle || askOpen || S.shop || S.board || S.cand || bagOpen || compOpen) return;
+    if (!S || !MAP || busy || S.dialogue || S.battle || askOpen || S.shop || S.board || S.cand || bagOpen || compOpen || codexOpen) return;
     const path = findPath(Math.floor(hero.x / TS), Math.floor(hero.y / TS), Math.max(0, Math.min(MAP.w - 1, Math.floor(px / TS))), Math.max(0, Math.min(MAP.h - 1, Math.floor(py / TS))));
     if (!path) { toast('走不到那裡。'); return; }
     const pts = path.slice(1).map(c => ({x: (c[0] + .5) * TS, y: (c[1] + .75) * TS}));
@@ -354,12 +354,15 @@ const TD = (() => {
     const nm = S.world.find(w => w.id === to).name;
     askBox(`搭船前往「${nm}」？（約 8 日航程）`, [{label: '出發', fn: () => post('ferry', {to})}, {label: '再等等', fn: () => {}}]);
   }
-  function toggleBag() { bagOpen = !bagOpen; if (bagOpen) compOpen = false; walk = null; panels(); }
-  function toggleComp() { compOpen = !compOpen; if (compOpen) bagOpen = false; walk = null; panels(); }
+  function toggleBag() { bagOpen = !bagOpen; if (bagOpen) { compOpen = false; codexOpen = false; } walk = null; panels(); }
+  function toggleComp() { compOpen = !compOpen; if (compOpen) { bagOpen = false; codexOpen = false; } walk = null; panels(); }
+  function toggleCodex(tab) { if (tab) { codexTab = tab; codexOpen = true; } else codexOpen = !codexOpen; if (codexOpen) { bagOpen = false; compOpen = false; } walk = null; panels(); }
   const key = k => {
     if (askOpen) { const a = $('ask'); if (k === '1' || k === 'enter') closeAsk(0); else if (k === '2') closeAsk(1); else if (k === 'escape') closeAsk(a._opts.length - 1); return; }
     if (k === 'b' && S && !S.battle) { toggleBag(); return; }
     if (k === 'p' && S && !S.battle) { toggleComp(); return; }
+    if (k === 'g' && S && !S.battle) { toggleCodex(); return; }
+    if (k === 'escape' && codexOpen) { toggleCodex(); return; }
     if (k === 'escape' && compOpen) { toggleComp(); return; }
     if (k === 'escape' && bagOpen) { toggleBag(); return; }
     if (S && S.battle) return;
@@ -438,7 +441,10 @@ const TD = (() => {
       g.globalAlpha = 1;
       if (!e.dead) {
         g.fillStyle = '#222'; g.fillRect(ex - 44, ey - 150 - off, 88, 8); g.fillStyle = e.boss ? '#e8a020' : '#e44'; g.fillRect(ex - 44, ey - 150 - off, 88 * Math.max(0, e.hp / e.maxhp), 8);
-        label((e.boss ? '★ ' : '') + e.el + ' ' + e.name + (e.stun ? ' 💫' : ''), ex, ey - 158 - off, ECOL[e.el], 13);
+        label((e.boss ? '★ ' : '') + (b.codex ? e.el : '？') + ' ' + e.name + (e.stun ? ' 💫' : ''), ex, ey - 158 - off, b.codex ? ECOL[e.el] : '#ccc', 13);
+        if (b.codex && e.weak && e.weak.length) label('弱點：' + e.weak.join(''), ex, ey - 172 - off, '#9fe', 11);
+        else if (!b.codex) label('（沒有《妖獸圖錄》，看不出屬性）', ex, ey - 172 - off, '#777', 10);
+        if (b.codex && e.boss && e.skills && e.skills.length) label('招式：' + e.skills.join('、'), ex, ey - 8 - off + 24 + off, '#e8a', 10);
         if (e.charging) { g.globalAlpha = .5 + .5 * Math.sin(now / 90); label('⚠ 蓄力絕招！', ex, ey - 184 - off, '#ff5a5a', 16); g.globalAlpha = 1; }
         if (i === bt.target && !b.over) label('▼', ex, ey - 168 - off + Math.sin(now / 150) * 4, '#ffd24a', 24);
       }
@@ -550,6 +556,22 @@ const TD = (() => {
       (sh.sells.length ? '<div style="margin-top:6px;font-size:13px;color:#aaa">— 收購 —</div>' + sh.sells.map(i => `<div class=row2><span>${i.name}×${i.have}　${i.price} 靈石</span><button onclick="TD.post('sell',{item:'${i.id}'})">賣一個</button></div>`).join('') : '') +
       (sh.kind === 'shady' ? `<div style="margin-top:6px">${sh.appraised ? `<div style="color:#ffd97a;font-size:13px">🔍 ${sh.appraised}</div>` : `<button onclick="TD.post('appraise')">🔍 請人鑑定這批貨（${sh.appraise_cost} 靈石）</button>`}</div>` : '') +
       '<button style="margin-top:6px" onclick="TD.post(\'shop_close\')">離開</button>' : '');
+    const cx = S.codex;
+    const cxLock = '<div style="color:#aaa;font-size:13px;margin:8px 0">你還沒有這本圖錄。可到丹藥鋪購買，或在洞窟守護者、強敵身上、天降異寶與寶箱裡找到。</div>';
+    const cxTabs = `<button ${codexTab === 'beast' ? 'disabled' : ''} onclick="TD.codex('beast')">妖獸圖錄${cx && cx.beast.owned ? ' ' + cx.beast.found + '/' + cx.beast.total : '（未取得）'}</button><button ${codexTab === 'pet' ? 'disabled' : ''} onclick="TD.codex('pet')" style="margin-left:6px">靈寵圖鑑${cx && cx.pet.owned ? ' ' + cx.pet.found + '/' + cx.pet.total : '（未取得）'}</button>`;
+    const kn = {wolf: '青狼', spider: '毒蛛', bear: '鐵背熊', snake: '赤焰蛇', python: '碧水蟒', ape: '山魈', bat: '血翼蝠'};
+    let cxBody = '';
+    if (cx && codexOpen) {
+      if (codexTab === 'beast') {
+        const b = cx.beast;
+        cxBody = !b.owned ? cxLock : '<div style="margin-top:6px;color:#e6b45a;font-size:13px">— 妖獸 —</div>' + b.entries.map(e => e.known ? `<div style="margin:6px 0;font-size:13px"><b>${e.name}</b> <small style="color:#999">遇過 ${e.seen} 次</small><br>${e.desc}<br><small style="color:#aaa">棲地：${e.habitat}</small><br><small style="color:#9fe">要領：${e.tip}</small>${e.elements.length ? '<br><small>已見屬性：' + e.elements.map(x => `<span style="color:${ECOL[x.el]}">${x.el}</span>（弱點 ${x.weak.join('')}）`).join('　') + '</small>' : ''}</div>` : '').join('') + (b.entries.some(e => !e.known) ? `<div style="margin:6px 0;color:#666;font-size:13px">？？？ ×${b.entries.filter(e => !e.known).length}　<small>（尚未遇過的妖獸）</small></div>` : '') +
+          '<div style="margin-top:8px;color:#e6b45a;font-size:13px">— 強敵 —</div>' + b.bosses.map(e => e.known ? `<div style="margin:6px 0;font-size:13px"><b style="color:#ff9a6a">★ ${e.name}</b> <small style="color:#999">交手 ${e.seen} 次　屬性 <span style="color:${ECOL[e.el] || '#ccc'}">${e.el}</span>${e.weak.length ? '（弱點 ' + e.weak.join('') + '）' : ''}</small><br>${e.lore}<br><small style="color:#e8a">招式：${e.skills.join('、')}</small><br><small style="color:#9fe">要領：${e.tip}</small></div>` : '').join('') + (b.bosses.some(e => !e.known) ? `<div style="margin:6px 0;color:#666;font-size:13px">？？？ ×${b.bosses.filter(e => !e.known).length}　<small>（尚未交手的強敵）</small></div>` : '');
+      } else {
+        const p = cx.pet;
+        cxBody = !p.owned ? cxLock : p.entries.map(e => e.known ? `<div style="margin:6px 0;font-size:13px"><b>${kn[e.id] ? e.stages[0] + '系' : e.id}</b>：${e.stages.join(' → ')}<br><small style="color:#ffd24a">✦ ${e.skill.name}（${e.skill.unlock} 級進化後習得，冷卻 ${e.skill.cd.join('→')} 回合）</small><br><small style="color:#ccc">${e.skill.desc}${e.skill.strong !== e.skill.desc ? '<br>強化後：' + e.skill.strong : ''}</small><br><small style="color:#9fe">${e.tip}</small></div>` : `<div style="margin:6px 0;color:#666;font-size:13px">？？？　<small>（尚未養過這種靈寵）</small></div>`).join('');
+      }
+    }
+    lst('codex', codexOpen && cx ? '<b>📖 圖錄</b> <small style="color:#999">（G 開關）</small><div style="margin:6px 0">' + cxTabs + '</div>' + cxBody + '<button style="margin-top:8px" onclick="TD.codex()">關閉（G）</button>' : '');
     const wr = S.war;
     lst('war', wr ? `<b style="color:#ff8a6a">⚔ ${wr.title}</b><div style="font-size:14px;margin:6px 0">${wr.text}</div><div style="font-size:12px;color:#aaa;margin-bottom:6px">${wr.member ? '你是「' + wr.sect + '」的弟子。' : ''}選擇你的立場：</div>` +
       wr.options.map(o => `<div style="margin:6px 0"><button ${o.ok ? '' : 'disabled'} onclick="TD.post('war_side',{side:'${o.k}'})"><b>${o.title}</b></button><div style="font-size:12px;color:#bbb">${o.desc}</div></div>`).join('') : '');
@@ -567,7 +589,7 @@ const TD = (() => {
           [['cool2', '❄❄ 大減火'], ['cool', '❄ 減火'], ['hold', '＝ 維持'], ['heat', '🔥 添火'], ['heat2', '🔥🔥 大添火']].map(([k, t]) => `<button onclick="TD.post('alch_act',{a:'${k}'})">${t}</button>`).join('') +
           (al.hist.length ? '<div style="margin-top:8px;font-size:12px;color:#999">' + al.hist.map((h, i) => `第${i + 1}回 → ${h.heat}（+${h.score}）`).join('　') + '</div>' : '')) : '');
     const bgs = S.bag || [];
-    lst('bag', bagOpen ? '<b>🎒 儲物袋</b> <small style="color:#9d9">容量：無限</small>' + ['錢財', '丹藥', '材料', '符錄', '陣法', '法寶'].map(c => { const l = bgs.filter(x => x.cat === c); return l.length ? `<div style="margin-top:8px;color:#e6b45a;font-size:13px">— ${c} —</div>` + l.map(x => x.cat === '法寶' ? `<div class=row2 style="flex-wrap:wrap"><span title="${x.desc}"><b>${x.name}</b> ${x.level}階${x.bonded ? ' <b style="color:#ffd24a">★本命</b>' : ''}<small style="color:#999"> ${x.desc}</small>${x.awaken ? `<br><small style="color:${x.level >= 3 ? '#9fe' : '#777'}">${x.awaken}${x.level >= 3 ? '（已覺醒）' : '（3 階覺醒）'}</small>` : ''}</span><span>${x.refine ? `<button onclick="TD.post('fb_refine',{item:'${x.id}'})">祭煉（${x.refine.lingshi} 靈石${x.refine.lingye ? '＋靈液' : ''}）</button>` : '<small>已達上限</small>'}${x.bonded ? '' : `<button onclick="TD.post('fb_bond',{item:'${x.id}'})">設為本命</button>`}</span></div>` : `<div class=row2><span title="${x.desc}">${x.name} <b>×${x.n}</b><small style="color:#999"> ${x.desc}</small></span>${x.use ? `<button onclick="TD.post('use',{item:'${x.id}'})">使用</button>` : ''}</div>`).join('') : ''; }).join('') + `<div style="margin-top:8px;font-size:12px;color:#aaa">符錄、陣法、法寶只能在主要對手戰中使用。儲存點：${S.checkpoint || '無'}</div><button style="margin-top:6px" onclick="TD.bag()">關閉（B）</button>` : '');
+    lst('bag', bagOpen ? '<b>🎒 儲物袋</b> <small style="color:#9d9">容量：無限</small>' + ['錢財', '丹藥', '材料', '圖錄', '符錄', '陣法', '法寶'].map(c => { const l = bgs.filter(x => x.cat === c); return l.length ? `<div style="margin-top:8px;color:#e6b45a;font-size:13px">— ${c} —</div>` + l.map(x => x.cat === '法寶' ? `<div class=row2 style="flex-wrap:wrap"><span title="${x.desc}"><b>${x.name}</b> ${x.level}階${x.bonded ? ' <b style="color:#ffd24a">★本命</b>' : ''}<small style="color:#999"> ${x.desc}</small>${x.awaken ? `<br><small style="color:${x.level >= 3 ? '#9fe' : '#777'}">${x.awaken}${x.level >= 3 ? '（已覺醒）' : '（3 階覺醒）'}</small>` : ''}</span><span>${x.refine ? `<button onclick="TD.post('fb_refine',{item:'${x.id}'})">祭煉（${x.refine.lingshi} 靈石${x.refine.lingye ? '＋靈液' : ''}）</button>` : '<small>已達上限</small>'}${x.bonded ? '' : `<button onclick="TD.post('fb_bond',{item:'${x.id}'})">設為本命</button>`}</span></div>` : `<div class=row2><span title="${x.desc}">${x.name} <b>×${x.n}</b><small style="color:#999"> ${x.desc}</small></span>${x.use === 'codex' ? `<button onclick="TD.codex('${x.id === 'codex_pet' ? 'pet' : 'beast'}')">翻閱</button>` : x.use ? `<button onclick="TD.post('use',{item:'${x.id}'})">使用</button>` : ''}</div>`).join('') : ''; }).join('') + `<div style="margin-top:8px;font-size:12px;color:#aaa">符錄、陣法、法寶只能在主要對手戰中使用。儲存點：${S.checkpoint || '無'}</div><button style="margin-top:6px" onclick="TD.bag()">關閉（B）</button>` : '');
     const bd = S.board;
     lst('board', bd ? `<b>📜 布告欄</b><div style="font-size:15px;margin:6px 0;color:#ffe9a6">${bd.title}</div>` +
       bd.offers.map(o => `<div class=offer><span>${o.give_txt} ⇒ <b>${o.get_txt}</b>${o.done ? '（已完成）' : ''}</span><button ${o.ok ? '' : 'disabled'} onclick="TD.post('barter',{idx:${o.id}})">交換</button></div>`).join('') +
@@ -626,9 +648,9 @@ const TD = (() => {
       else if (e.k === 'plot') list.push({y: e.y * TS + 10, f: () => { const st = S.plots[e.id] || {stage: 0}, ix = (e.x + .5) * TS - cam.x, iy = (e.y + 1) * TS - cam.y - 2; drawObj(bio, 'plot' + st.stage, ix, iy, 1); if (st.stage === 3) label('可收成', ix, iy - 28 + Math.sin(now / 250) * 2, '#ffe36a', 11); else if (st.stage > 0) label(st.left + '日', ix, iy - 26, '#cfe', 10); }});
       else if (e.k === 'npc') list.push({y: e.py, f: () => drawNPC(e.npc, ax, ay, e.face || 'd', e.moving)});
       else if (e.k === 'candidate') list.push({y: e.py, f: () => { drawNPC(e.npc, ax, ay, hero.x < e.px ? 'l' : 'r', false); label(e.name, ax, ay + 14, '#ffc0d8', 12); const a = S.affinity[e.cid] || 0; label(S.partner && S.partner.id === e.cid ? '♥ 道侶' : (a > 0 ? '♥' + a : '♡'), ax, ay - 62 + Math.sin(now / 300) * 2, '#ff7aa8', 14); }});
-      else if (e.k === 'guardian' && !(S.guardians || []).includes(S.cur_loc)) list.push({y: (e.y + 1) * TS, f: () => { const gx = (e.x + .5) * TS - cam.x, gy = (e.y + 1) * TS - cam.y; shadow(gx, gy + 2, 40); drawBeast(e, gx, gy, 2.2, false, Math.floor(now / 250) % 4); label('★ ' + e.name, gx, gy - 100, '#ff9a5a', 14); label(e.el, gx, gy - 116, ECOL[e.el], 14); }});
+      else if (e.k === 'guardian' && !(S.guardians || []).includes(S.cur_loc)) list.push({y: (e.y + 1) * TS, f: () => { const gx = (e.x + .5) * TS - cam.x, gy = (e.y + 1) * TS - cam.y; shadow(gx, gy + 2, 40); drawBeast(e, gx, gy, 2.2, false, Math.floor(now / 250) % 4); label('★ ' + e.name, gx, gy - 100, '#ff9a5a', 14); label(S.codex && S.codex.beast.owned ? e.el : '？', gx, gy - 116, S.codex && S.codex.beast.owned ? ECOL[e.el] : '#ccc', 14); }});
       else if (e.k === 'well') list.push({y: (e.y + 1) * TS + 1, f: () => label('💾', (e.x + .5) * TS - cam.x, e.y * TS - cam.y - 22 + Math.sin(now / 400) * 2, '#9df', 16)});
-      else if (e.k === 'enemy' && !S.defeated.includes(e.id)) list.push({y: e.py, f: () => { const B = Art.man.beasts; drawBeast(e, ax, ay, 1, (e.dir || 1) < 0); label(e.el, ax, ay - 46 - (e.kind === 'bat' ? 26 : 0), ECOL[e.el], 13); if ((cool['f' + e.id] || 0) > now) { g.globalAlpha = .6; label('…', ax, ay - 60, '#fff', 14); g.globalAlpha = 1; } }});
+      else if (e.k === 'enemy' && !S.defeated.includes(e.id)) list.push({y: e.py, f: () => { const B = Art.man.beasts; drawBeast(e, ax, ay, 1, (e.dir || 1) < 0); label(S.codex && S.codex.beast.owned ? e.el : '？', ax, ay - 46 - (e.kind === 'bat' ? 26 : 0), S.codex && S.codex.beast.owned ? ECOL[e.el] : '#ccc', 13); if ((cool['f' + e.id] || 0) > now) { g.globalAlpha = .6; label('…', ax, ay - 60, '#fff', 14); g.globalAlpha = 1; } }});
     }
     if (MAP.kind === 'loc' && S.wev_ent) { const w = S.wev_ent, ax = (w.x + .5) * TS - cam.x, ay = (w.y + .9) * TS - cam.y; list.push({y: (w.y + .9) * TS, f: () => { if (w.sprite) { drawNPC(w.sprite, ax, ay, hero.x < (w.x + .5) * TS ? 'r' : 'l', false); label(w.name, ax, ay + 14, '#ffe08a', 12); } else { g.globalAlpha = .6 + .3 * Math.sin(now / 200); g.fillStyle = '#ffe08a'; g.beginPath(); g.ellipse(ax, ay - 6, 16, 8, 0, 0, 7); g.fill(); g.globalAlpha = 1; } label(w.label, ax, ay - 62 + Math.sin(now / 230) * 3, '#ffd24a', 26); }}); }
     if (MAP.kind === 'loc' && S.karma_ev) { const k = S.karma_ev, ax = (k.x + .5) * TS - cam.x, ay = (k.y + .9) * TS - cam.y, av = k.kind === 'avenger'; list.push({y: (k.y + .9) * TS, f: () => { drawNPC(k.sprite, ax, ay, hero.x < (k.x + .5) * TS ? 'r' : 'l', false); label(av ? '仇' : '恩', ax, ay - 62 + Math.sin(now / 240) * 3, av ? '#ff5a5a' : '#7dff9a', 26); label(k.name, ax, ay + 14, av ? '#ff9a9a' : '#b8ffc8', 12); }}); }
@@ -679,5 +701,5 @@ const TD = (() => {
   }
   boot();
   window.__td = {get S() { return S; }, get MAP() { return MAP; }, hero, get ents() { return ents; }, post, load, get bt() { return bt; }};
-  return {post, act, openNew, cmd: btCmd, btEnd, bag: toggleBag, comp: toggleComp, menu: v => { bt.menu = v; $('bt')._k = ''; btUI(); }, spellMenu: v => { bt.menu = v ? 'spell' : null; $('bt')._k = ''; btUI(); }};
+  return {post, act, openNew, cmd: btCmd, btEnd, bag: toggleBag, comp: toggleComp, codex: toggleCodex, menu: v => { bt.menu = v; $('bt')._k = ''; btUI(); }, spellMenu: v => { bt.menu = v ? 'spell' : null; $('bt')._k = ''; btUI(); }};
 })();

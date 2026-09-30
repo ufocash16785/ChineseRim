@@ -71,6 +71,12 @@
         "pet_egg": {
           "price": 500,
           "daily": 1
+        },
+        "codex_beast": {
+          "price": 350
+        },
+        "codex_pet": {
+          "price": 400
         }
       },
       "sell": {
