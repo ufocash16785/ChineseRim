@@ -8,7 +8,7 @@ from .character import item_name
 from .explore import DEEP, min_realm
 
 _MAP_CACHE = {}          # 地圖只由資料決定，行程內共用（唯讀）
-TD_KINDS = {"sell", "appraise", "barter", "join", "board_close", "gift", "chat", "cand_close", "plant", "harvest", "boost", "craft", "shop_close", "enter", "leave", "talk", "region", "ferry", "pos", "battle_start", "battle", "battle_end", "buy", "chest", "portal", "use", "fb_refine", "fb_bond"}
+TD_KINDS = {"sell", "appraise", "barter", "join", "board_close", "gift", "chat", "cand_close", "plant", "harvest", "boost", "craft", "shop_close", "enter", "leave", "talk", "region", "ferry", "pos", "battle_start", "battle", "battle_end", "buy", "chest", "portal", "use", "fb_refine", "fb_bond", "alch_start", "alch_act", "alch_close"}
 STEPS_PER_DAY = 160
 FERRY_DAYS = 8
 
@@ -240,6 +240,8 @@ class TopDownMixin:
     # ---- 動作 ----
     def _td(self, kind, **q):
         if self.battle and kind not in ("battle", "battle_end"):
+            return
+        if self.alch and kind not in ("alch_act", "alch_close", "pos"):
             return
         if kind not in ("buy", "sell", "appraise", "barter", "join", "gift", "chat", "pos", "talk"):
             self.ui = {}

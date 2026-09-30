@@ -10,6 +10,7 @@ from .data import ROOT, GameData
 from .elements import ADV_MULT, DIS_MULT, PAIRS, PARENT
 from .explore import DEEP, WorldMap, is_wild, kill_reward, min_realm, visit
 from .realms import RealmSystem
+from .alchemy import AlchemyMixin
 from .social import SocialMixin
 from .topdown import TD_KINDS, TopDownMixin
 
@@ -17,7 +18,7 @@ SAVE_VERSION = 1
 DEFAULT_SAVE = ROOT / "saves" / "save.json"
 
 
-class Session(TopDownMixin, SocialMixin):
+class Session(TopDownMixin, SocialMixin, AlchemyMixin):
     def __init__(self, save_path=DEFAULT_SAVE, seed=None):
         self.data = GameData()
         self.rng = random.Random(seed)
@@ -65,6 +66,7 @@ class Session(TopDownMixin, SocialMixin):
         quests.ensure(self.hero, self.data)
         self.ui = {}
         self.pending_boss = None
+        self.alch = None
         self.td_reset()
         self.make_checkpoint("旅程起點")
 
@@ -72,7 +74,7 @@ class Session(TopDownMixin, SocialMixin):
     def to_dict(self):
         return {"version": SAVE_VERSION, "day": self.day, "region": self.region, "log": self.log[-30:], "hero": asdict(self.hero), "difficulty": self.difficulty, "configured": self.configured,
                 "td": {"mode": self.mode, "map_id": self.map_id, "pos": self.pos, "tp": getattr(self, "tp", 0), "cur_loc": self.cur_loc, "defeated": self.defeated,
-                       "train_n": self.train_n, "step_acc": self.step_acc, "battle": self.battle, "checkpoint": self.checkpoint}}
+                       "train_n": self.train_n, "step_acc": self.step_acc, "battle": self.battle, "checkpoint": self.checkpoint, "alch": self.alch}}
 
     def from_dict(self, d):
         if d.get("version") != SAVE_VERSION:
@@ -92,6 +94,7 @@ class Session(TopDownMixin, SocialMixin):
                 self.get_map(td["map_id"])
                 self.mode, self.map_id, self.pos, self.cur_loc = td["mode"], td["map_id"], td["pos"], td["cur_loc"]
                 self.defeated, self.train_n, self.step_acc, self.battle = td["defeated"], td["train_n"], td["step_acc"], td["battle"]
+                self.alch = td.get("alch")
                 self.checkpoint = td.get("checkpoint")
                 if not self.checkpoint:
                     self.make_checkpoint("目前位置")
@@ -245,7 +248,7 @@ class Session(TopDownMixin, SocialMixin):
             "dialogue": dialogue.view(self.data, h),
             "difficulty": self.difficulty, "difficultyName": self.dcfg["name"], "configured": self.configured, "difficulties": {k: {"name": v["name"], "desc": v["desc"]} for k, v in difficulty.DIFFICULTY.items()},
             "mode": self.mode, "map_id": self.map_id, "pos": self.pos, "tp": getattr(self, "tp", 0), "cur_loc": self.cur_loc, "defeated": self.defeated,
-            "battle": battle.view(self.battle, h), "bag": self.bag_view(), "karma": karma.view(h, self.data.karma), "karma_ev": self.karma_view(), "checkpoint": (self.checkpoint or {}).get("label"), "guardians": [k[9:] for k, v in h.flags.items() if k.startswith("guardian:") and v], "shop": self.shop_view(), "board": self.board_view(), "cand": self.cand_view(), "shady": self.shady_view(),
+            "battle": battle.view(self.battle, h), "bag": self.bag_view(), "alch": self.alch_view(), "alch_n": h.counters.get("alch:n", 0), "karma": karma.view(h, self.data.karma), "karma_ev": self.karma_view(), "checkpoint": (self.checkpoint or {}).get("label"), "guardians": [k[9:] for k, v in h.flags.items() if k.startswith("guardian:") and v], "shop": self.shop_view(), "board": self.board_view(), "cand": self.cand_view(), "shady": self.shady_view(),
             "members": [{"id": m, "name": self.data.sects[m]["name"], "perk": self.perk_of(m)["name"], "desc": self.perk_of(m)["desc"]} for m in h.members],
             "partner": self.partner_spec(), "affinity": h.affinity, "mp": round(h.mp), "max_mp": round(h.max_mp), "heal": h.count("heal"), "mpills": h.count("mpill"), "herbs": h.count("herb"), "plots": self.plots_view(),
             "seeds": {k: dict(v, cost=round(v["cost"] * self.dcfg["price"])) for k, v in self.data.farming["seeds"].items()},

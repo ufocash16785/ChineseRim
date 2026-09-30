@@ -1,13 +1,119 @@
 {
   "description": "藥園與煉丹（獨立引擎用）。seeds：種子（cost 靈石、days 成熟天數、yield 收成靈草數量範圍、lingye 收成時額外掉靈液的機率）。recipes：丹方（needs 消耗、gives 產出、chance 基礎成功率，失敗時損失一半材料）。",
   "seeds": {
-    "common": { "name": "普通靈草", "cost": 10, "days": 3, "yield": [1, 2] },
-    "ginseng": { "name": "靈參", "cost": 40, "days": 6, "yield": [3, 5] },
-    "lotus": { "name": "火蓮", "cost": 120, "days": 10, "yield": [6, 10], "lingye": 0.35 }
+    "common": {
+      "name": "普通靈草",
+      "cost": 10,
+      "days": 3,
+      "yield": [
+        1,
+        2
+      ]
+    },
+    "ginseng": {
+      "name": "靈參",
+      "cost": 40,
+      "days": 6,
+      "yield": [
+        3,
+        5
+      ]
+    },
+    "lotus": {
+      "name": "火蓮",
+      "cost": 120,
+      "days": 10,
+      "yield": [
+        6,
+        10
+      ],
+      "lingye": 0.35
+    }
   },
   "recipes": {
-    "heal": { "name": "回春丹（×2）", "needs": { "herb": 3 }, "gives": { "heal": 2 }, "chance": 1.0 },
-    "mpill": { "name": "聚氣丹（×2）", "needs": { "herb": 3, "lingshi": 10 }, "gives": { "mpill": 2 }, "chance": 1.0 },
-    "pill": { "name": "突破丹（×1）", "needs": { "herb": 10, "lingye": 1, "lingshi": 100 }, "gives": { "pill": 1 }, "chance": 0.7 }
+    "heal": {
+      "name": "回春丹（×2）",
+      "needs": {
+        "herb": 3
+      },
+      "gives": {
+        "heal": 2
+      },
+      "chance": 1.0,
+      "heat": 8
+    },
+    "mpill": {
+      "name": "聚氣丹（×2）",
+      "needs": {
+        "herb": 3,
+        "lingshi": 10
+      },
+      "gives": {
+        "mpill": 2
+      },
+      "chance": 1.0,
+      "heat": 10
+    },
+    "pill": {
+      "name": "突破丹（×1）",
+      "needs": {
+        "herb": 10,
+        "lingye": 1,
+        "lingshi": 100
+      },
+      "gives": {
+        "pill": 1
+      },
+      "chance": 0.7,
+      "heat": 14
+    }
+  },
+  "alchemy": {
+    "rounds": 5,
+    "actions": {
+      "cool2": -20,
+      "cool": -8,
+      "hold": 0,
+      "heat": 8,
+      "heat2": 20
+    },
+    "zones": [
+      [
+        8,
+        3
+      ],
+      [
+        18,
+        2
+      ],
+      [
+        30,
+        1
+      ]
+    ],
+    "tiers": [
+      [
+        12,
+        3,
+        "極品"
+      ],
+      [
+        8,
+        2,
+        "上品"
+      ],
+      [
+        4,
+        1,
+        "普通"
+      ],
+      [
+        0,
+        0,
+        "失敗"
+      ]
+    ],
+    "mastery_per": 4,
+    "mastery_max": 4
   }
 }

@@ -1566,3 +1566,71 @@ class KarmaAndTreasureTest(unittest.TestCase):
                 self.assertEqual(st["enemies"][0].get("stun", 0) + (1 if st["enemies"][0].get("stun_imm") else 0) > 0, True)
             s.battle = None
         self.assertGreater(dmg[1], dmg[0] * 1.3)
+
+
+class AlchemyMiniGameTest(unittest.TestCase):
+    def setUp(self):
+        import pathlib, tempfile
+        from chineserim.session import Session
+        self.s = Session(pathlib.Path(tempfile.mkdtemp()) / "s.json", seed=4)
+        self.s.act("new", diff="normal")
+        self.h = self.s.hero
+        self.s.act("enter", loc=next(l["id"] for w in self.s.data.regions for g in w["regions"] for l in g["locations"] if l["type"] == "洞府") if False else "qingniu")
+        self.s.act("leave")
+        # 找一個有丹爐的地點
+        for w in self.s.data.regions:
+            for g in w["regions"]:
+                for l in g["locations"]:
+                    if l["type"] == "藥園":
+                        self.s.region = g["id"]
+                        self.s.act("enter", loc=l["id"])
+                        return
+        self.fail("沒有藥園")
+
+    def test_play_and_tiers(self):
+        h, s = self.h, self.s
+        h.add("herb", 30)
+        s.act("alch_start", recipe="heal")
+        self.assertTrue(s.alch)
+        self.assertEqual(h.count("herb"), 27)
+        s.act("battle_end")                                  # 煉製中其他動作被擋
+        s.act("talk", ent="bed")
+        self.assertTrue(s.alch)
+        for _ in range(5):
+            s.act("alch_act", a="hold")
+        v = s.snapshot()["alch"]
+        self.assertTrue(v["over"] and v["result"])
+        s.act("alch_close")
+        self.assertIsNone(s.alch)
+        self.assertEqual(h.counters["alch:n"], 1)
+
+    def test_good_play_beats_bad_play(self):
+        h, s = self.h, self.s
+        scores = []
+        for policy in ("good", "bad"):
+            h.add("herb", 10)
+            s.act("alch_start", recipe="heal")
+            while not s.alch["over"]:
+                if policy == "good":
+                    # 依火候往 50 修正（能看見目前爐溫，看不見確切火勢）
+                    heat = s.alch["heat"]
+                    a = "cool" if heat > 58 else "heat" if heat < 42 else "hold"
+                else:
+                    a = "heat2"
+                s.act("alch_act", a=a)
+            scores.append(s.alch["score"])
+            s.act("alch_close")
+        self.assertGreater(scores[0], scores[1])
+
+    def test_boom_and_save(self):
+        from chineserim.session import Session
+        h, s = self.h, self.s
+        h.add("herb", 6)
+        s.act("alch_start", recipe="heal")
+        s2 = Session(s.save_path)
+        s2.load()
+        self.assertEqual(s2.alch["recipe"], "heal")            # 存檔可續煉
+        for _ in range(3):
+            s.act("alch_act", a="heat2")
+        self.assertTrue(s.alch["over"])
+        self.assertEqual(s.alch["tier"], 0)

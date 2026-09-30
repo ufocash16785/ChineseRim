@@ -19,7 +19,7 @@ button{padding:6px 12px;font-size:14px;cursor:pointer}
 #dlg .sp{color:#e6b45a;font-weight:bold;margin-bottom:4px}#dlg .tx{font-size:17px;line-height:1.6;margin-bottom:8px}#dlg button,.panel button{display:block;margin:4px 0;font-size:15px;text-align:left}
 canvas.pt{float:left;width:104px;height:135px;image-rendering:pixelated;margin:-34px 16px 0 0;background:linear-gradient(#3a4256,#252a38);border:2px solid #b8893a;border-radius:6px}
 #ask{left:50%;top:40%;transform:translate(-50%,-50%);min-width:300px;text-align:center}
-#shop,#board,#cand,#bag{right:8px;top:8px;bottom:auto;min-width:300px;max-width:390px;max-height:90%;overflow:auto}
+#shop,#board,#cand,#bag,#alch{right:8px;top:8px;bottom:auto;min-width:300px;max-width:390px;max-height:90%;overflow:auto}
 #board .offer,#shop .row2{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:3px 0;font-size:14px}
 .aff{height:10px;background:#333;border-radius:5px;overflow:hidden;margin:4px 0}.aff i{display:block;height:100%;background:linear-gradient(90deg,#f6a,#f36)}
 #bt{left:0;right:0;bottom:0;border-radius:0;border-width:2px 0 0;padding:8px 14px}
@@ -32,7 +32,7 @@ canvas.pt{float:left;width:104px;height:135px;image-rendering:pixelated;margin:-
 <div id=stage><canvas id=c width=960 height=540></canvas><canvas id=mini width=150 height=150></canvas>
 <div id=toast></div><div id=prompt></div><div id=quest></div><div id=banner></div>
 <div id=help>WASD/方向鍵 移動　Shift 奔跑　E/空白 互動　B 儲物袋　滑鼠點地面/物件自動走過去　走進地圖上的地點圖示即可進入</div>
-<div id=dlg class=panel></div><div id=ask class=panel></div><div id=shop class=panel></div><div id=board class=panel></div><div id=cand class=panel></div><div id=bag class=panel></div><div id=bt class=panel></div></div>
+<div id=dlg class=panel></div><div id=ask class=panel></div><div id=shop class=panel></div><div id=board class=panel></div><div id=cand class=panel></div><div id=bag class=panel></div><div id=alch class=panel></div><div id=bt class=panel></div></div>
 <div id=bar2><button onclick="TD.bag()">🎒 儲物袋 (B)</button><button onclick="TD.act('break')">突破</button><button onclick="TD.act('refine')">祭煉青竹蜂雲劍</button><button onclick="TD.act('rest')">閉關7日</button>
 <button onclick="TD.openNew()">新遊戲</button><a href="/side">舊版卷軸</a><small>自動存檔</small></div>
 <div id=logp></div>

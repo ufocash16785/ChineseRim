@@ -135,7 +135,7 @@ const TD = (() => {
     if (bannerT > 0) { bannerT -= dt * 1000; if (bannerT <= 0) $('banner').style.opacity = 0; }
     hero.inv -= dt; exitCool -= dt;
     if (!S || !MAP) return;
-    const frozen = busy || S.dialogue || S.battle || askOpen || S.shop || S.board || S.cand || bagOpen;
+    const frozen = busy || S.dialogue || S.battle || askOpen || S.shop || S.board || S.cand || bagOpen || S.alch;
     if (frozen) walk = null;
     if (!frozen) {
       let dx = (down('d', 'arrowright') ? 1 : 0) - (down('a', 'arrowleft') ? 1 : 0), dy = (down('s', 'arrowdown') ? 1 : 0) - (down('w', 'arrowup') ? 1 : 0);
@@ -343,7 +343,7 @@ const TD = (() => {
   }
   function furnaceMenu() {
     const need = (r) => Object.entries(r.needs).map(([k, v]) => ({herb: '靈草', lingye: '靈液', lingshi: '靈石'}[k] + '×' + v)).join(' ');
-    askBox(`煉丹爐（靈草 ${S.herbs}・靈液 ${S.lingye}・靈石 ${S.lingshi}）`, Object.entries(S.recipes).map(([k, v]) => ({label: `${v.name}　需 ${need(v)}${v.chance < 1 ? '　成功率約 ' + Math.round(v.chance * 100) + '%' : ''}`, fn: () => post('craft', {recipe: k})})).concat([{label: '不煉了', fn: () => {}}]));
+    askBox(`煉丹爐（靈草 ${S.herbs}・靈液 ${S.lingye}・靈石 ${S.lingshi}・熟練 ${S.alch_n}）`, Object.entries(S.recipes).flatMap(([k, v]) => [{label: `🔥 火候煉製 ${v.name}　需 ${need(v)}（品質決定產量；熟練度越高越好控制）`, fn: () => post('alch_start', {recipe: k})}, {label: `快速煉製 ${v.name}${v.chance < 1 ? '（成功率約 ' + Math.round(v.chance * 100) + '%）' : ''}`, fn: () => post('craft', {recipe: k})}]).concat([{label: '不煉了', fn: () => {}}]));
   }
   function askLeave() {
     askBox(`離開「${MAP.name}」？`, [{label: '離開，回到大地圖', fn: () => post('leave')}, {label: '留下', fn: () => { hero.y -= 46; exitCool = 1.5; }}]);
@@ -540,6 +540,14 @@ const TD = (() => {
       (sh.sells.length ? '<div style="margin-top:6px;font-size:13px;color:#aaa">— 收購 —</div>' + sh.sells.map(i => `<div class=row2><span>${i.name}×${i.have}　${i.price} 靈石</span><button onclick="TD.post('sell',{item:'${i.id}'})">賣一個</button></div>`).join('') : '') +
       (sh.kind === 'shady' ? `<div style="margin-top:6px">${sh.appraised ? `<div style="color:#ffd97a;font-size:13px">🔍 ${sh.appraised}</div>` : `<button onclick="TD.post('appraise')">🔍 請人鑑定這批貨（${sh.appraise_cost} 靈石）</button>`}</div>` : '') +
       '<button style="margin-top:6px" onclick="TD.post(\'shop_close\')">離開</button>' : '');
+    const al = S.alch;
+    lst('alch', al ? `<b>🔥 煉製${al.name}</b> <small>第 ${Math.min(al.round + 1, al.rounds)}/${al.rounds} 回合　得分 ${al.score}/${al.maxScore}</small>` +
+      `<div style="position:relative;height:26px;background:#222;border-radius:6px;margin:10px 0;overflow:hidden"><div style="position:absolute;left:32%;width:36%;top:0;bottom:0;background:#5a4a10"></div><div style="position:absolute;left:42%;width:16%;top:0;bottom:0;background:#3a7a2a"></div><div style="position:absolute;left:${al.heat}%;top:-2px;bottom:-2px;width:5px;margin-left:-2px;background:#ff5a2a;box-shadow:0 0 8px #f80"></div></div>` +
+      `<div style="font-size:13px;color:#ccc">爐溫 ${al.heat}（綠區＝完美、黃區＝尚可；0 或 100 會炸爐）</div>` +
+      (al.over ? `<div style="margin:10px 0;font-size:16px;color:${al.tier ? '#9fe' : '#f88'}">${al.result}</div><button onclick="TD.post('alch_close')">收爐</button>`
+        : `<div style="margin:8px 0;color:#ffd97a">火勢變化：${al.trend.dir > 0 ? '漸旺 ↑' : al.trend.dir < 0 ? '漸弱 ↓' : '平穩'}（${al.trend.size}）</div>` +
+          [['cool2', '❄❄ 大減火'], ['cool', '❄ 減火'], ['hold', '＝ 維持'], ['heat', '🔥 添火'], ['heat2', '🔥🔥 大添火']].map(([k, t]) => `<button onclick="TD.post('alch_act',{a:'${k}'})">${t}</button>`).join('') +
+          (al.hist.length ? '<div style="margin-top:8px;font-size:12px;color:#999">' + al.hist.map((h, i) => `第${i + 1}回 → ${h.heat}（+${h.score}）`).join('　') + '</div>' : '')) : '');
     const bgs = S.bag || [];
     lst('bag', bagOpen ? '<b>🎒 儲物袋</b> <small style="color:#9d9">容量：無限</small>' + ['錢財', '丹藥', '材料', '符錄', '陣法', '法寶'].map(c => { const l = bgs.filter(x => x.cat === c); return l.length ? `<div style="margin-top:8px;color:#e6b45a;font-size:13px">— ${c} —</div>` + l.map(x => x.cat === '法寶' ? `<div class=row2 style="flex-wrap:wrap"><span title="${x.desc}"><b>${x.name}</b> ${x.level}階${x.bonded ? ' <b style="color:#ffd24a">★本命</b>' : ''}<small style="color:#999"> ${x.desc}</small>${x.awaken ? `<br><small style="color:${x.level >= 3 ? '#9fe' : '#777'}">${x.awaken}${x.level >= 3 ? '（已覺醒）' : '（3 階覺醒）'}</small>` : ''}</span><span>${x.refine ? `<button onclick="TD.post('fb_refine',{item:'${x.id}'})">祭煉（${x.refine.lingshi} 靈石${x.refine.lingye ? '＋靈液' : ''}）</button>` : '<small>已達上限</small>'}${x.bonded ? '' : `<button onclick="TD.post('fb_bond',{item:'${x.id}'})">設為本命</button>`}</span></div>` : `<div class=row2><span title="${x.desc}">${x.name} <b>×${x.n}</b><small style="color:#999"> ${x.desc}</small></span>${x.use ? `<button onclick="TD.post('use',{item:'${x.id}'})">使用</button>` : ''}</div>`).join('') : ''; }).join('') + `<div style="margin-top:8px;font-size:12px;color:#aaa">符錄、陣法、法寶只能在主要對手戰中使用。儲存點：${S.checkpoint || '無'}</div><button style="margin-top:6px" onclick="TD.bag()">關閉（B）</button>` : '');
     const bd = S.board;
