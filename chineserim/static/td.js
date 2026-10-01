@@ -398,7 +398,7 @@ const TD = (() => {
     post('battle_end');
   }
   function drawBattle() {
-    const b = S.battle, B = MAP.biome || 'tiannan', bio = MAP.kind === 'world' ? 'tiannan' : B;
+    const b = S.battle, B = MAP.biome || 'tiannan', bio = MAP.kind === 'world' ? ((MAP.zoneBiomes && MAP.zoneIds.indexOf(S.region) >= 0 ? MAP.zoneBiomes[MAP.zoneIds.indexOf(S.region)] : null) || 'tiannan') : B;
     const sk = Art.man.biomes[bio] ? Art.man.biomes[bio].sky : ['#274b6e', '#8fc1d8'];
     const gr = g.createLinearGradient(0, 0, 0, 330); gr.addColorStop(0, sk[0]); gr.addColorStop(1, sk[1]); g.fillStyle = gr; g.fillRect(0, 0, VW, VH);
     g.fillStyle = 'rgba(0,0,0,.25)';

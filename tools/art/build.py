@@ -48,6 +48,12 @@ NPCS = {
     "tianyunzi": dict(robe="#4a5a9a", trim="#e0e8ff", sash="#2a3468", hair="#e0e0f0", beard="#e0e0f0", hairstyle="elder"),
     "xuezhan": dict(robe="#e8d8a0", trim="#c0a040", sash="#8a6a20", hair="#1a1414", hairstyle="ponytail"),
     "tiandao": dict(robe="#f4f0e0", trim="#ffd35a", sash="#fff0b0", hair="#f8f4e8", hairstyle="long"),
+    "tashi": dict(robe="#9fb4c8", trim="#e8f4ff", sash="#5a6a80", hair="#e8f0f8", beard="#e8f0f8", hairstyle="elder", halo="#bfe8ff", sword=False),
+    "tianfa": dict(robe="#34446a", trim="#d8e8ff", sash="#e0d060", hair="#f0f0ff", hairstyle="ponytail", hat="#9aa8c0", pauldron="#c8d0e0"),
+    "mojie": dict(robe="#2a1220", trim="#e04020", sash="#801010", hair="#c02020", hairstyle="ponytail", horns="#4a1a1a", pauldron="#6a2020"),
+    "dao_true": dict(robe="#fffdf2", trim="#ffd35a", sash="#ffe890", hair="#ffffff", hairstyle="long", halo="#ffe890", wings="#fff4c8", sword=False),
+    "taiyi": dict(robe="#5a3a8a", trim="#f0d070", sash="#2a1a4a", hair="#e8e0f0", beard="#e8e0f0", hairstyle="elder", hat="#3a2a5a", sword=False),
+    "zhu": dict(robe="#2a2a44", trim="#a890ff", sash="#6a58c8", hair="#d8d0ff", beard="#d8d0ff", hairstyle="elder", halo="#a890ff", sword=False),
     "yuzitong": dict(robe="#5a3a3a", trim="#a08a7a", sash="#2a1a1a", hair="#1a1414", hairstyle="topknot"),
     "merchant": dict(robe="#5a7a3a", trim="#e8d8a0", sash="#8a6a2a", hair="#3a2a2a", hairstyle="short", hat="#6a4a2a"),
     "boatman": dict(robe="#4a6a8a", trim="#a8c0d0", sash="#2a3a4a", hair="#3a3a3a", hairstyle="short", hat="#b89a5a"),
@@ -67,7 +73,7 @@ SPEAKERS = {
     "母親": "villager_f", "三叔": "villager_m", "執事": "disciple", "落雲宗執事": "disciple", "靈獸山弟子": "disciple",
     "聯盟使者": "disciple", "厲飛雨": "lifeiyu", "張鐵": "zhangtie", "墨大夫": "mo", "李化元": "li",
     "南宮婉": "nangong", "大衍神君": "dayan", "曲魂": "villain", "玄骨老祖": "xuangu", "慕沛靈": "mupei",
-    "凌玉靈": "lingyu", "余子童": "yuzitong", "王林": "wanglin", "李慕婉": "limuwan", "司徒南": "situnan", "天運子": "tianyunzi", "薛戰": "xuezhan", "黑衣修士": "villain", "五行守衛": "puppet_iron", "天道化身": "tiandao", "珠中之聲": "xinmo", "天罰使者": "tiandao", "天道本體": "tiandao", "塔靈": "xuangu", "魔劫使": "mozu", "太一宗主": "tianyunzi", "王蟬": "wangchan", "天星雙聖": "tianxing", "魔族將領": "mozu", "心魔": "xinmo", "攤主": "merchant", "藥鋪掌櫃": "pharmacist", "掌櫃": "pharmacist", "奸商": "shady", "董萱兒": "dongxuaner", "墨彩環": "mocaihuan", "陳巧倩": "chenqiaoqian", "元瑤": "yuanyao", "文詩兒": "wenshier", "紫靈": "ziling", "船夫": "boatman",
+    "凌玉靈": "lingyu", "余子童": "yuzitong", "王林": "wanglin", "李慕婉": "limuwan", "司徒南": "situnan", "天運子": "tianyunzi", "薛戰": "xuezhan", "黑衣修士": "villain", "五行守衛": "puppet_iron", "天道化身": "tiandao", "珠中之聲": "zhu", "天罰使者": "tianfa", "天道本體": "dao_true", "塔靈": "tashi", "魔劫使": "mojie", "太一宗主": "taiyi", "王蟬": "wangchan", "天星雙聖": "tianxing", "魔族將領": "mozu", "心魔": "xinmo", "攤主": "merchant", "藥鋪掌櫃": "pharmacist", "掌櫃": "pharmacist", "奸商": "shady", "董萱兒": "dongxuaner", "墨彩環": "mocaihuan", "陳巧倩": "chenqiaoqian", "元瑤": "yuanyao", "文詩兒": "wenshier", "紫靈": "ziling", "船夫": "boatman",
     "天淵守軍": "soldier",
 }
 
@@ -197,7 +203,7 @@ def main():
               ("icon_battle", tiles.icon_battle(b)), ("icon_camp", tiles.icon_camp(b)), ("icon_port", tiles.icon_port(b)),
               ("icon_ruin", tiles.icon_ruin(b)), ("icon_portal", tiles.icon_portal(b)),
               ("furnace", tiles.furnace(b)), ("plot0", tiles.plot(b, 0)), ("plot1", tiles.plot(b, 1)), ("plot2", tiles.plot(b, 2)), ("plot3", tiles.plot(b, 3)),
-              ("scarecrow", tiles.scarecrow(b)), ("bed", tiles.bed(b)), ("board", tiles.board(b)), ("pharmacy", tiles.pharmacy(b)), ("icon_garden", tiles.icon_garden(b)), ("icon_hut", tiles.icon_hut(b))]
+              ("thunder_pillar", tiles.thunder_pillar(b)), ("ruin_arch", tiles.ruin_arch(b)), ("scarecrow", tiles.scarecrow(b)), ("bed", tiles.bed(b)), ("board", tiles.board(b)), ("pharmacy", tiles.pharmacy(b)), ("icon_garden", tiles.icon_garden(b)), ("icon_hut", tiles.icon_hut(b))]
         atlas, rects = pack_atlas([(n, cv.image()) for n, cv in ob], 512)
         atlas.save(OUT / f"objects_{b}.png")
         manifest["objects"][b] = rects

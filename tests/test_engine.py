@@ -2828,3 +2828,51 @@ class CrossStoryMentionsTest(unittest.TestCase):
         for camp, name in (("fanren", "王林"), ("xianni", "韓立")):
             self.assertTrue(any(name in x for x in d.market["shady"]["cross"][camp]))
             self.assertTrue(any(name in x for x in d.ambient["cross"][camp]))
+
+
+class Volume45ArtTest(unittest.TestCase):
+    def setUp(self):
+        import json, pathlib
+        self.ART = pathlib.Path(__file__).resolve().parents[1] / "chineserim" / "static" / "art"
+        self.man = json.loads((self.ART / "manifest.json").read_text(encoding="utf-8"))
+
+    def test_taixu_biome_assets_and_map_uses_it(self):
+        from chineserim import mapgen
+        self.assertEqual(mapgen.BIOME_OF["taixu"], "taixu")
+        for f in ("scene_taixu.png", "tiles_taixu.png", "objects_taixu.png"):
+            self.assertTrue((self.ART / f).exists(), f)
+        self.assertIn("taixu", self.man["biomes"])
+        self.assertIn("thunder_pillar", self.man["objects"]["taixu"])
+        self.assertIn("ruin_arch", self.man["objects"]["taixu"])
+
+    def test_every_boss_and_npc_sprite_has_art(self):
+        from chineserim.data import GameData
+        d = GameData()
+        sprites = set(self.man["npcs"])
+        for bid, b in d.bosses["bosses"].items():
+            if b.get("sprite"):
+                self.assertIn(b["sprite"], sprites, bid)
+        for sp in ("tashi", "tianfa", "mojie", "dao_true", "taiyi", "zhu"):
+            self.assertIn(sp, sprites)
+        self.assertEqual(d.bosses["bosses"]["xn_final"]["sprite"], "dao_true")
+
+    def test_new_sprites_look_different(self):
+        from PIL import Image
+        im = Image.open(self.ART / "npcs.png")
+        fw, fh = self.man["human"]["frameW"], self.man["human"]["frameH"]
+        rows = {n: self.man["npcs"][n]["row"] for n in ("tashi", "tianfa", "mojie", "dao_true", "taiyi", "zhu")}
+        crops = {n: im.crop((0, r * fh, fw, (r + 1) * fh)).tobytes() for n, r in rows.items()}
+        self.assertEqual(len(set(crops.values())), 6)
+
+    def test_taixu_location_maps_have_new_props(self):
+        import pathlib, tempfile
+        from chineserim.session import Session
+        s = Session(pathlib.Path(tempfile.mkdtemp()) / "s.json", seed=70)
+        s.act("new", diff="normal", campaign="xianni")
+        kinds = set()
+        for lid in ("taixu_cheng", "mojie_xu", "chenmo_ta", "shenyuan_hai"):
+            m = s.get_map("loc:" + lid)
+            self.assertEqual(m["biome"], "taixu")
+            kinds |= {o["t"] for o in m["objects"]}
+        self.assertTrue({"thunder_pillar", "ruin_arch"} <= kinds)
+        self.assertNotIn("thunder_pillar", {o["t"] for o in s.get_map("loc:hengyue_pai")["objects"]})

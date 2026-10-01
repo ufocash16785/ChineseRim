@@ -11,9 +11,10 @@ BIOMES = {
     "mulan": dict(grass="#c9b24a", dirt="#8a6a3a", leaf="#a8a03a", leaf2="#7a7a2a", roof="#a0522d", sky=("#3a6a9a", "#e6d9a0")),
     "luanxinghai": dict(grass="#e6d29a", dirt="#b89a6a", leaf="#3fae9a", leaf2="#2a7f78", roof="#2f6f8f", sky=("#1e4d7a", "#8fdcd8")),
     "dajin": dict(grass="#a88a4a", dirt="#5f4a3a", leaf="#d0702a", leaf2="#a04a1a", roof="#4a4a5a", sky=("#3a3a5a", "#c8a890")),
+    "taixu": dict(grass="#6a7aa8", dirt="#2e3454", leaf="#6ac0d0", leaf2="#3a7a9a", roof="#243a6a", sky=("#080c28", "#5a6aa8")),
     "tianyuan": dict(grass="#9a7ad0", dirt="#4a3a6a", leaf="#7ad0d8", leaf2="#4a9ab8", roof="#5a3a8a", sky=("#231a4a", "#a88ad8")),
 }
-REGION_BIOME = {"tiannan": "tiannan", "mulan": "mulan", "luanxinghai": "luanxinghai", "dajin": "dajin", "tianyuan": "tianyuan"}
+REGION_BIOME = {"tiannan": "tiannan", "mulan": "mulan", "luanxinghai": "luanxinghai", "dajin": "dajin", "tianyuan": "tianyuan", "taixu": "taixu"}
 
 
 def _c(h):

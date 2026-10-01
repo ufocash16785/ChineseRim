@@ -6,7 +6,7 @@ from .canvas import Canvas, darken, hexc, lighten, mix
 from .scenery import BIOMES
 
 T = 32
-WATER = {"tiannan": "#3f86c8", "mulan": "#4a90c0", "luanxinghai": "#2f9fb8", "dajin": "#4a6a9a", "tianyuan": "#6a5ac8"}
+WATER = {"tiannan": "#3f86c8", "mulan": "#4a90c0", "luanxinghai": "#2f9fb8", "dajin": "#4a6a9a", "tianyuan": "#6a5ac8", "taixu": "#3a5aa8"}
 
 
 def _r(*seed):
@@ -589,4 +589,33 @@ def pharmacy(b):
     c.ellipse(60, 20, 7, 7, hexc("#fff4c0"), "sign"); c.ellipse(60, 20, 5, 5, hexc("#c0392b"), "sign")
     c.ellipse(60, 18, 2, 2, hexc("#fff4c0"), "sign"); c.ellipse(60, 22, 2, 2, hexc("#3a2a1a"), "sign")
     c.rect(59, 27, 61, 30, hexc("#5a3a22"), "sign")
+    return c
+
+
+def thunder_pillar(b):
+    """雷柱：太虛域的標誌物，石柱頂端纏繞雷光。"""
+    c = Canvas(18, 44)
+    c.rect(4, 14, 13, 42, (112, 118, 140), "s")
+    c.rect(4, 14, 6, 42, (146, 152, 176), "s")
+    c.rect(2, 38, 15, 43, (92, 98, 120), "s")
+    c.rect(2, 10, 15, 15, (126, 132, 156), "s")
+    for y in range(18, 36, 6):
+        c.rect(4, y, 13, y, (82, 88, 112), "t")
+    bolt = (150, 220, 255)
+    c.line(9, 0, 6, 6, bolt, "g", 1)
+    c.line(6, 6, 11, 8, bolt, "g", 1)
+    c.line(11, 8, 8, 12, (255, 255, 255), "g", 1)
+    return c
+
+
+def ruin_arch(b):
+    """殘破石拱：古戰場與遺跡的點綴。"""
+    c = Canvas(34, 30)
+    c.rect(2, 8, 8, 29, (122, 126, 148), "s")
+    c.rect(25, 14, 31, 29, (122, 126, 148), "s")
+    c.rect(2, 6, 18, 11, (140, 144, 168), "s")
+    c.poly([(18, 6), (26, 10), (24, 14), (18, 11)], (140, 144, 168), "s")
+    c.rect(4, 12, 5, 28, (160, 164, 188), "s")
+    c.put(21, 18, (100, 104, 126), "t")
+    c.put(22, 21, (100, 104, 126), "t")
     return c

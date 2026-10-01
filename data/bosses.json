@@ -257,7 +257,7 @@
     },
     "xn_tower": {
       "name": "塔靈",
-      "sprite": "xuangu",
+      "sprite": "tashi",
       "el": "水",
       "hp_mult": 4.4,
       "atk_mult": 1.3,
@@ -282,7 +282,7 @@
     },
     "xn_tianfa": {
       "name": "天罰使者",
-      "sprite": "tiandao",
+      "sprite": "tianfa",
       "el": "雷",
       "hp_mult": 4.8,
       "atk_mult": 1.35,
@@ -302,7 +302,7 @@
     },
     "xn_mojie": {
       "name": "魔劫使",
-      "sprite": "mozu",
+      "sprite": "mojie",
       "el": "火",
       "hp_mult": 5.0,
       "atk_mult": 1.4,
@@ -330,7 +330,7 @@
     },
     "xn_final": {
       "name": "天道本體",
-      "sprite": "tiandao",
+      "sprite": "dao_true",
       "el": "雷",
       "hp_mult": 6.0,
       "atk_mult": 1.5,

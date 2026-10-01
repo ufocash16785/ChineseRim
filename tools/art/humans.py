@@ -1,4 +1,6 @@
 """Q 版小人偶（約 3 頭身，仙劍一代比例）。面朝右，左向由前端水平翻轉。"""
+import math
+
 from .canvas import Canvas, darken, hexc, lighten, mix
 
 FW, FH = 40, 52
@@ -10,12 +12,14 @@ HAIR_DARK = hexc("#2b2233")
 
 class Pal:
     def __init__(self, robe, trim, sash, hair, skin=SKIN, boots="#3a2c3c", beard=None, hairstyle="topknot",
-                 accessory=None, sword=True, robe2=None, hat=None, female=False, eye=None, shawl=None, ornament="#ff7a9a"):
+                 accessory=None, sword=True, robe2=None, hat=None, female=False, eye=None, shawl=None, ornament="#ff7a9a",
+                 halo=None, horns=None, pauldron=None, wings=None):
         self.robe, self.trim, self.sash = hexc(robe), hexc(trim), hexc(sash)
         self.robe2 = hexc(robe2) if robe2 else darken(hexc(robe), .18)
         self.hair, self.skin, self.boots = hexc(hair), skin, hexc(boots)
         self.beard = hexc(beard) if beard else None
         self.hairstyle, self.accessory, self.sword, self.hat = hairstyle, accessory, sword, hat
+        self.halo, self.horns, self.pauldron, self.wings = halo, horns, pauldron, wings      # 強敵專用：光環／角／肩甲／羽翼
         self.female = female
         self.eye = hexc(eye) if eye else hexc("#5a3a6a")
         self.shawl = hexc(shawl) if shawl else lighten(hexc(trim), .1)
@@ -31,9 +35,38 @@ def _sword(c, x0, y0, x1, y1):
     c.put(x0 - dx / n * 2, y0 - dy / n * 2, hexc("#8a5a2b"), "hilt")
 
 
+def _gear_back(c, p, cx, top):
+    """身後的裝飾（羽翼），要先畫，才會被身體蓋住。"""
+    if p.wings:
+        w = hexc(p.wings)
+        for sg in (-1, 1):
+            c.poly([(cx + sg * 6, top + 1), (cx + sg * 19, top - 9), (cx + sg * 17, top + 1), (cx + sg * 20, top + 8), (cx + sg * 8, top + 11)], w, "trim")
+            c.poly([(cx + sg * 8, top + 3), (cx + sg * 16, top - 4), (cx + sg * 15, top + 3)], lighten(w, .35), "trim")
+
+
+def _gear_front(c, p, cx, hy, top):
+    """頭上與肩上的裝飾（角、光環、肩甲），畫在最上層。"""
+    if p.pauldron:
+        pc = hexc(p.pauldron)
+        for sg in (-1, 1):
+            c.ellipse(cx + sg * 9, top + 2, 4, 3, pc, "trim")
+            c.rect(cx + sg * 9 - 1, top - 2, cx + sg * 9 + 1, top, lighten(pc, .3), "trim")
+    if p.horns:
+        hc = hexc(p.horns)
+        for sg in (-1, 1):
+            c.poly([(cx + sg * 5, hy - 6), (cx + sg * 11, hy - 16), (cx + sg * 8, hy - 4)], hc, "trim")
+    if p.halo:
+        hc = hexc(p.halo)
+        for a in range(0, 360, 10):
+            c.put(cx + 9 * math.cos(math.radians(a)), hy - 15 + 2 * math.sin(math.radians(a)), hc, "trim")
+        for a in range(0, 360, 20):
+            c.put(cx + 10 * math.cos(math.radians(a)), hy - 15 + 3 * math.sin(math.radians(a)), lighten(hc, .4), "trim")
+
+
 def draw_human(p: Pal, pose: dict):
     c = Canvas(FW, FH)
     bob = pose.get("bob", 0)
+    _gear_back(c, p, 20 + pose.get("lean", 0), 24 + bob)
     lean = pose.get("lean", 0)               # 上身水平位移（受擊後仰為負）
     fly = pose.get("fly", False)
     flutter = pose.get("flutter", 0)         # 衣髮飄動 0/1/2
@@ -161,6 +194,7 @@ def draw_human(p: Pal, pose: dict):
     if p.hat:
         c.ellipse(cx, hy - 8, 12, 3, hexc(p.hat), "trim")
         c.rect(cx - 6, hy - 13, cx + 5, hy - 8, hexc(p.hat), "trim")
+    _gear_front(c, p, cx, hy, top)
     # 五官
     ey = hy + 1
     if pose.get("hurt"):
@@ -243,6 +277,7 @@ def draw_human_dir(p: Pal, pose: dict):
     hs = p.hairstyle
     top, bot = 24 + bob, 40 + bob
     back = view == "back"
+    _gear_back(c, p, cx, top)
 
     # 長髮（背面時蓋在身體上，所以先畫身體）
     # ---- 長袍 ----
@@ -360,6 +395,7 @@ def draw_human_dir(p: Pal, pose: dict):
     if p.hat:
         c.ellipse(cx, hy - 8, 12, 3, hexc(p.hat), "trim")
         c.rect(cx - 6, hy - 13, cx + 5, hy - 8, hexc(p.hat), "trim")
+    _gear_front(c, p, cx, hy, top)
     # 臉
     if not back:
         ey = hy + 1

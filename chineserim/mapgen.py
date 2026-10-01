@@ -25,7 +25,7 @@ OBJ = {
     "crystal": (1, 1, 1), "altar": (1, 2, 1), "tomb": (1, 1, 1), "dummy": (1, 1, 1),
     "bush": (1, 1, 1), "flowers": (1, 0, 0), "boulder": (1, 1, 1),
     "furnace": (1, 1, 1), "plot0": (1, 0, 0), "plot1": (1, 0, 0), "plot2": (1, 0, 0), "plot3": (1, 0, 0),
-    "scarecrow": (1, 1, 1), "bed": (1, 2, 1), "board": (1, 2, 1), "pharmacy": (1, 2, 1),
+    "scarecrow": (1, 1, 1), "thunder_pillar": (2, 1, 1), "ruin_arch": (2, 2, 1), "bed": (1, 2, 1), "board": (1, 2, 1), "pharmacy": (1, 2, 1),
 }
 OBJ_SCALE = {k: v[0] for k, v in OBJ.items()}
 
@@ -134,7 +134,7 @@ def _solid_grid(ground, w, h, block, objects):
 WORLD_SIZES = {"renjie": (176, 176), "lingjie": (110, 90), "xianni": (140, 130)}
 REGION_RADIUS = {"tiannan": 34, "mulan": 19, "dajin": 22, "luanxinghai": 27, "tianyuan": 34, "zhaoguo": 30, "tianyun": 30, "taixu": 28}
 ICON = {"town": "icon_town", "sect": "icon_sect", "deep": "icon_cave", "garden": "icon_garden", "dwelling": "icon_hut"}
-BIOME_OF = {"tiannan": "tiannan", "mulan": "mulan", "luanxinghai": "luanxinghai", "dajin": "dajin", "tianyuan": "tianyuan", "zhaoguo": "tiannan", "tianyun": "dajin", "taixu": "tianyuan"}
+BIOME_OF = {"tiannan": "tiannan", "mulan": "mulan", "luanxinghai": "luanxinghai", "dajin": "dajin", "tianyuan": "tianyuan", "zhaoguo": "tiannan", "tianyun": "dajin", "taixu": "taixu"}
 
 
 def _wild_icon(loc):
@@ -578,6 +578,8 @@ class LocBuilder:
     # ---- 版型 ----
     def build(self):
         getattr(self, "_" + self.cat)()
+        if self.region == "taixu" and self.cat not in ("garden", "dwelling"):        # 太虛域特有的雷柱與殘破石拱
+            self.scatter(["thunder_pillar", "ruin_arch"], 7 if self.cat in ("wild", "deep") else 3, 1)
         self.add_candidate()
         # 入口告示牌
         sx, sy = self.spawn
