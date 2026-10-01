@@ -50,10 +50,10 @@ const TD = (() => {
   const isSolidTile = (tx, ty) => tx < 0 || ty < 0 || tx >= MAP.w || ty >= MAP.h || solid[ty][tx] === '1';
   const blockedPx = (x, y) => isSolidTile(Math.floor(x / TS), Math.floor(y / TS));
   function npcBlocks(x, y) {
-    for (const e of ents) if ((e.k === 'npc' || e.k === 'dummy') && Math.hypot(e.px - x, e.py - y) < 15) return true;
-    if (MAP.kind === 'loc' && S.shady) { const sx = (S.shady.x + .5) * TS - cam.x, sy = (S.shady.y + .9) * TS - cam.y; list.push({y: sy + cam.y, f: () => { drawNPC('shady', sx, sy, hero.x < sx + cam.x ? 'l' : 'r', false); label('神秘商人', sx, sy + 14, '#e8c060', 11); label('?', sx, sy - 62 + Math.sin(now / 260) * 3, '#e8c060', 22); }}); }
-    if (S.partner && trail.length) { const t = trail[Math.max(0, trail.length - 7)], px = t.x - cam.x, py = t.y - cam.y, mv = hero.moving; list.push({y: t.y - 1, f: () => drawNPC(S.partner.sprite, px, py, t.dir, mv)}); }
-    if (MAP.kind === 'loc' && S.questNpc) { const q = questPos(); if (Math.hypot(q[0] - x, q[1] - y) < 15) return true; }
+    // 靠太近時只擋「更靠近」的移動，不能把人鎖死在原地（NPC 走到身上、剛傳送到 NPC 旁，都要能走開）
+    const hit = (ox, oy) => { const d = Math.hypot(ox - x, oy - y); return d < 15 && d < Math.hypot(ox - hero.x, oy - hero.y) - .01; };
+    for (const e of ents) if ((e.k === 'npc' || e.k === 'dummy') && hit(e.px, e.py)) return true;
+    if (MAP.kind === 'loc' && S.questNpc) { const q = questPos(); if (hit(q[0], q[1])) return true; }
     return false;
   }
   function free(x, y) {
@@ -368,8 +368,8 @@ const TD = (() => {
     if (S && S.battle) return;
     if (k === 'e' || k === ' ' || k === 'enter') interact();
   };
-  addEventListener('keydown', e => { if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' '].includes(e.key)) e.preventDefault(); if (!keys[e.key]) { keys[e.key] = 1; key(e.key.toLowerCase()); } });
-  addEventListener('keyup', e => keys[e.key] = 0);
+  addEventListener('keydown', e => { if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' '].includes(e.key)) e.preventDefault(); if (!keys[e.key]) { keys[e.key] = 1; keys[e.key.toLowerCase()] = 1; key(e.key.toLowerCase()); } });
+  addEventListener('keyup', e => { keys[e.key] = 0; keys[e.key.toLowerCase()] = 0; });
   addEventListener('blur', () => { for (const k in keys) keys[k] = 0; });
   addEventListener('error', e => err('頁面錯誤：' + e.message));
 
@@ -686,6 +686,8 @@ const TD = (() => {
     if (MAP.kind === 'loc' && S.karma_ev) { const k = S.karma_ev, ax = (k.x + .5) * TS - cam.x, ay = (k.y + .9) * TS - cam.y, av = k.kind === 'avenger'; list.push({y: (k.y + .9) * TS, f: () => { drawNPC(k.sprite, ax, ay, hero.x < (k.x + .5) * TS ? 'r' : 'l', false); label(av ? '仇' : '恩', ax, ay - 62 + Math.sin(now / 240) * 3, av ? '#ff5a5a' : '#7dff9a', 26); label(k.name, ax, ay + 14, av ? '#ff9a9a' : '#b8ffc8', 12); }}); }
     if (MAP.kind === 'loc' && S.questNpc) { const q = questPos(), ax = q[0] - cam.x, ay = q[1] - cam.y, id = speakerSprite(S.questNpc); if (id) list.push({y: q[1], f: () => { drawNPC(id, ax, ay, hero.x < q[0] ? 'l' : 'r', false); label('!', ax, ay - 62 + Math.sin(now / 220) * 4, '#ffd24a', 30); label(S.questNpc, ax, ay + 14, '#ffe9a6', 12); }}); }
     if (S.comp && S.comp.pet && trail.length) { const t = trail[Math.max(0, trail.length - 4)], px = t.x - cam.x + 12, py = t.y - cam.y + 2, pt = S.comp.pet; list.push({y: t.y, f: () => { shadow(px, py + 1, 10); drawBeast({kind: pt.kind, el: pt.el}, px, py, .8, t.dir === 'l', hero.moving ? Math.floor(now / 160) % 4 : 0); }}); }
+    if (MAP.kind === 'loc' && S.shady) { const sx = (S.shady.x + .5) * TS - cam.x, sy = (S.shady.y + .9) * TS - cam.y; list.push({y: sy + cam.y, f: () => { drawNPC('shady', sx, sy, hero.x < sx + cam.x ? 'l' : 'r', false); label('神秘商人', sx, sy + 14, '#e8c060', 11); label('?', sx, sy - 62 + Math.sin(now / 260) * 3, '#e8c060', 22); }}); }
+    if (S.partner && trail.length) { const t = trail[Math.max(0, trail.length - 7)], px = t.x - cam.x, py = t.y - cam.y, mv = hero.moving; list.push({y: t.y - 1, f: () => drawNPC(S.partner.sprite, px, py, t.dir, mv)}); }
     list.push({y: hero.y, f: () => drawHero(cam)});
     list.sort((a, b) => a.y - b.y);
     for (const it of list) it.f();

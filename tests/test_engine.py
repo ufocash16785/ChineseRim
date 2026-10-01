@@ -2876,3 +2876,37 @@ class Volume45ArtTest(unittest.TestCase):
             kinds |= {o["t"] for o in m["objects"]}
         self.assertTrue({"thunder_pillar", "ruin_arch"} <= kinds)
         self.assertNotIn("thunder_pillar", {o["t"] for o in s.get_map("loc:hengyue_pai")["objects"]})
+
+
+class BrowserSmokeTest(unittest.TestCase):
+    """真的開瀏覽器跑一下：有 partner／神秘商人時不能因執行錯誤而動不了；站在 NPC 身上也要能走開。"""
+    PW = "/opt/node22/lib/node_modules/playwright"
+    EXE = "/opt/pw-browsers/chromium"
+
+    def test_hero_can_walk_away_from_npc_with_partner(self):
+        import json, pathlib, shutil, subprocess, threading
+        from http.server import HTTPServer
+        node = shutil.which("node")
+        if not node or not pathlib.Path(self.PW).exists() or not pathlib.Path(self.EXE).exists():
+            self.skipTest("沒有 node／playwright／chromium")
+        from chineserim import web
+        from chineserim.session import Session
+        s = Session(None, seed=3)
+        s.act("new", diff="normal")
+        s.hero.companion = "nangong"                       # 有道侶 → partner 會被繪製
+        s.act("enter", loc="qingniu")
+        s.hero.dialogue = {}                               # 進入時的劇情對話會凍結移動，先關掉
+        web.session = s
+        srv = HTTPServer(("127.0.0.1", 0), web.H)
+        threading.Thread(target=srv.serve_forever, daemon=True).start()
+        try:
+            script = pathlib.Path(__file__).resolve().parent / "browser_smoke.js"
+            r = subprocess.run([node, str(script), f"http://127.0.0.1:{srv.server_port}/", self.PW, self.EXE], capture_output=True, text=True, timeout=90)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            out = json.loads(r.stdout.strip().splitlines()[-1])
+        finally:
+            srv.shutdown()
+        self.assertEqual(out["errs"], [])
+        self.assertTrue(out["partner"])
+        self.assertIsNotNone(out["moved"])
+        self.assertGreater(out["moved"], 20)               # 從 NPC 身上走開了
