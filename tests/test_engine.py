@@ -2642,3 +2642,88 @@ class DefyMechanicTest(unittest.TestCase):
         hp0 = st["enemies"][0]["hp"]
         self.s.act("battle", cmd="defy")
         self.assertLess(st["enemies"][0]["hp"], hp0)
+
+
+class LegacyTest(unittest.TestCase):
+    def setUp(self):
+        import pathlib, tempfile
+        from chineserim.session import Session
+        self.Session = Session
+        self.tmp = pathlib.Path(tempfile.mkdtemp())
+        self.path = self.tmp / "s.json"
+
+    def _finish(self, s, ending_id, campaign):
+        """直接把結局標成已決定（不用重打整個劇本）。"""
+        s.hero.campaign = campaign
+        s.hero.flags["ending"] = {"id": ending_id, "stats": s._ending_stats()}
+        s.snapshot()
+
+    def test_recorded_once_and_persisted_across_sessions(self):
+        s = self.Session(self.path, seed=1)
+        s.act("new", diff="normal")
+        self._finish(s, "saint", "fanren")
+        self._finish(s, "saint", "fanren")
+        self.assertEqual(list(s.legacy.endings), ["saint"])
+        self.assertTrue((self.tmp / "legacy.json").exists())
+        s2 = self.Session(self.path, seed=2)
+        self.assertIn("saint", s2.legacy.endings)
+        self.assertEqual(s2.snapshot()["legacy"]["got"], 1)
+
+    def test_new_game_survives_in_legacy_and_gives_cross_campaign_gift(self):
+        s = self.Session(self.path, seed=3)
+        s.act("new", diff="normal", campaign="fanren")
+        self._finish(s, "lone_sword", "fanren")
+        s.act("new", diff="normal", campaign="xianni")
+        h = s.hero
+        self.assertEqual(h.campaign, "xianni")
+        self.assertGreaterEqual(h.count("lingye"), 3)                 # 韓立的舊物
+        self.assertGreaterEqual(h.count("lingshi"), 500)              # 獨行者盤纏
+        self.assertTrue(any("傳承" in x for x in s.log))
+        self.assertEqual(h.count("codex_beast"), 0)                   # 王林的玉簡要通關仙逆篇才有
+
+    def test_reverse_gift_and_both_campaigns_bonus_and_karma_cap(self):
+        s = self.Session(self.path, seed=4)
+        s.act("new", diff="normal", campaign="xianni")
+        self._finish(s, "xn_slay", "xianni")
+        s.act("new", diff="normal", campaign="fanren")
+        h = s.hero
+        self.assertGreaterEqual(h.count("codex_beast"), 1)            # 王林的玉簡
+        self.assertEqual(h.count("codex_pet"), 0)
+        from chineserim import karma
+        self.assertEqual(karma.get(h, "sha"), 3)
+        self._finish(s, "blood_lord", "fanren")                       # 兩劇本都通關
+        s.act("new", diff="normal", campaign="fanren")
+        h = s.hero
+        self.assertGreaterEqual(h.count("codex_pet"), 1)              # 兩個世界的見聞
+        self.assertEqual(karma.get(h, "sha"), 4)                      # 3+3 但有上限 4
+
+    def test_preview_and_gallery(self):
+        s = self.Session(self.path, seed=5)
+        s.act("new", diff="normal")
+        v = s.snapshot()["legacy"]
+        self.assertEqual(v["total"], 12)                              # 7 + 5 種結局
+        self.assertEqual(v["got"], 0)
+        self.assertTrue(all(not x for x in v["preview"].values()))
+        self._finish(s, "together", "fanren")
+        v = s.snapshot()["legacy"]
+        self.assertEqual(v["got"], 1)
+        self.assertEqual([b["title"] for b in v["preview"]["fanren"]], ["同行的約定"])
+        self.assertIn("韓立的舊物", [b["title"] for b in v["preview"]["xianni"]])
+        self.assertEqual(v["completed"], ["fanren"])
+
+    def test_in_memory_session_does_not_write_files(self):
+        s = self.Session(None, seed=6)
+        s.act("new", diff="normal")
+        self._finish(s, "saint", "fanren")
+        self.assertIn("saint", s.legacy.endings)
+        self.assertIsNone(s.legacy.path)
+
+    def test_bad_legacy_file_is_ignored(self):
+        (self.tmp / "legacy.json").write_text("{壞掉", encoding="utf-8")
+        s = self.Session(self.path, seed=7)
+        self.assertEqual(s.legacy.endings, {})
+
+    def test_every_ending_has_bonus_entry(self):
+        s = self.Session(None, seed=8)
+        ids = [e["id"] for e in s.data.endings["endings"]] + [e["id"] for l in s.data.endings["campaign_endings"].values() for e in l]
+        self.assertEqual(set(ids) - set(s.data.legacy["by_ending"]), set())

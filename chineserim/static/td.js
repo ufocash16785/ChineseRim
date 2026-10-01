@@ -583,7 +583,7 @@ const TD = (() => {
       en.paras.map((p, i) => `<p class=endp style="animation-delay:${2.6 + i * 1.6}s">${p}</p>`).join('') +
       `<div class=endep style="animation-delay:${2.6 + en.paras.length * 1.6}s">${en.epilogue.map(x => '<div>' + x + '</div>').join('')}` +
       `<div class=endstats>${[['歷時', stt.day + ' 日'], ['境界', stt.realm + ' Lv' + stt.level], ['道心', stt.dao + '（殺 ' + stt.sha + '／善 ' + stt.ren + '）'], ['擊敗強敵', stt.bosses], ['累計擊殺', stt.kills], ['煉丹', stt.alch + ' 次']].map(([a, b]) => `<span><small>${a}</small><b>${b}</b></span>`).join('')}</div>` +
-      `<div class=endall>已達成：${en.all.map(x => x.got ? `<b style="color:#ffd24a">「${x.title}」</b>` : `<span style="color:#666">？？？</span>`).join(' ')}　<small style="color:#888">（共 ${en.all.length} 種結局）</small></div>` +
+      `<div class=endall>已達成：${en.all.map(x => x.got ? `<b style="color:#ffd24a">「${x.title}」</b>` : `<span style="color:#666">？？？</span>`).join(' ')}　<small style="color:#888">（本劇本共 ${en.all.length} 種結局）</small><br><small style="color:#9fe">📜 跨劇本結局收藏 ${S.legacy.got}/${S.legacy.total}——已記入傳承，下次開新遊戲會有紀念獎勵</small></div>` +
       `<div style="margin-top:10px"><button onclick="TD.endClose(false)">繼續遊玩（自由探索）</button><button onclick="TD.endClose(true)">開始新的一輪</button></div></div></div>` : '');
     const wr = S.war;
     lst('war', wr ? `<b style="color:#ff8a6a">⚔ ${wr.title}</b><div style="font-size:14px;margin:6px 0">${wr.text}</div><div style="font-size:12px;color:#aaa;margin-bottom:6px">${wr.member ? '你是「' + wr.sect + '」的弟子。' : ''}選擇你的立場：</div>` +
@@ -709,6 +709,7 @@ const TD = (() => {
     a.innerHTML = `<b style="font-size:18px">${first ? '歡迎來到凡人修仙傳' : '新遊戲（會覆蓋存檔）'}</b>
     <div style="margin:10px 0 4px;text-align:left"><b>劇本</b></div>
     <div id=nc style="text-align:left">${Object.entries(S.campaigns).map(([k, v]) => `<label style="display:block;margin:3px 0"><input type=radio name=cc value="${k}" ${k === 'fanren' ? 'checked' : ''}> <b>${v.name}</b>　<small style="color:#bbb">${v.desc}（主角：${v.hero}）</small></label>`).join('')}</div>
+    <div id=nl style="text-align:left;font-size:12px;margin:6px 0"></div>
     <div style="margin:10px 0 4px;text-align:left"><b>難度</b></div>
     <div id=nd style="text-align:left">${diffs.map(([k, v]) => `<label style="display:block;margin:3px 0"><input type=radio name=dd value="${k}" ${k === (S.configured ? S.difficulty : 'normal') ? 'checked' : ''}> <b>${v.name}</b>　<small style="color:#bbb">${v.desc}</small></label>`).join('')}</div>
     <div style="margin:10px 0;text-align:left">名字：<input id=nn value="韓立" maxlength=8 style="font-size:15px"></div>
@@ -720,7 +721,13 @@ const TD = (() => {
     const diff = () => document.querySelector('input[name=dd]:checked').value;
     const camp = () => document.querySelector('input[name=cc]:checked').value;
     const syncName = () => { const c = S.campaigns[camp()]; const n = $('nn'); if (n && (n.value === '韓立' || n.value === '王林' || !n.dataset.touched)) n.value = c.hero; };
-    document.querySelectorAll('input[name=cc]').forEach(x => x.onchange = syncName);
+    const legacyUI = () => {
+      const lg = S.legacy, pv = lg.preview[camp()] || [], ends = lg.endings.map(e => e.got ? `<b style="color:#ffd24a">${e.title}</b>` : '<span style="color:#666">？</span>').join('　');
+      $('nl').innerHTML = `<div style="color:#9fe">📜 結局收藏 ${lg.got}/${lg.total}：${ends}</div>` +
+        (pv.length ? '<div style="margin-top:4px;color:#ffd97a">🎁 傳承獎勵（開局獲得）：' + pv.map(b => `${b.title}${Object.keys(b.items).length ? '（' + Object.entries(b.items).map(([k, n]) => k + '×' + n).join('、') + '）' : ''}${Object.keys(b.karma).length ? '（因果 ' + Object.entries(b.karma).map(([k, n]) => (k === 'sha' ? '殺業+' : '善緣+') + n).join(' ') + '）' : ''}`).join('、') + '</div>' : '<div style="margin-top:4px;color:#777">通關任一劇本，就能把紀念獎勵帶進下一輪（包含另一個劇本）。</div>');
+    };
+    document.querySelectorAll('input[name=cc]').forEach(x => x.onchange = () => { syncName(); legacyUI(); });
+    legacyUI();
     $('nn').oninput = () => { $('nn').dataset.touched = '1'; };
     if ($('nb3')) $('nb3').onclick = close;
     $('nb2').onclick = () => { const d = diff(); close(); post('act', {c: 'new', diff: d, campaign: camp()}); };

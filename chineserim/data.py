@@ -45,6 +45,7 @@ class GameData:
         self.events = _load(d / "events.json")
         self.codex = _load(d / "codex.json")
         self.endings = _load(d / "endings.json")
+        self.legacy = _load(d / "legacy.json")
         self.quest_rules = _merge(d, "quests*.json", "arcs")
         self.regions = [w for f in sorted(d.glob("regions*.json")) for w in _load(f)["worlds"]]
         self.campaigns = _load(d / "campaigns.json")["campaigns"]

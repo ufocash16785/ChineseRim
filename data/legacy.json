@@ -1,0 +1,131 @@
+{
+  "description": "跨劇本傳承。通關時把結局記到 saves/legacy.json（與存檔分開，開新遊戲不會清掉）；之後開新遊戲時依傳承給予起手獎勵。from_campaign：通關某劇本後，在另一個劇本開局的紀念贈禮；by_ending：每種達成過的結局提供的餘韻（相同加成只算一次，因果上限 cap_karma）。",
+  "cap_karma": 4,
+  "from_campaign": {
+    "fanren": {
+      "to": "xianni",
+      "title": "韓立的舊物",
+      "items": {
+        "lingye": 3,
+        "mpill": 3
+      },
+      "text": "行囊裡多了幾瓶東西，附著一張字條：「舊友的謝禮，山高水長，望君保重。」——彷彿來自另一個故事裡的某位謹慎的修士。"
+    },
+    "xianni": {
+      "to": "fanren",
+      "title": "王林的玉簡",
+      "items": {
+        "codex_beast": 1,
+        "fu_ding": 2
+      },
+      "text": "一枚古舊的玉簡躺在你的行囊裡，上面刻滿了妖獸的習性與弱點，末尾只有三個字：「逆天者」。"
+    }
+  },
+  "both": {
+    "title": "兩個世界的見聞",
+    "items": {
+      "codex_pet": 1
+    },
+    "text": "你走過兩條截然不同的路——謹慎的，與逆天的。這兩段見聞匯成了一本《靈寵圖鑑》，靜靜躺在你的行囊裡。"
+  },
+  "by_ending": {
+    "blood_lord": {
+      "title": "殘存的殺意",
+      "karma": {
+        "sha": 3
+      },
+      "text": "血月的餘光，還在你的眼底。"
+    },
+    "kill_way": {
+      "title": "冷鋒餘韻",
+      "karma": {
+        "sha": 2
+      },
+      "text": "劍的冷意，從舊日留到了今天。"
+    },
+    "saint": {
+      "title": "善緣迴響",
+      "karma": {
+        "ren": 3
+      },
+      "text": "曾被你救過的人，把祝福託風帶了過來。"
+    },
+    "benevolent": {
+      "title": "仁心餘暖",
+      "karma": {
+        "ren": 2
+      },
+      "text": "一盞舊日的燈，還亮在你的記憶裡。"
+    },
+    "two_faces": {
+      "title": "一念之間",
+      "karma": {
+        "ren": 1,
+        "sha": 1
+      },
+      "items": {
+        "mpill": 2
+      },
+      "text": "善與惡，你都嚐過。這一次，你想怎麼選？"
+    },
+    "together": {
+      "title": "同行的約定",
+      "items": {
+        "pet_egg": 1
+      },
+      "text": "有人在你出發前塞給你一枚靈獸蛋：「路上，有個伴。」"
+    },
+    "lone_sword": {
+      "title": "獨行者的盤纏",
+      "items": {
+        "lingshi": 500
+      },
+      "text": "你獨自走過的那條路，留下了一點盤纏。"
+    },
+    "xn_slay": {
+      "title": "弒天者的威名",
+      "karma": {
+        "sha": 3
+      },
+      "items": {
+        "fu_lei": 2
+      },
+      "text": "那個「弒天」的傳說，讓你的行囊裡多了兩張雷符。"
+    },
+    "xn_defy": {
+      "title": "不肯低頭",
+      "karma": {
+        "sha": 2
+      },
+      "items": {
+        "fu_hu": 2
+      },
+      "text": "逆旅的傲氣，化作兩張護身符。"
+    },
+    "xn_bond": {
+      "title": "雲夢的約定",
+      "items": {
+        "pet_egg": 1,
+        "heal": 3
+      },
+      "text": "雲夢澤的霧裡，有人遞來一枚靈獸蛋和幾顆丹藥。"
+    },
+    "xn_heart": {
+      "title": "以仁逆天的回響",
+      "karma": {
+        "ren": 3
+      },
+      "items": {
+        "heal": 3
+      },
+      "text": "你的溫柔，被世界記住了。"
+    },
+    "xn_lone": {
+      "title": "逆旅的盤纏",
+      "items": {
+        "lingshi": 600
+      },
+      "text": "獨行的路上，總會有些零星的收穫。"
+    }
+  }
+}

@@ -14,6 +14,7 @@ from .alchemy import AlchemyMixin
 from .allies import AlliesMixin
 from .codex import CodexMixin
 from .endings import EndingMixin
+from .legacy import LegacyMixin, LegacyStore
 from .events import EventsMixin
 from .social import SocialMixin
 from .topdown import TD_KINDS, TopDownMixin
@@ -22,7 +23,7 @@ SAVE_VERSION = 1
 DEFAULT_SAVE = ROOT / "saves" / "save.json"
 
 
-class Session(TopDownMixin, SocialMixin, AlchemyMixin, AlliesMixin, EventsMixin, CodexMixin, EndingMixin):
+class Session(TopDownMixin, SocialMixin, AlchemyMixin, AlliesMixin, EventsMixin, CodexMixin, EndingMixin, LegacyMixin):
     def __init__(self, save_path=DEFAULT_SAVE, seed=None):
         self.data = GameData()
         self.rng = random.Random(seed)
@@ -30,6 +31,7 @@ class Session(TopDownMixin, SocialMixin, AlchemyMixin, AlliesMixin, EventsMixin,
         self.rs.session = self
         self.world = WorldMap(self.data)
         self.save_path = pathlib.Path(save_path) if save_path else None
+        self.legacy = LegacyStore(self.save_path.parent / "legacy.json" if self.save_path else None)
         self.rs.on("CR_OnRealmChanged", lambda actor, order, sub, old: self.log.append(f"★ 境界變更 → {self.data.realms[order]['name']}"))
         self.difficulty = difficulty.DEFAULT
         # 全新安裝（沒有存檔）時，前端會先叫出「難度＋角色」設定畫面
@@ -70,6 +72,7 @@ class Session(TopDownMixin, SocialMixin, AlchemyMixin, AlliesMixin, EventsMixin,
         self.day, self.region = 0, cc["start_region"]
         self.hero.add("heal", self.dcfg["start_heal"])
         self.log = [cc["intro"]]
+        self.apply_legacy(camp)
         quests.ensure(self.hero, self.data)
         self.ui = {}
         self.pending_boss = None
@@ -252,6 +255,7 @@ class Session(TopDownMixin, SocialMixin, AlchemyMixin, AlliesMixin, EventsMixin,
 
     def snapshot(self):
         self.ending_check()
+        self.legacy_sync()
         h, w = self.hero, self.world
         r = self.rs.realm(h)
         reg = w.regions[self.region]
@@ -266,7 +270,7 @@ class Session(TopDownMixin, SocialMixin, AlchemyMixin, AlliesMixin, EventsMixin,
             "dialogue": dialogue.view(self.data, h),
             "difficulty": self.difficulty, "difficultyName": self.dcfg["name"], "configured": self.configured, "difficulties": {k: {"name": v["name"], "desc": v["desc"]} for k, v in difficulty.DIFFICULTY.items()},
             "mode": self.mode, "map_id": self.map_id, "pos": self.pos, "tp": getattr(self, "tp", 0), "cur_loc": self.cur_loc, "defeated": self.defeated,
-            "battle": self._battle_view(), "bag": self.bag_view(), "campaign": h.campaign, "campaigns": {k: {"name": v["name"], "desc": v["desc"], "hero": v["hero"]["name"]} for k, v in self.data.campaigns.items()}, "ending": self.ending_view(), "codex": self.codex_view(), "news": self.news_view(), "war": self.war_view(), "wev_ent": self.wev_entity(), "comp": self.allies_view(), "alch": self.alch_view(), "alch_n": h.counters.get("alch:n", 0), "karma": karma.view(h, self.data.karma), "karma_ev": self.karma_view(), "checkpoint": (self.checkpoint or {}).get("label"), "guardians": [k[9:] for k, v in h.flags.items() if k.startswith("guardian:") and v], "shop": self.shop_view(), "board": self.board_view(), "cand": self.cand_view(), "shady": self.shady_view(),
+            "battle": self._battle_view(), "bag": self.bag_view(), "legacy": self.legacy_view(), "campaign": h.campaign, "campaigns": {k: {"name": v["name"], "desc": v["desc"], "hero": v["hero"]["name"]} for k, v in self.data.campaigns.items()}, "ending": self.ending_view(), "codex": self.codex_view(), "news": self.news_view(), "war": self.war_view(), "wev_ent": self.wev_entity(), "comp": self.allies_view(), "alch": self.alch_view(), "alch_n": h.counters.get("alch:n", 0), "karma": karma.view(h, self.data.karma), "karma_ev": self.karma_view(), "checkpoint": (self.checkpoint or {}).get("label"), "guardians": [k[9:] for k, v in h.flags.items() if k.startswith("guardian:") and v], "shop": self.shop_view(), "board": self.board_view(), "cand": self.cand_view(), "shady": self.shady_view(),
             "members": [{"id": m, "name": self.data.sects[m]["name"], "perk": self.perk_of(m)["name"], "desc": self.perk_of(m)["desc"]} for m in h.members],
             "partner": self.partner_spec(), "affinity": h.affinity, "mp": round(h.mp), "max_mp": round(h.max_mp), "heal": h.count("heal"), "mpills": h.count("mpill"), "herbs": h.count("herb"), "plots": self.plots_view(),
             "seeds": {k: dict(v, cost=round(v["cost"] * self.dcfg["price"])) for k, v in self.data.farming["seeds"].items()},

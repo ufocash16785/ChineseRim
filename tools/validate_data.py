@@ -188,6 +188,16 @@ def main() -> int:
     for kind in load("pets")["pets"]:
         if kind not in cxd["pet_tips"]:
             errors.append(f"codex/pet_tips: 缺少 {kind}")
+    lg = load("legacy")
+    all_ends = {e["id"] for e in load("endings")["endings"]} | {e["id"] for l in load("endings").get("campaign_endings", {}).values() for e in l}
+    for eid in all_ends - set(lg["by_ending"]):
+        errors.append(f"legacy/by_ending: 缺少結局 {eid}")
+    for eid in set(lg["by_ending"]) - all_ends:
+        errors.append(f"legacy/by_ending: 未知結局 {eid}")
+    for grp in list(lg["by_ending"].values()) + list(lg["from_campaign"].values()) + [lg["both"]]:
+        for it in grp.get("items", {}):
+            if it not in item_ids:
+                errors.append(f"legacy: 未知物品 {it}")
     camps = load("campaigns")["campaigns"]
     all_arcs = {a["id"]: a for a in arcs["arcs"]}
     for cid, c in camps.items():
