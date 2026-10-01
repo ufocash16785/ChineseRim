@@ -10,7 +10,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   pg.on('pageerror', e => errs.push(String(e)));
   pg.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
   await pg.goto(url); await sleep(2500);
-  const out = {errs, moved: null, partner: await pg.evaluate('!!__td.S.partner')};
+  const out = {errs, moved: null, partner: await pg.evaluate('!!__td.S.partner'), shady: await pg.evaluate('!!__td.S.shady')};
   const npc = await pg.evaluate("(() => { const e = __td.ents.find(e => e.k === 'npc'); return e ? [e.px, e.py] : null; })()");
   if (npc) {
     await pg.evaluate(`__td.hero.x = ${npc[0]}; __td.hero.y = ${npc[1]};`);

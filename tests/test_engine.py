@@ -2894,7 +2894,17 @@ class BrowserSmokeTest(unittest.TestCase):
         s = Session(None, seed=3)
         s.act("new", diff="normal")
         s.hero.companion = "nangong"                       # 有道侶 → partner 會被繪製
-        s.act("enter", loc="qingniu")
+        found = None                                       # 並找一個此刻有神秘商人的地點（兩種角色都要能被畫出來）
+        for w in s.data.regions:
+            for g in w["regions"]:
+                for l in g["locations"]:
+                    for d in range(0, 30, 3):
+                        s.day, s.region = d, g["id"]
+                        if not found and s.shady_now(l["id"]):
+                            found = (l["id"], d, g["id"])
+        self.assertTrue(found)
+        s.day, s.region = found[1], found[2]
+        s.act("enter", loc=found[0])
         s.hero.dialogue = {}                               # 進入時的劇情對話會凍結移動，先關掉
         web.session = s
         srv = HTTPServer(("127.0.0.1", 0), web.H)
@@ -2908,5 +2918,6 @@ class BrowserSmokeTest(unittest.TestCase):
             srv.shutdown()
         self.assertEqual(out["errs"], [])
         self.assertTrue(out["partner"])
+        self.assertTrue(out["shady"])
         self.assertIsNotNone(out["moved"])
         self.assertGreater(out["moved"], 20)               # 從 NPC 身上走開了
