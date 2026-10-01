@@ -129,6 +129,87 @@
           ]
         }
       ]
+    },
+    {
+      "id": "xn4_taixu",
+      "campaign": "xianni",
+      "name": "第四卷·天罰",
+      "region": "taixu",
+      "playerRealm": "nascent_soul → deity_transformation",
+      "levelRange": [
+        60,
+        100
+      ],
+      "summary": "擊敗天道化身之後，天罰降臨。王林逃往太虛域，與司徒南重逢，闖入沉默古塔，最終登上天罰台，擊敗天罰使者。",
+      "quests": [
+        {
+          "id": "XN_Q30_Flee",
+          "name": "天罰追殺",
+          "objectives": [
+            "逃往太虛域",
+            "在太虛城遇見故人"
+          ]
+        },
+        {
+          "id": "XN_Q31_TaiYi",
+          "name": "太一宗",
+          "objectives": [
+            "拜訪太一宗",
+            "清除深淵海的妖獸"
+          ]
+        },
+        {
+          "id": "XN_Q32_Tower",
+          "name": "沉默古塔",
+          "objectives": [
+            "闖入沉默古塔，擊敗塔靈",
+            "突破到化神期"
+          ]
+        },
+        {
+          "id": "XN_Q33_Punish",
+          "name": "天罰台",
+          "objectives": [
+            "登上天罰台，擊敗天罰使者"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "xn5_final",
+      "campaign": "xianni",
+      "name": "第五卷·逆天終章",
+      "region": "taixu",
+      "playerRealm": "deity_transformation",
+      "levelRange": [
+        80,
+        100
+      ],
+      "summary": "逆天珠的來歷終於揭曉。魔劫使擄走李慕婉，王林追至魔劫墟；最後，他在天罰台前與天道本體做出最後了斷。",
+      "quests": [
+        {
+          "id": "XN_Q40_Origin",
+          "name": "珠的來歷",
+          "objectives": [
+            "回到沉默古塔，探尋逆天珠的來歷",
+            "清除魔劫墟的魔物"
+          ]
+        },
+        {
+          "id": "XN_Q41_Rescue",
+          "name": "慕婉之劫",
+          "objectives": [
+            "追至魔劫墟，擊敗魔劫使"
+          ]
+        },
+        {
+          "id": "XN_Q42_Final",
+          "name": "逆天之後",
+          "objectives": [
+            "在天罰台前，與天道本體做最後了斷"
+          ]
+        }
+      ]
     }
   ]
 }

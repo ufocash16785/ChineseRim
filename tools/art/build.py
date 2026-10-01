@@ -67,7 +67,7 @@ SPEAKERS = {
     "母親": "villager_f", "三叔": "villager_m", "執事": "disciple", "落雲宗執事": "disciple", "靈獸山弟子": "disciple",
     "聯盟使者": "disciple", "厲飛雨": "lifeiyu", "張鐵": "zhangtie", "墨大夫": "mo", "李化元": "li",
     "南宮婉": "nangong", "大衍神君": "dayan", "曲魂": "villain", "玄骨老祖": "xuangu", "慕沛靈": "mupei",
-    "凌玉靈": "lingyu", "余子童": "yuzitong", "王林": "wanglin", "李慕婉": "limuwan", "司徒南": "situnan", "天運子": "tianyunzi", "薛戰": "xuezhan", "黑衣修士": "villain", "五行守衛": "puppet_iron", "天道化身": "tiandao", "珠中之聲": "xinmo", "王蟬": "wangchan", "天星雙聖": "tianxing", "魔族將領": "mozu", "心魔": "xinmo", "攤主": "merchant", "藥鋪掌櫃": "pharmacist", "掌櫃": "pharmacist", "奸商": "shady", "董萱兒": "dongxuaner", "墨彩環": "mocaihuan", "陳巧倩": "chenqiaoqian", "元瑤": "yuanyao", "文詩兒": "wenshier", "紫靈": "ziling", "船夫": "boatman",
+    "凌玉靈": "lingyu", "余子童": "yuzitong", "王林": "wanglin", "李慕婉": "limuwan", "司徒南": "situnan", "天運子": "tianyunzi", "薛戰": "xuezhan", "黑衣修士": "villain", "五行守衛": "puppet_iron", "天道化身": "tiandao", "珠中之聲": "xinmo", "天罰使者": "tiandao", "天道本體": "tiandao", "塔靈": "xuangu", "魔劫使": "mozu", "太一宗主": "tianyunzi", "王蟬": "wangchan", "天星雙聖": "tianxing", "魔族將領": "mozu", "心魔": "xinmo", "攤主": "merchant", "藥鋪掌櫃": "pharmacist", "掌櫃": "pharmacist", "奸商": "shady", "董萱兒": "dongxuaner", "墨彩環": "mocaihuan", "陳巧倩": "chenqiaoqian", "元瑤": "yuanyao", "文詩兒": "wenshier", "紫靈": "ziling", "船夫": "boatman",
     "天淵守軍": "soldier",
 }
 

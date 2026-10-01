@@ -132,9 +132,9 @@ def _solid_grid(ground, w, h, block, objects):
 
 # ============================ 大地圖 ============================
 WORLD_SIZES = {"renjie": (176, 176), "lingjie": (110, 90), "xianni": (140, 130)}
-REGION_RADIUS = {"tiannan": 34, "mulan": 19, "dajin": 22, "luanxinghai": 27, "tianyuan": 34, "zhaoguo": 30, "tianyun": 30}
+REGION_RADIUS = {"tiannan": 34, "mulan": 19, "dajin": 22, "luanxinghai": 27, "tianyuan": 34, "zhaoguo": 30, "tianyun": 30, "taixu": 28}
 ICON = {"town": "icon_town", "sect": "icon_sect", "deep": "icon_cave", "garden": "icon_garden", "dwelling": "icon_hut"}
-BIOME_OF = {"tiannan": "tiannan", "mulan": "mulan", "luanxinghai": "luanxinghai", "dajin": "dajin", "tianyuan": "tianyuan", "zhaoguo": "tiannan", "tianyun": "dajin"}
+BIOME_OF = {"tiannan": "tiannan", "mulan": "mulan", "luanxinghai": "luanxinghai", "dajin": "dajin", "tianyuan": "tianyuan", "zhaoguo": "tiannan", "tianyun": "dajin", "taixu": "tianyuan"}
 
 
 def _wild_icon(loc):

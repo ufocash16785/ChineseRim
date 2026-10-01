@@ -461,6 +461,13 @@ class TopDownMixin:
             if name:
                 self.log.append(f"「{e['name']}」聽說「{name}」那邊有人在找你呢。")
                 return
+        camp = h.campaign
+        cross = self.data.ambient.get("cross", {}).get(camp)
+        if cross and self.rng.random() < 0.22:                 # 另一個劇本的傳聞（通關過的人會被認出來）
+            other = "xianni" if camp == "fanren" else "fanren"
+            pool = list(cross) + (list(self.data.ambient.get("cross_done", {}).get(camp, [])) * 2 if other in self.legacy.completed() else [])
+            self.log.append(f"「{e['name']}」{self.rng.choice(pool)}")
+            return
         local = self.data.ambient.get("byLoc", {}).get(self.cur_loc)
         if local and self.rng.random() < .55:
             lines = local
@@ -709,4 +716,8 @@ class TopDownMixin:
 
 
 def _shady_line(sess):
-    return sess.rng.choice(sess.data.market["shady"]["greetings"])
+    sh = sess.data.market["shady"]
+    cross = sh.get("cross", {}).get(sess.hero.campaign)
+    if cross and sess.rng.random() < 0.25:
+        return sess.rng.choice(cross)
+    return sess.rng.choice(sh["greetings"])

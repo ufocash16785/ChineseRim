@@ -255,7 +255,7 @@
         },
         "a": {
           "speaker": "天運子",
-          "text": "好。外門雜役房，你去報到。"
+          "text": "好。外門雜役房，你去報到。（你要是肯吃苦，也別怕資質差——聽說遙遠的越國，也有個資質不高、卻一步步走出來的人。）"
         },
         "b": {
           "speaker": "天運子",
@@ -440,7 +440,17 @@
       "nodes": {
         "start": {
           "speaker": "旁白",
-          "text": "天道化身潰散的那一刻，逆天珠發出前所未有的光。你終於明白，「逆天」二字，從來不是勝負，而是——你不肯低頭。"
+          "text": "天道化身潰散的那一刻，逆天珠發出前所未有的光——隨即，「喀」的一聲，珠身裂開了一道細縫。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "珠中之聲",
+          "text": "糟了……你斬了祂的一縷化身，真正的天罰，要來了。快走！",
+          "next": "n2"
+        },
+        "n2": {
+          "speaker": "旁白",
+          "text": "天穹深處，一道雷光緩緩凝聚。你知道，這只是開始。"
         }
       }
     },
@@ -559,6 +569,345 @@
         "no": {
           "speaker": "李慕婉",
           "text": "（她點點頭）我等你。"
+        }
+      }
+    },
+    "d_xn_arrive_taixu": {
+      "trigger": {
+        "arrive": "taixu",
+        "quest": "XN_Q30_Flee",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "你一路逃過天運宗域，身後的天空始終壓著一片不散的雷雲。太虛域的城牆，終於出現在地平線上。"
+        }
+      }
+    },
+    "d_xn_situnan": {
+      "trigger": {
+        "loc": "taixu_cheng",
+        "quest": "XN_Q30_Flee",
+        "obj": 1
+      },
+      "nodes": {
+        "start": {
+          "speaker": "司徒南",
+          "text": "……王林？真的是你！我還以為恆岳那場火之後，你已經……",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "司徒南",
+          "text": "我後來流落到太虛域，被太一宗收留。聽說你一路逆天而來——這世上，也只有你敢。",
+          "choices": [
+            {
+              "text": "「還活著，多虧了你當年那句『我罩你』。」",
+              "next": "a",
+              "effects": [
+                {
+                  "flag": "xn_situnan_reunion"
+                },
+                {
+                  "karma": {
+                    "ren": 1
+                  }
+                }
+              ]
+            },
+            {
+              "text": "「別說這些。我被天罰追殺，你要是怕，現在可以走。」",
+              "next": "b",
+              "effects": [
+                {
+                  "flag": "xn_situnan_reunion"
+                }
+              ]
+            }
+          ]
+        },
+        "a": {
+          "speaker": "司徒南",
+          "text": "（大笑）當年那句玩笑，你倒記到現在。走，我帶你見宗主。"
+        },
+        "b": {
+          "speaker": "司徒南",
+          "text": "（搖頭）怕？雜役房裡一起挨過罵的，沒有這個字。"
+        }
+      }
+    },
+    "d_xn_taiyi": {
+      "trigger": {
+        "loc": "taiyi_zong",
+        "quest": "XN_Q31_TaiYi",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "太一宗主",
+          "text": "（打量你懷中的逆天珠）能讓天罰追到這裡，你不簡單。我可以庇護你，但有一個條件——",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "太一宗主",
+          "text": "古塔之下，鎮著一樣東西。那樣東西，與你的珠子，同源。去查清楚，再回來告訴我。",
+          "choices": [
+            {
+              "text": "「我答應你。」",
+              "next": "a",
+              "effects": [
+                {
+                  "flag": "xn_taiyi_pact"
+                }
+              ]
+            },
+            {
+              "text": "「我自己的事，不勞宗主費心。」",
+              "next": "b",
+              "effects": [
+                {
+                  "flag": "xn_taiyi_pact"
+                },
+                {
+                  "karma": {
+                    "sha": 1
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "a": {
+          "speaker": "太一宗主",
+          "text": "好。太一宗，欠你一個人情。"
+        },
+        "b": {
+          "speaker": "太一宗主",
+          "text": "（淡淡一笑）隨你。但那座塔，你遲早要去。"
+        }
+      }
+    },
+    "d_xn_tower": {
+      "trigger": {
+        "loc": "chenmo_ta",
+        "quest": "XN_Q32_Tower",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "沉默古塔，寂靜得連腳步聲都被吞沒。塔心的石座上，坐著一個由無數殘魂凝成的身影。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "塔靈",
+          "text": "（空洞）又一個……拿著那顆珠子的人。留下吧，和他們一樣。",
+          "effects": [
+            {
+              "boss": "xn_tower"
+            }
+          ]
+        }
+      }
+    },
+    "d_xn_epi3b": {
+      "trigger": {
+        "onQuestDone": "XN_Q32_Tower"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "塔靈潰散，塔心的石座上，留下一行刻字：「逆天者，必有後來者。」你握緊了珠子，心跳得很快。"
+        }
+      }
+    },
+    "d_xn_tianfa": {
+      "trigger": {
+        "loc": "tianfa_tai",
+        "quest": "XN_Q33_Punish",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "天罰台上，雷雲翻湧。一道身披雷甲的身影，自雲中緩緩走下。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "天罰使者",
+          "text": "逆者王林，奉天道之命，奪珠、誅魂。",
+          "next": "n2"
+        },
+        "n2": {
+          "speaker": "珠中之聲",
+          "text": "別怕。這一戰，你贏得了。贏了，我就告訴你全部的真相。",
+          "effects": [
+            {
+              "boss": "xn_tianfa"
+            }
+          ]
+        }
+      }
+    },
+    "d_xn_epi4": {
+      "trigger": {
+        "onQuestDone": "XN_Q33_Punish"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "天罰使者倒下的地方，雷雲裂開了一道縫，透出久違的陽光。逆天珠緩緩浮起，在你面前，說出了第一句真話。"
+        }
+      }
+    },
+    "d_xn_origin": {
+      "trigger": {
+        "loc": "chenmo_ta",
+        "quest": "XN_Q40_Origin",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "珠中之聲",
+          "text": "我曾經，也是一個像你一樣的修士。很久很久以前，我握著這顆珠子，與天道對抗，最後敗了。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "珠中之聲",
+          "text": "我的肉身死在這座塔裡，殘魂附在珠上，等了無數歲月，等一個『不肯低頭』的人。那個人，是你。",
+          "next": "n2"
+        },
+        "n2": {
+          "speaker": "珠中之聲",
+          "text": "現在你知道了。天道的本體，就在天罰台的雷雲之後。你要的話，我陪你走完最後一程。若你想放手……我也不怪你。",
+          "choices": [
+            {
+              "text": "「我走到這裡，不是為了放手。」",
+              "next": "a",
+              "effects": [
+                {
+                  "flag": "xn_bead_origin"
+                }
+              ]
+            },
+            {
+              "text": "「我想先救出身邊的人，再談逆天。」",
+              "next": "b",
+              "effects": [
+                {
+                  "flag": "xn_bead_origin"
+                },
+                {
+                  "karma": {
+                    "ren": 1
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "a": {
+          "speaker": "珠中之聲",
+          "text": "（笑）好小子，沒看錯你。"
+        },
+        "b": {
+          "speaker": "珠中之聲",
+          "text": "……你果然和我當年，不一樣。這是好事。"
+        }
+      }
+    },
+    "d_xn_kidnap": {
+      "trigger": {
+        "loc": "mojie_xu",
+        "quest": "XN_Q41_Rescue",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "魔劫墟的黑霧中，一道人影押著昏迷的李慕婉，緩緩現身。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "魔劫使",
+          "text": "天道要的是你。把珠子交出來，我放了她。",
+          "next": "n2"
+        },
+        "n2": {
+          "speaker": "旁白",
+          "text": "你握緊拳頭，逆天珠的光芒在你掌心跳動。沒有退路，也不需要退路。",
+          "effects": [
+            {
+              "boss": "xn_mojie"
+            }
+          ]
+        }
+      }
+    },
+    "d_xn_final": {
+      "trigger": {
+        "loc": "tianfa_tai",
+        "quest": "XN_Q42_Final",
+        "obj": 0
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "雷雲散盡，天罰台上，一片空白。沒有人影，沒有聲音，只有一種無法形容的、彷彿整個天地都在注視你的壓力。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "天道本體",
+          "text": "逆者，你走到這裡，已經是我見過最遠的一個。此刻回頭，我可免你一死。",
+          "next": "n2"
+        },
+        "n2": {
+          "speaker": "珠中之聲",
+          "text": "別聽祂的。我輸了一次，不想你也輸。上吧，小子。",
+          "effects": [
+            {
+              "boss": "xn_final"
+            }
+          ]
+        }
+      }
+    },
+    "d_xn_final_epi": {
+      "trigger": {
+        "onQuestDone": "XN_Q42_Final"
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "天道本體潰散的那一刻，逆天珠發出最後一道光，化作漫天光點，緩緩消散。珠中之聲輕輕說了一句：「謝了，小子。」",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "旁白",
+          "text": "從恆岳派的雜役少年，到站在天的盡頭。你終於明白，「逆天」二字，從來不是勝負，而是——你不肯低頭。"
+        }
+      }
+    },
+    "d_xn_insight": {
+      "trigger": {
+        "loc": "chenmo_ta",
+        "quest": "XN_Q32_Tower",
+        "obj": 1
+      },
+      "nodes": {
+        "start": {
+          "speaker": "旁白",
+          "text": "塔靈潰散後，古塔裡只剩下你，與塔心那一行刻字。你盤膝坐下，把一路走來的血、淚、怒、不甘，一一放在心上。",
+          "next": "n1"
+        },
+        "n1": {
+          "speaker": "旁白",
+          "text": "忽然之間，天地法則如潮水般湧入識海——你悟了。",
+          "effects": [
+            {
+              "setRealm": "deity_transformation"
+            }
+          ]
         }
       }
     }

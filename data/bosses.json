@@ -254,6 +254,104 @@
         }
       ],
       "drops": "boss_xinmo"
+    },
+    "xn_tower": {
+      "name": "塔靈",
+      "sprite": "xuangu",
+      "el": "水",
+      "hp_mult": 4.4,
+      "atk_mult": 1.3,
+      "skills": [
+        {
+          "name": "殘魂哀嚎",
+          "mult": 1.9,
+          "every": 3
+        },
+        {
+          "name": "沉默",
+          "mult": 1.5,
+          "every": 2
+        }
+      ],
+      "on_win": [
+        {
+          "flag": "beat:xn_tower"
+        }
+      ],
+      "drops": "boss_xuangu"
+    },
+    "xn_tianfa": {
+      "name": "天罰使者",
+      "sprite": "tiandao",
+      "el": "雷",
+      "hp_mult": 4.8,
+      "atk_mult": 1.35,
+      "skills": [
+        {
+          "name": "天罰雷霆",
+          "mult": 2.2,
+          "every": 3
+        }
+      ],
+      "on_win": [
+        {
+          "flag": "beat:xn_tianfa"
+        }
+      ],
+      "drops": "boss_tianxing"
+    },
+    "xn_mojie": {
+      "name": "魔劫使",
+      "sprite": "mozu",
+      "el": "火",
+      "hp_mult": 5.0,
+      "atk_mult": 1.4,
+      "skills": [
+        {
+          "name": "魔劫焚天",
+          "mult": 2.1,
+          "every": 3
+        },
+        {
+          "name": "黑霧纏身",
+          "mult": 1.4,
+          "every": 2
+        }
+      ],
+      "on_win": [
+        {
+          "flag": "beat:xn_mojie"
+        }
+      ],
+      "drops": "boss_mozu",
+      "karma": {
+        "sha": 1
+      }
+    },
+    "xn_final": {
+      "name": "天道本體",
+      "sprite": "tiandao",
+      "el": "雷",
+      "hp_mult": 6.0,
+      "atk_mult": 1.5,
+      "skills": [
+        {
+          "name": "天道無情",
+          "mult": 2.3,
+          "every": 3
+        },
+        {
+          "name": "規則崩塌",
+          "mult": 1.7,
+          "every": 2
+        }
+      ],
+      "on_win": [
+        {
+          "flag": "beat:xn_final"
+        }
+      ],
+      "drops": "boss_xinmo"
     }
   },
   "guardian": {

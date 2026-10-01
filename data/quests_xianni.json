@@ -177,6 +177,110 @@
           "level": 10
         }
       }
+    },
+    "xn4_taixu": {
+      "XN_Q30_Flee": {
+        "objectives": [
+          {
+            "type": "arrive",
+            "loc": "taixu"
+          },
+          {
+            "type": "visit",
+            "loc": "taixu_cheng"
+          }
+        ],
+        "reward": {
+          "lingshi": 1500
+        }
+      },
+      "XN_Q31_TaiYi": {
+        "objectives": [
+          {
+            "type": "visit",
+            "loc": "taiyi_zong"
+          },
+          {
+            "type": "kill",
+            "loc": "shenyuan_hai",
+            "n": 5
+          }
+        ],
+        "reward": {
+          "lingshi": 2000,
+          "pill": 2
+        }
+      },
+      "XN_Q32_Tower": {
+        "objectives": [
+          {
+            "type": "flag",
+            "flag": "beat:xn_tower"
+          },
+          {
+            "type": "realm",
+            "n": 5
+          }
+        ],
+        "reward": {
+          "lingshi": 3000,
+          "pill": 3
+        }
+      },
+      "XN_Q33_Punish": {
+        "objectives": [
+          {
+            "type": "flag",
+            "flag": "beat:xn_tianfa"
+          }
+        ],
+        "reward": {
+          "lingshi": 4000,
+          "level": 5
+        }
+      }
+    },
+    "xn5_final": {
+      "XN_Q40_Origin": {
+        "objectives": [
+          {
+            "type": "flag",
+            "flag": "xn_bead_origin"
+          },
+          {
+            "type": "kill",
+            "loc": "mojie_xu",
+            "n": 6
+          }
+        ],
+        "reward": {
+          "lingshi": 4000
+        }
+      },
+      "XN_Q41_Rescue": {
+        "objectives": [
+          {
+            "type": "flag",
+            "flag": "beat:xn_mojie"
+          }
+        ],
+        "reward": {
+          "lingshi": 5000,
+          "pill": 3
+        }
+      },
+      "XN_Q42_Final": {
+        "objectives": [
+          {
+            "type": "flag",
+            "flag": "beat:xn_final"
+          }
+        ],
+        "reward": {
+          "lingshi": 9999,
+          "level": 10
+        }
+      }
     }
   }
 }

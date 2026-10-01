@@ -196,6 +196,103 @@
               "profile": "trap"
             }
           ]
+        },
+        {
+          "id": "taixu",
+          "name": "太虛域",
+          "coords": [
+            66,
+            70
+          ],
+          "summary": "天罰追殺之下，王林逃往的遙遠大域。太一宗盤踞於此，沉默古塔與天罰台的傳說，指向逆天珠真正的來歷。",
+          "nations": [
+            "太虛域"
+          ],
+          "locations": [
+            {
+              "id": "taixu_cheng",
+              "name": "太虛城",
+              "type": "國都",
+              "note": "太虛域的中樞大城，各方修士匯聚，也是故人重逢之地。",
+              "verified": false
+            },
+            {
+              "id": "taixu_market",
+              "name": "太虛坊市",
+              "type": "坊市",
+              "note": "太虛城中的大坊市，貨品比天運坊市更豐富。",
+              "verified": false
+            },
+            {
+              "id": "taixu_yaoyuan",
+              "name": "太虛藥園",
+              "type": "藥園",
+              "note": "太虛城外的藥園：可種藥、住小屋、用丹爐。",
+              "verified": false
+            },
+            {
+              "id": "taixu_dongfu",
+              "name": "太虛洞府",
+              "type": "洞府",
+              "note": "可供修士租住的洞府：可休息、煉丹、打坐。",
+              "verified": false
+            },
+            {
+              "id": "taiyi_zong",
+              "name": "太一宗",
+              "type": "門派",
+              "note": "太虛域的大宗門，宗主深不可測。司徒南如今在此。",
+              "verified": false
+            },
+            {
+              "id": "shenyuan_hai",
+              "name": "深淵海",
+              "type": "荒野",
+              "note": "終年陰沉的海域，深處有成群的海妖。",
+              "verified": false
+            },
+            {
+              "id": "xuanbing_ya",
+              "name": "玄冰崖",
+              "type": "山",
+              "note": "寒氣逼人的冰崖，冰屬性妖獸的棲地。",
+              "verified": false
+            },
+            {
+              "id": "mojie_xu",
+              "name": "魔劫墟",
+              "type": "戰場",
+              "note": "古戰場遺址，魔氣縈繞，魔劫使的據點。",
+              "verified": false
+            },
+            {
+              "id": "chenmo_ta",
+              "name": "沉默古塔",
+              "type": "遺跡",
+              "note": "傳說無人能活著走出來的古塔，藏著逆天珠的祕密。",
+              "verified": false,
+              "minRealm": 3,
+              "profile": "rich"
+            },
+            {
+              "id": "tianfa_tai",
+              "name": "天罰台",
+              "type": "秘境",
+              "note": "天道降下天罰的刑台，雷雲終年不散。",
+              "verified": false,
+              "minRealm": 4,
+              "profile": "normal"
+            },
+            {
+              "id": "taixu_mizang",
+              "name": "太虛祕藏",
+              "type": "洞窟",
+              "note": "傳聞藏著無數寶物，也藏著無數陷阱。",
+              "verified": false,
+              "minRealm": 3,
+              "profile": "trap"
+            }
+          ]
         }
       ],
       "start_loc": "qingshi_zhen"

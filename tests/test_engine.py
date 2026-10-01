@@ -2526,10 +2526,10 @@ class XianniCampaignTest(unittest.TestCase):
                     seen.add((nx, ny))
                     dq.append((nx, ny))
         ents = [e for e in m["entities"] if e["k"] == "enter"]
-        self.assertEqual(len(ents), 22)
+        self.assertEqual(len(ents), sum(len(g["locations"]) for g in self.s.data.regions[2]["regions"]))
         for e in ents:
             self.assertIn((e["x"], e["y"] + 1), seen, e["loc"])
-        self.assertEqual(set(m["zoneIds"]), {"zhaoguo", "tianyun"})
+        self.assertEqual(set(m["zoneIds"]), {"zhaoguo", "tianyun", "taixu"})
         self.assertEqual(m["zoneBiomes"], [mapgen.BIOME_OF[z] for z in m["zoneIds"]])
 
     def test_every_location_map_builds(self):
@@ -2727,3 +2727,104 @@ class LegacyTest(unittest.TestCase):
         s = self.Session(None, seed=8)
         ids = [e["id"] for e in s.data.endings["endings"]] + [e["id"] for l in s.data.endings["campaign_endings"].values() for e in l]
         self.assertEqual(set(ids) - set(s.data.legacy["by_ending"]), set())
+
+
+class XianniLaterVolumesTest(unittest.TestCase):
+    def setUp(self):
+        import pathlib, tempfile
+        from chineserim.session import Session
+        self.s = Session(pathlib.Path(tempfile.mkdtemp()) / "s.json", seed=50)
+        self.s.act("new", diff="normal", campaign="xianni")
+
+    def test_five_arcs_and_final_quest(self):
+        from chineserim import quests
+        order = quests.arc_order(self.s.data, "xianni")
+        self.assertEqual(order, ["xn1_hengyue", "xn2_tianyun", "xn3_nitian", "xn4_taixu", "xn5_final"])
+        last = next(a for a in self.s.data.arcs if a["id"] == order[-1])
+        self.assertEqual(last["quests"][-1]["id"], "XN_Q42_Final")
+        self.assertEqual(sum(len(a["quests"]) for a in self.s.data.arcs if a.get("campaign") == "xianni"), 18)
+
+    def test_new_region_and_locations_exist(self):
+        g = next(g for w in self.s.data.regions if w["id"] == "xianni" for g in w["regions"] if g["id"] == "taixu")
+        self.assertGreaterEqual(len(g["locations"]), 10)
+        for l in g["locations"]:
+            m = self.s.get_map("loc:" + l["id"])
+            self.assertTrue(any(e["k"] == "well" for e in m["entities"]), l["id"])
+        wm = self.s.get_map("world:xianni")
+        self.assertIn("taixu", wm["zoneIds"])
+
+    def test_full_playthrough_ends_after_last_volume(self):
+        from tests.bot_td import play_through_td
+        play_through_td(self.s, limit=8000)
+        h = self.s.hero
+        self.assertEqual(h.quest["arc"], "xn5_final")
+        self.assertTrue(h.quest["done"])
+        for f in ("beat:xn_tiandao", "beat:xn_tower", "beat:xn_tianfa", "beat:xn_mojie", "beat:xn_final", "xn_bead_origin"):
+            self.assertTrue(h.flags.get(f), f)
+        self.assertEqual(h.realm, 5)
+        self.assertTrue(self.s.snapshot()["ending"]["id"].startswith("xn_"))
+
+    def test_ending_not_triggered_after_middle_volume(self):
+        from chineserim import quests
+        h = self.s.hero
+        h.quest = {"arc": "xn3_nitian", "q": 2, "o": 0, "baseline": {}, "done": True, "completed": []}
+        self.assertIsNone(self.s.snapshot()["ending"])                  # 第三卷完成 ≠ 通關
+        quests.update(self.s.data, h, self.s.rs)
+        self.assertEqual(h.quest["arc"], "xn4_taixu")                    # 自動銜接第四卷
+
+    def test_new_bosses_have_codex_and_drops(self):
+        for b in ("xn_tower", "xn_tianfa", "xn_mojie", "xn_final"):
+            self.assertIn(b, self.s.data.bosses["bosses"])
+            self.assertIn(b, self.s.data.codex["bosses"])
+            self.s.start_boss_fight(b)
+            self.assertTrue(self.s.battle["boss"])
+            self.s.battle = None
+
+
+class CrossStoryMentionsTest(unittest.TestCase):
+    def _talk_lines(self, s, n=400):
+        """在城鎮裡反覆和路人說話，收集所有對話紀錄。"""
+        loc = next(l["id"] for w in s.data.regions for g in w["regions"] for l in g["locations"]
+                   if s.get_map("loc:" + l["id"])["cat"] == "town" and any(e.get("role") == "villager" for e in s.get_map("loc:" + l["id"])["entities"]))
+        s.region = next(g["id"] for w in s.data.regions for g in w["regions"] for l in g["locations"] if l["id"] == loc)
+        s.act("enter", loc=loc)
+        npc = next(e for e in s.get_map(s.map_id)["entities"] if e.get("role") == "villager")
+        out = []
+        for _ in range(n):
+            s.log.clear()
+            s.act("talk", ent=npc["id"])
+            out += s.log
+        return " ".join(out)
+
+    def test_fanren_npcs_mention_wanglin_and_xianni_npcs_mention_hanli(self):
+        import pathlib, tempfile
+        from chineserim.session import Session
+        a = Session(pathlib.Path(tempfile.mkdtemp()) / "a.json", seed=60)
+        a.act("new", diff="normal", campaign="fanren")
+        self.assertIn("王林", self._talk_lines(a))
+        b = Session(pathlib.Path(tempfile.mkdtemp()) / "b.json", seed=61)
+        b.act("new", diff="normal", campaign="xianni")
+        self.assertIn("韓立", self._talk_lines(b))
+
+    def test_recognition_lines_only_after_completing_other_story(self):
+        import pathlib, tempfile
+        from chineserim.session import Session
+        s = Session(pathlib.Path(tempfile.mkdtemp()) / "c.json", seed=62)
+        s.act("new", diff="normal", campaign="fanren")
+        before = self._talk_lines(s)
+        self.assertNotIn("不肯低頭的人", before)
+        s.hero.flags["ending"] = {"id": "xn_lone", "stats": s._ending_stats()}
+        s.hero.campaign = "xianni"
+        s.snapshot()                                                   # 記入傳承：通關過仙逆篇
+        s.act("new", diff="normal", campaign="fanren")
+        after = self._talk_lines(s, 600)
+        self.assertTrue("不肯低頭的人" in after or "逆天珠的主人" in after)
+
+    def test_dialogue_crossrefs_and_shady_lines_exist(self):
+        from chineserim.data import GameData
+        d = GameData()
+        self.assertIn("王林", d.dialogues["d3_sea"]["nodes"]["start"]["text"])
+        self.assertIn("越國", d.dialogues["d_xn_join"]["nodes"]["a"]["text"])
+        for camp, name in (("fanren", "王林"), ("xianni", "韓立")):
+            self.assertTrue(any(name in x for x in d.market["shady"]["cross"][camp]))
+            self.assertTrue(any(name in x for x in d.ambient["cross"][camp]))
